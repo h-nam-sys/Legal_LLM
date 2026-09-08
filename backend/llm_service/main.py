@@ -39,28 +39,46 @@ async def generate(payload: LLMServiceRequest):
 
     context_str = "\n".join([f"- {doc}" for doc in payload.context])
 
+    # Updated to match the ML Engineer's successful benchmark prompt
+    system_prompt = (
+        "Bạn là một trợ lý pháp lý chuyên nghiệp. Tất cả câu trả lời BẮT BUỘC phải viết bằng TIẾNG VIỆT.\n\n"
+        "Yêu cầu trả lời:\n"
+        "1. Trực tiếp đưa ra câu trả lời ngắn gọn.\n"
+        "2. Chỉ trích dẫn thông tin có trong phần \"Tài liệu\".\n"
+        "3. Nếu \"Tài liệu\" không có thông tin, CHỈ trả lời đúng câu: \"Không đủ thông tin pháp lý từ tài liệu được cung cấp.\""
+    )
+
     prompt_template = (
-        f"<|im_start|>system\n"
-        f"Bạn là trợ lý pháp lý. Trả lời câu hỏi ngắn gọn bằng tiếng Việt, CHỈ sử dụng thông tin trong phần Tài liệu dưới đây.\n"
-        f"Không chào hỏi, không thêm thông tin ngoài.\n\n"
-        f"Tài liệu:\n{context_str}<|im_end|>\n"
-        f"<|im_start|>user\n{payload.prompt}<|im_end|>\n"
+        f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
+        f"<|im_start|>user\n"
+        f"Tài liệu:\n{context_str}\n\n"
+        f"Câu hỏi: {payload.prompt}<|im_end|>\n"
         f"<|im_start|>assistant\n"
     )
 
+    # Updated to match the ML Engineer's stable parameters
     output = llm(
         prompt_template,
-        max_tokens=350,
-        temperature=0.1,
+        max_tokens=256,
+        temperature=0.01,
+        repeat_penalty=1.1,
         stop=["<|im_end|>"]
     )
 
     raw_answer = output["choices"][0]["text"].strip()
 
+    # Fallback confidence routing
+    if "Không đủ thông tin pháp lý" in raw_answer:
+        confidence_score = 0.2
+        formatted_sources = []
+    else:
+        confidence_score = 0.90
+        formatted_sources = [clean_source_citation(doc) for doc in payload.context]
+
     return LLMServiceResponse(
         answer=raw_answer[:5000],
-        confidence=0.90,
-        sources=[clean_source_citation(doc) for doc in payload.context]
+        confidence=confidence_score,
+        sources=formatted_sources
     )
 
 if __name__ == "__main__":
