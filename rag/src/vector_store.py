@@ -119,7 +119,7 @@ def create_client():
     # Local in-memory Qdrant.
     #
     # Later we can switch to Docker Qdrant.
-    client = QdrantClient(path="D:/legal-rag/qdrant_data")
+    client = QdrantClient(path=str(PROJECT_ROOT / "qdrant_data"))
 
     print("\n[OK] Qdrant client created")
 

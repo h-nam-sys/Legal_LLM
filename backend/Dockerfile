@@ -2,11 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install build tools for llama-cpp-python
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    cmake \
-    && rm -rf /var/lib/apt/lists/*
+# Point pip directly to pre-compiled CPU wheels for llama-cpp-python
+ENV PIP_EXTRA_INDEX_URL="https://abetlen.github.io/llama-cpp-python/whl/cpu"
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
