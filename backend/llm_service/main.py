@@ -16,11 +16,11 @@ llm = Llama(
 )
 
 class LLMServiceRequest(BaseModel):
-    prompt: str = Field(..., description="The legal question")
-    context: list[str] = Field(default=[], description="Retrieved legal documents")
+    prompt: str = Field(..., description="The user prompt")
+    context: list[str] = Field(default=[], description="Retrieved documents or routing instructions")
 
 class LLMServiceResponse(BaseModel):
-    answer: str = Field(..., description="Generated legal response")
+    answer: str = Field(..., description="Generated response")
     confidence: float = Field(..., description="Model confidence score (0-1)")
     sources: list[str] = Field(default=[], description="Which documents were referenced")
 
@@ -30,6 +30,18 @@ def clean_source_citation(doc_text: str) -> str:
 
 @app.post("/generate", response_model=LLMServiceResponse)
 async def generate(payload: LLMServiceRequest):
+    # 1. Routing / Chit-Chat Mode (Intercepts single-string instructions from backend)
+    if len(payload.context) == 1 and ("Phân loại tin nhắn" in payload.context[0] or "Bạn là trợ lý tư vấn" in payload.context[0]):
+        system_prompt = payload.context[0]
+        prompt_template = (
+            f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
+            f"<|im_start|>user\n{payload.prompt}<|im_end|>\n"
+            f"<|im_start|>assistant\n"
+        )
+        output = llm(prompt_template, max_tokens=256, temperature=0.01, repeat_penalty=1.1, stop=["<|im_end|>"])
+        return LLMServiceResponse(answer=output["choices"][0]["text"].strip(), confidence=0.0, sources=[])
+
+    # 2. Standard Legal RAG Mode
     if not payload.context:
         return LLMServiceResponse(
             answer="Không đủ thông tin pháp lý từ tài liệu được cung cấp.",
@@ -39,7 +51,6 @@ async def generate(payload: LLMServiceRequest):
 
     context_str = "\n".join([f"- {doc}" for doc in payload.context])
 
-    # Updated to match the ML Engineer's successful benchmark prompt
     system_prompt = (
         "Bạn là một trợ lý pháp lý chuyên nghiệp. Tất cả câu trả lời BẮT BUỘC phải viết bằng TIẾNG VIỆT.\n\n"
         "Yêu cầu trả lời:\n"
@@ -56,10 +67,9 @@ async def generate(payload: LLMServiceRequest):
         f"<|im_start|>assistant\n"
     )
 
-    # Updated to match the ML Engineer's stable parameters
     output = llm(
         prompt_template,
-        max_tokens=256,
+        max_tokens=300,
         temperature=0.01,
         repeat_penalty=1.1,
         stop=["<|im_end|>"]
@@ -67,18 +77,13 @@ async def generate(payload: LLMServiceRequest):
 
     raw_answer = output["choices"][0]["text"].strip()
 
-    # Fallback confidence routing
     if "Không đủ thông tin pháp lý" in raw_answer:
-        confidence_score = 0.2
-        formatted_sources = []
-    else:
-        confidence_score = 0.90
-        formatted_sources = [clean_source_citation(doc) for doc in payload.context]
+        return LLMServiceResponse(answer=raw_answer[:5000], confidence=0.2, sources=[])
 
     return LLMServiceResponse(
         answer=raw_answer[:5000],
-        confidence=confidence_score,
-        sources=formatted_sources
+        confidence=0.90,
+        sources=[clean_source_citation(doc) for doc in payload.context]
     )
 
 if __name__ == "__main__":

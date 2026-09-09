@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tư Vấn Pháp Lý</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; background: #f9f9f9; }
+        #sidebar { width: 260px; background: #2c3e50; color: white; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; }
+        #sidebar h3 { margin-top: 0; font-size: 16px; color: #ecf0f1; }
+        .new-chat-btn { width: 100%; padding: 10px; margin-bottom: 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .new-chat-btn:hover { background: #2ecc71; }
+        .conv-item { padding: 10px; margin-bottom: 5px; background: #34495e; border-radius: 4px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .conv-item:hover { background: #3d566e; }
+        .conv-item.active { background: #2980b9; border-left: 4px solid #3498db; }
+        
+        #main { flex: 1; display: flex; flex-direction: column; }
+        #chat-window { flex: 1; padding: 20px; overflow-y: auto; background: #fff; }
+        #input-area { padding: 15px; background: #fff; border-top: 1px solid #ddd; display: flex; align-items: center; }
+        input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        input:focus { outline: none; border-color: #3498db; }
+        button.send-btn { padding: 12px 20px; margin-left: 10px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button.send-btn:hover { background: #2980b9; }
+        
+        .message { margin-bottom: 15px; padding: 12px 15px; border-radius: 8px; max-width: 75%; line-height: 1.5; }
+        .user { background: #e3f2fd; align-self: flex-end; margin-left: auto; color: #0d47a1; border-bottom-right-radius: 0; }
+        .bot { background: #f1f2f6; align-self: flex-start; margin-right: auto; color: #2c3e50; border-bottom-left-radius: 0; }
+        .sources { font-size: 0.85em; color: #7f8c8d; margin-top: 8px; border-top: 1px dashed #bdc3c7; padding-top: 5px; }
+        .msg-wrapper { display: flex; width: 100%; flex-direction: column; }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>Lịch sử tư vấn</h3>
+        <button class="new-chat-btn" onclick="startNewChat()">+ Cuộc trò chuyện mới</button>
+        <div id="history-list"></div>
+    </div>
+    
+    <div id="main">
+        <div id="chat-window"></div>
+        <div id="input-area">
+            <input type="text" id="prompt" placeholder="Nhập câu hỏi pháp lý..." onkeypress="handleEnter(event)">
+            <button class="send-btn" onclick="sendMessage()">Gửi</button>
+        </div>
+    </div>
+
+    <script>
+        let currentConvId = null;
+        const userId = "client_web_user_1"; 
+
+        window.onload = loadSidebar;
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        async function loadSidebar() {
+            const res = await fetch(`/conversations/${userId}`);
+            const data = await res.json();
+            const list = document.getElementById("history-list");
+            list.innerHTML = "";
+            
+            data.forEach(conv => {
+                const div = document.createElement("div");
+                div.className = `conv-item ${conv.id === currentConvId ? 'active' : ''}`;
+                div.innerText = `Chat #${conv.id} - ${conv.created_at.split("T")[0]}`;
+                div.onclick = () => loadChatHistory(conv.id);
+                list.appendChild(div);
+            });
+        }
+
+        async function startNewChat() {
+            const res = await fetch("/start-conversation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: userId, title: "Tư vấn mới" })
+            });
+            const data = await res.json();
+            currentConvId = data.conversation_id;
+            document.getElementById("chat-window").innerHTML = "";
+            loadSidebar();
+        }
+
+        async function loadChatHistory(convId) {
+            currentConvId = convId;
+            loadSidebar(); 
+            
+            const res = await fetch(`/history/${convId}`);
+            const data = await res.json();
+            
+            const chatWindow = document.getElementById("chat-window");
+            chatWindow.innerHTML = "";
+            
+            data.messages.forEach(msg => {
+                const isUser = msg.role === "user";
+                let sourceHtml = (!isUser && msg.sources && msg.sources.length > 0) 
+                    ? `<div class="sources">Nguồn: ${msg.sources.join(" | ")}</div>` 
+                    : "";
+                
+                chatWindow.innerHTML += `
+                    <div class="msg-wrapper">
+                        <div class="message ${isUser ? 'user' : 'bot'}">
+                            ${msg.content.replace(/\n/g, '<br>')}
+                            ${sourceHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        async function sendMessage() {
+            if (!currentConvId) await startNewChat();
+            
+            const input = document.getElementById("prompt");
+            const text = input.value.trim();
+            if (!text) return;
+
+            const chatWindow = document.getElementById("chat-window");
+            chatWindow.innerHTML += `
+                <div class="msg-wrapper">
+                    <div class="message user">${text}</div>
+                </div>
+            `;
+            input.value = "";
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            try {
+                const res = await fetch(`/chat/${currentConvId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_prompt: text })
+                });
+                const data = await res.json();
+                
+                let sourceHtml = (data.sources && data.sources.length > 0) 
+                    ? `<div class="sources">Nguồn: ${data.sources.join(" | ")}</div>` 
+                    : "";
+                    
+                chatWindow.innerHTML += `
+                    <div class="msg-wrapper">
+                        <div class="message bot">
+                            ${data.answer.replace(/\n/g, '<br>')}
+                            ${sourceHtml}
+                        </div>
+                    </div>
+                `;
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                loadSidebar();
+            } catch (err) {
+                chatWindow.innerHTML += `<div class="msg-wrapper"><div class="message bot" style="color:red;">Lỗi kết nối.</div></div>`;
+            }
+        }
+    </script>
+</body>
+</html>

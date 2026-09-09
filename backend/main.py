@@ -1,16 +1,14 @@
-from fastapi import FastAPI
-from dotenv import load_dotenv
 import os
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from dotenv import load_dotenv
 from routers import chat
 from database import init_db
 
-# Load environment variables from .env file
 load_dotenv()
-
-# Initialize database tables
 init_db()
 
-# Read service URLs from environment
 LLM_SERVICE_URL = os.getenv("LLM_SERVICE_URL", "http://localhost:8001")
 RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "http://localhost:8002")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -21,18 +19,21 @@ app = FastAPI(
     description="Vietnamese legal consulting system with RAG and LLM integration"
 )
 
-# Include routers
+# 1. Mount static assets
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 2. Serve the chat interface
+@app.get("/chat")
+def serve_chat_ui():
+    return FileResponse("static/index.html")
+
 app.include_router(chat.router)
 
 @app.get("/")
 def health_check():
     return {
         "status": "Backend server is running live",
-        "version": "1.0",
-        "llm_service_url": LLM_SERVICE_URL,
-        "rag_service_url": RAG_SERVICE_URL,
-        "log_level": LOG_LEVEL,
-        "database": "SQLite initialized"
+        "chat_ui": "http://localhost:8000/chat"
     }
 
 @app.get("/health")
