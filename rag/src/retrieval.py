@@ -8,7 +8,9 @@ from qdrant_client import QdrantClient
 
 EMBEDDING_MODEL = "bkai-foundation-models/vietnamese-bi-encoder"
 
-QDRANT_URL = "http://localhost:6333"
+from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+QDRANT_URL = str(PROJECT_ROOT / "qdrant_data")
 
 COLLECTION_NAME = "vietnamese_administrative_procedures"
 
@@ -60,7 +62,7 @@ def connect_qdrant():
     print("CONNECTING TO QDRANT")
     print("=" * 80)
 
-    client = QdrantClient(url=QDRANT_URL)
+    client = QdrantClient(path=QDRANT_URL)
 
     print("[OK] Qdrant connected")
 
