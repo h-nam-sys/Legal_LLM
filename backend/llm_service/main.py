@@ -24,17 +24,15 @@ class LLMServiceResponse(BaseModel):
     confidence: float = Field(..., description="Model confidence score (0-1)")
     sources: list[str] = Field(default=[], description="Which documents were referenced")
 
-def clean_source_citation(doc_text: str) -> str:
-    """Extracts the actual procedure name from the document chunk instead of the label"""
-    for line in doc_text.split("\n"):
-        if "Tên thủ tục hành chính" in line:
-            parts = line.split(":", 1)
-            if len(parts) > 1:
-                return parts[1].strip()
-
-    # Fallback if line isn't found
-    header = doc_text.split("\n")[0]
-    return header.replace("Tên thủ tục hành chính:", "").strip()
+def extract_sources(docs: list[str]) -> list[str]:
+    sources = []
+    for doc in docs:
+        match = re.search(r"Tên thủ tục hành chính:\s*([^\n\r]+)", doc)
+        if match:
+            proc_name = match.group(1).strip()
+            if proc_name:
+                sources.append(proc_name)
+    return sources
 
 @app.post("/generate", response_model=LLMServiceResponse)
 async def generate(payload: LLMServiceRequest):
@@ -45,18 +43,17 @@ async def generate(payload: LLMServiceRequest):
             sources=[]
         )
 
-    # Join the retrieved RAG chunks
-    context_str = "\n\n".join([f"Tài liệu {i+1}:\n{doc}" for i, doc in enumerate(payload.context)])
+    context_str = "\n\n".join(payload.context)
 
     system_prompt = (
-        "Bạn là trợ lý tư vấn thủ tục hành chính và pháp luật Việt Nam. "
-        "Dựa vào thông tin tham khảo được cung cấp bởi hệ thống dưới đây, hãy trả lời câu hỏi của người dùng một cách chính xác, tự nhiên bằng tiếng Việt."
+        "Bạn là trợ lý giải đáp thủ tục hành chính Việt Nam. "
+        "Hãy dựa vào tài liệu được cung cấp để trả lời câu hỏi trực tiếp và ngắn gọn nhất có thể."
     )
 
     prompt_template = (
         f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
         f"<|im_start|>user\n"
-        f"[Thông tin tham khảo từ hệ thống]:\n{context_str}\n\n"
+        f"{context_str}\n\n"
         f"Câu hỏi: {payload.prompt}<|im_end|>\n"
         f"<|im_start|>assistant\n"
     )
@@ -74,7 +71,7 @@ async def generate(payload: LLMServiceRequest):
     return LLMServiceResponse(
         answer=raw_answer,
         confidence=0.90,
-        sources=[clean_source_citation(doc) for doc in payload.context]
+        sources=extract_sources(payload.context)
     )
 
 if __name__ == "__main__":

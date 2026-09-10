@@ -1,0 +1,13 @@
+env\Scripts\activate
+cd backend\llm_service
+uvicorn main:app --port 8001
+
+
+env\Scripts\activate
+cd rag\src
+uvicorn rag:app --port 8002
+
+
+env\Scripts\activate
+cd backend
+uvicorn main:app --port 8000 --reload

@@ -6,7 +6,6 @@ from schemas import LLMServiceRequest, LLMServiceResponse, RAGServiceRequest, RA
 LLM_SERVICE_URL = os.getenv("LLM_SERVICE_URL", "http://localhost:8001")
 RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "http://localhost:8002")
 
-# Array of varied nudge responses to feign natural AI conversation
 NUDGE_MESSAGES = [
     "Xin chào! Tôi là trợ lý tư vấn pháp lý. Vui lòng nhập câu hỏi pháp luật bạn muốn tìm hiểu (ví dụ: luật hôn nhân, hình sự, doanh nghiệp...).",
     "Chào bạn! Tôi ở đây để hỗ trợ giải đáp các thắc mắc về pháp luật Việt Nam. Bạn đang cần tìm hiểu về vấn đề pháp lý nào?",
@@ -16,7 +15,6 @@ NUDGE_MESSAGES = [
 ]
 
 async def fetch_rag_context(query: str) -> tuple[list[str], list[float]]:
-    """Fetch legal document context and similarity scores from RAG service with logging"""
     print(f"\n[DEBUG] Calling RAG Service at {RAG_SERVICE_URL}/retrieve with query: '{query}'")
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
@@ -28,41 +26,32 @@ async def fetch_rag_context(query: str) -> tuple[list[str], list[float]]:
             )
             response.raise_for_status()
             rag_result = RAGServiceResponse(**response.json())
-            print(f"[DEBUG] RAG Response received. Documents count: {len(rag_result.documents)}, Scores: {rag_result.scores}")
+            print(f"[DEBUG] RAG Response received. Documents count: {len(rag_result.documents)}")
             return rag_result.documents, rag_result.scores
-        except httpx.ConnectError as e:
-            print(f"[ERROR] RAG Service connection failed at {RAG_SERVICE_URL}: {e}")
-            return [], []
-        except httpx.HTTPStatusError as e:
-            print(f"[ERROR] RAG Service HTTP Error {e.response.status_code}: {e}")
-            return [], []
         except Exception as e:
             print(f"[ERROR] RAG Service unexpected error: {e}")
             return [], []
 
-async def get_legal_response(prompt: str) -> tuple[str, list[str]]:
-    """Main orchestration with full diagnostic printing"""
+async def get_legal_response(prompt: str, search_query: str) -> tuple[str, list[str]]:
     print(f"\n==========================================")
-    print(f"[DEBUG] Incoming User Prompt: '{prompt}'")
+    print(f"[DEBUG] Original Prompt: '{prompt}'")
+    print(f"[DEBUG] Search Query for RAG: '{search_query}'")
     print(f"==========================================")
 
-    # 1. Trigger RAG first
-    context_docs, scores = await fetch_rag_context(prompt)
+    # 1. Trigger RAG using the bundled query
+    context_docs, scores = await fetch_rag_context(search_query)
 
-    # 2. Evaluate scores
     max_score = max(scores) if scores else 0.0
-    SCORE_THRESHOLD = 0.35  # Adjust threshold here if needed
+    SCORE_THRESHOLD = 0.45
     print(f"[DEBUG] Max Similarity Score: {max_score:.4f} (Threshold: {SCORE_THRESHOLD})")
 
-    # 3. Branch based on score
     if max_score < SCORE_THRESHOLD or not context_docs:
         print(f"[DEBUG] Score is BELOW threshold. Triggering casual nudge message.")
-        nudge_message = random.choice(NUDGE_MESSAGES)
-        return nudge_message, []
+        return random.choice(NUDGE_MESSAGES), []
 
-    print(f"[DEBUG] Score is ABOVE threshold. Forwarding to LLM Service at {LLM_SERVICE_URL}/generate")
+    print(f"[DEBUG] Score is ABOVE threshold. Forwarding short prompt to LLM Service.")
 
-    # 4. Send to LLM Service
+    # 2. Send only the short prompt to the LLM
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             llm_request = LLMServiceRequest(prompt=prompt, context=context_docs)
@@ -73,14 +62,6 @@ async def get_legal_response(prompt: str) -> tuple[str, list[str]]:
             )
             response.raise_for_status()
             llm_result = LLMServiceResponse(**response.json())
-            print(f"[DEBUG] LLM Response successfully generated.")
             return llm_result.answer, llm_result.sources
-        except httpx.ConnectError as e:
-            print(f"[ERROR] LLM Service connection failed at {LLM_SERVICE_URL}: {e}")
-            return f"LLM service unavailable at {LLM_SERVICE_URL}. Please try again shortly.", []
-        except httpx.HTTPStatusError as e:
-            print(f"[ERROR] LLM Service HTTP Error {e.response.status_code}: {e}")
-            return f"LLM service error: {e.response.status_code}. Please try again.", []
         except Exception as e:
-            print(f"[ERROR] LLM Service unexpected error: {e}")
             return f"Error processing request: {str(e)}", []
