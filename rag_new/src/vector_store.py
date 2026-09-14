@@ -21,7 +21,10 @@ INPUT_FILE = (
     / "administrative_procedures_embeddings.parquet"
 )
 
-QDRANT_URL = "http://localhost:6333"
+# Qdrant Embedded Local Mode - không cần Docker
+QDRANT_PATH = str(
+    PROJECT_ROOT / "qdrant_storage"
+)
 
 COLLECTION_NAME = "vietnamese_administrative_procedures"
 
@@ -127,19 +130,24 @@ def validate_embeddings(df):
 def create_client():
 
     print("\n" + "=" * 80)
-    print("CONNECTING TO QDRANT SERVER")
+    print("CONNECTING TO QDRANT - LOCAL EMBEDDED MODE")
     print("=" * 80)
 
-    print(f"\nQdrant URL: {QDRANT_URL}")
+    print(f"\nQdrant storage: {QDRANT_PATH}")
 
-    client = QdrantClient(
-        url=QDRANT_URL
+    Path(QDRANT_PATH).mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
-    # Check connection
+    client = QdrantClient(
+        path=QDRANT_PATH
+    )
+
+    # Check local Qdrant
     collections = client.get_collections()
 
-    print("\n[OK] Connected to Qdrant Server")
+    print("\n[OK] Qdrant local storage opened")
 
     print(
         f"Existing collections: "

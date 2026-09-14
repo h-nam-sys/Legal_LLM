@@ -35,8 +35,7 @@ Requirements:
     torch
 
 Expected Qdrant:
-    Mode: local embedded
-    Storage: D:/legal-rag/qdrant_storage
+    URL: http://localhost:6333
     Collection:
         vietnamese_administrative_procedures
 
@@ -55,7 +54,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import torch
-from rapidfuzz import fuzz
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 
@@ -288,365 +286,102 @@ def tokenize(text: Any) -> List[str]:
 # PROCEDURE DETECTION
 # =============================================================================
 
+PROCEDURES = [
+    "Thủ tục đăng ký khai sinh",
+    "Thủ tục đăng ký kết hôn",
+    "Thủ tục đăng ký khai tử",
+    "Thủ tục xác nhận tình trạng hôn nhân",
+]
 
-def _procedure_variants(procedure: str) -> List[str]:
+
+PROCEDURE_ALIASES = {
+    "Thủ tục đăng ký khai sinh": [
+        "dang ky khai sinh",
+        "khai sinh",
+        "lam khai sinh",
+        "dang ky giay khai sinh",
+        "giay khai sinh",
+    ],
+
+    "Thủ tục đăng ký kết hôn": [
+        "dang ky ket hon",
+        "ket hon",
+        "lam dang ky ket hon",
+        "dang ky hon nhan",
+    ],
+
+    "Thủ tục đăng ký khai tử": [
+        "dang ky khai tu",
+        "khai tu",
+        "lam khai tu",
+        "giay khai tu",
+    ],
+
+    "Thủ tục xác nhận tình trạng hôn nhân": [
+        "xac nhan tinh trang hon nhan",
+        "tinh trang hon nhan",
+        "xac nhan hon nhan",
+        "giay xac nhan tinh trang hon nhan",
+    ],
+}
+
+
+def detect_procedure(query: str) -> Tuple[Optional[str], float]:
     """
-    Build normalized variants for one procedure name.
+    Detect administrative procedure from query.
 
-    We do not hard-code procedure names or aliases. The source of truth is
-    the procedure_name field stored in Qdrant.
-    """
-    normalized = normalize_without_accents(procedure)
-    if not normalized:
-        return []
-
-    variants = {normalized}
-
-    # Most records start with ``thu tuc``. Keep a shorter variant so a user
-    # query such as ``dang ky khai sinh`` can still match strongly.
-    if normalized.startswith("thu tuc "):
-        shortened = normalized[len("thu tuc "):].strip()
-        if shortened:
-            variants.add(shortened)
-
-    return list(variants)
-
-
-def detect_procedure(
-    query: str,
-    procedures: List[str],
-) -> Tuple[Optional[str], float]:
-    """
-    Detect the most likely administrative procedure.
-
-    Important rule:
-        - Generic questions such as:
-            "hồ sơ gồm những gì?"
-            "nộp ở đâu?"
-            "bao lâu?"
-          must return None.
-
-        - If the query contains procedure-specific words such as:
-            "khai sinh"
-            "khai tử"
-            "kết hôn"
-            "hộ kinh doanh"
-          the procedure should still be detected even when
-          the rest of the query contains generic intent words.
+    We deliberately use deterministic lexical matching instead of
+    depending only on vector similarity.
     """
 
     q = normalize_without_accents(query)
 
-    if not q or not procedures:
-        return None, 0.0
-
-# ---------------------------------------------------------------------
-# Normalize common abbreviations used in Vietnamese administrative
-# procedure queries.
-# ---------------------------------------------------------------------
-    q = re.sub(r"\bđk\b", "dang ky", q)
-    q = re.sub(r"\bdk\b", "dang ky", q)
-
-    query_tokens = set(q.split())
-
-    # ---------------------------------------------------------------------
-    # Words that belong to the QUESTION / INTENT, not the procedure name.
-    # These words should NOT help procedure detection.
-    # ---------------------------------------------------------------------
-    QUERY_GENERIC_WORDS = {
-    "toi",
-    "muon",
-    "cho",
-    "hoi",
-    "xin",
-    "nho",
-    "hay",
-    "biet",
-
-    "gi",
-    "nhung",
-    "nao",
-    "the",
-
-    "ho",
-    "so",
-    "gom",
-    "giay",
-    "to",
-
-    "can",
-    "chuan",
-    "bi",
-    "nop",
-
-    "phi",
-    "le",
-    "chi",
-    "tien",
-    "mat",
-    "ton",
-
-    "o",
-    "dau",
-    "dia",
-    "diem",
-    "noi",
-    "tai",
-    "tiep",
-    "nhan",
-
-    "thoi",
-    "gian",
-    "han",
-    "bao",
-    "lau",
-    "ngay",
-    "khi",
-    
-    "qua",
-
-    "co",
-    "khong",
-}
-
-    # ---------------------------------------------------------------------
-    # Administrative words that are common to many procedure names.
-    # They are not strong evidence for one specific procedure.
-    # ---------------------------------------------------------------------
-    PROCEDURE_GENERIC_WORDS = {
-        "thu",
-        "tuc",
-        "dang",
-        "ky",
-        "giai",
-        "quyet",
-        "thuc",
-        "hien",
-    }
-
-    # Only keep words that can identify a concrete procedure.
-    specific_query_tokens = (
-        query_tokens
-        - QUERY_GENERIC_WORDS
-        - PROCEDURE_GENERIC_WORDS
-    )
-
-    # ---------------------------------------------------------------------
-    # CRITICAL:
-    # No procedure-specific token => do NOT guess a procedure.
-    #
-    # Example:
-    #   "ho so gom nhung gi"
-    #   => specific_query_tokens = {}
-    #   => procedure = None
-    # ---------------------------------------------------------------------
-    if not specific_query_tokens:
-        return None, 0.0
-
-    best_procedure: Optional[str] = None
+    best_procedure = None
     best_score = 0.0
 
-    for procedure in procedures:
+    for procedure, aliases in PROCEDURE_ALIASES.items():
 
-        procedure_best_score = 0.0
+        local_score = 0.0
 
-        for variant in _procedure_variants(procedure):
+        for alias in aliases:
+            alias = normalize_without_accents(alias)
 
-            if not variant:
-                continue
+            # Exact phrase is strongest
+            if alias in q:
+                score = 1.0
+            else:
+                alias_tokens = set(alias.split())
+                query_tokens = set(q.split())
 
-            variant_tokens = set(variant.split())
+                if not alias_tokens:
+                    score = 0.0
+                else:
+                    overlap = len(alias_tokens & query_tokens)
+                    score = overlap / len(alias_tokens)
 
-            # Remove generic administrative words
-            specific_variant_tokens = (
-                variant_tokens
-                - PROCEDURE_GENERIC_WORDS
-            )
+            local_score = max(local_score, score)
 
-            if not specific_variant_tokens:
-                specific_variant_tokens = variant_tokens
-
-            # -------------------------------------------------------------
-            # 1. Exact phrase
-            # -------------------------------------------------------------
-            if variant in q:
-                procedure_best_score = max(
-                    procedure_best_score,
-                    1.0,
-                )
-                continue
-
-            # -------------------------------------------------------------
-            # 2. Exact specific-token overlap
-            # -------------------------------------------------------------
-            overlap = (
-                specific_variant_tokens
-                & specific_query_tokens
-            )
-
-            if not overlap:
-                continue
-
-            query_coverage = (
-                len(overlap)
-                / len(specific_query_tokens)
-            )
-
-            procedure_coverage = (
-                len(overlap)
-                / len(specific_variant_tokens)
-            )
-
-            balanced_overlap = min(
-                query_coverage,
-                procedure_coverage,
-            )
-
-            # -------------------------------------------------------------
-            # 3. Fuzzy matching
-            #
-            # Fuzzy is only allowed when there is already at least
-            # one meaningful procedure-specific token overlap.
-            # This prevents generic questions from randomly matching
-            # a procedure.
-            # -------------------------------------------------------------
-            fuzzy_score = (
-                fuzz.token_set_ratio(
-                    " ".join(sorted(specific_query_tokens)),
-                    " ".join(sorted(specific_variant_tokens)),
-                )
-                / 100.0
-            )
-
-            score = max(
-                balanced_overlap,
-                0.70 * fuzzy_score,
-            )
-
-            # -------------------------------------------------------------
-            # If only one word overlaps but the procedure contains
-            # multiple meaningful words, do not consider it highly
-            # confident.
-            #
-            # Example:
-            #   query: "khai"
-            #   procedure: "khai sinh"
-            # -------------------------------------------------------------
-            if (
-                len(overlap) == 1
-                and len(specific_variant_tokens) >= 2
-            ):
-                score = min(score, 0.79)
-
-            # -------------------------------------------------------------
-            # Candidate has additional specific words that are absent
-            # from the query -> do not allow 1.0.
-            #
-            # Example:
-            #   query: "ket hon"
-            #   candidate:
-            #       "ket hon co yeu to nuoc ngoai"
-            # -------------------------------------------------------------
-            extra_specific = (
-                specific_variant_tokens
-                - specific_query_tokens
-            )
-
-            if extra_specific:
-                score = min(score, 0.89)
-
-            procedure_best_score = max(
-                procedure_best_score,
-                score,
-            )
-
-        if procedure_best_score > best_score:
-            best_score = procedure_best_score
+        if local_score > best_score:
+            best_score = local_score
             best_procedure = procedure
 
-    # ---------------------------------------------------------------------
-    # Final confidence threshold
-    # ---------------------------------------------------------------------
-    if best_score < 0.80:
-        return None, 0.0
-
-    return best_procedure, clamp(best_score)
+    return best_procedure, best_score
 
 
 # =============================================================================
 # INTENT DETECTION
 # =============================================================================
 
-# Weighted phrases used by detect_intent()
-INTENT_PHRASES = {
-    "required_documents": [
-        ("giay to gi", 1.00),
-        ("giay to", 0.95),
-        ("ho so gom gi", 1.00),
-        ("ho so can gi", 1.00),
-        ("ho so gom nhung gi", 1.00),
-        ("can nhung gi", 0.95),
-        ("can chuan bi gi", 1.00),
-        ("chuan bi gi", 0.95),
-        ("nop nhung gi", 0.95),
-        ("thanh phan ho so", 1.00),
-        ("thanh phan", 0.90),
-    ],
-
-    "processing_time": [
-        ("mat bao lau", 1.00),
-        ("bao lau", 0.95),
-        ("thoi gian", 0.90),
-        ("thoi gian giai quyet", 1.00),
-        ("thoi han", 0.95),
-        ("khi nao co ket qua", 1.00),
-        ("bao gio co ket qua", 1.00),
-        ("may ngay", 0.95),
-    ],
-
-    "fee": [
-        ("le phi", 1.00),
-        ("phi bao nhieu", 1.00),
-        ("bao nhieu tien", 1.00),
-        ("co mat phi khong", 1.00),
-        ("co ton phi khong", 1.00),
-        ("mat phi khong", 1.00),
-        ("chi phi", 0.90),
-        ("thu phi", 0.90),
-    ],
-
-    "location": [
-        ("o dau", 1.00),
-        ("nop o dau", 1.00),
-        ("nop ho so o dau", 1.00),
-        ("dia diem", 1.00),
-        ("noi nop", 0.95),
-        ("co quan nao", 0.95),
-        ("tiep nhan o dau", 1.00),
-        ("nop tai dau", 1.00),
-    ],
-
-    "general_information": [
-        ("la gi", 0.80),
-        ("nhu the nao", 0.80),
-        ("quy trinh", 0.90),
-        ("huong dan", 0.90),
-        ("thu tuc", 0.60),
-        ("dang ky", 0.50),
-    ],
-}
-
-
-# Simple keywords used by calculate_text_intent_score()
 INTENT_KEYWORDS = {
     "required_documents": [
         "giay to gi",
         "giay to",
         "ho so",
+        "can nhung gi",
+        "can gi",
+        "chuan bi gi",
         "thanh phan ho so",
         "thanh phan",
-        "chuan bi",
-        "can nhung gi",
         "can chuan bi",
         "nop nhung gi",
     ],
@@ -656,18 +391,18 @@ INTENT_KEYWORDS = {
         "bao lau",
         "thoi gian",
         "thoi han",
+        "trong bao lau",
+        "giai quyet bao lau",
         "khi nao co ket qua",
         "bao gio co ket qua",
-        "may ngay",
     ],
 
     "fee": [
         "le phi",
-        "phi bao nhieu",
+        "phi",
+        "mat phi",
+        "co mat phi",
         "bao nhieu tien",
-        "co mat phi khong",
-        "co ton phi khong",
-        "mat phi khong",
         "chi phi",
         "thu phi",
     ],
@@ -679,167 +414,116 @@ INTENT_KEYWORDS = {
         "dia diem",
         "noi nop",
         "co quan nao",
+        "trung tam nao",
         "tiep nhan o dau",
-        "nop tai dau",
     ],
 
     "general_information": [
         "la gi",
         "nhu the nao",
-        "quy trinh",
-        "huong dan",
+        "the nao",
+        "thong tin",
         "thu tuc",
         "dang ky",
+        "quy trinh",
+        "huong dan",
+        "khong",
     ],
 }
 
+
 def detect_intent(query: str) -> Tuple[str, float]:
     """
-    Detect query intent using exact phrase, token overlap,
-    fuzzy matching, and strong special rules.
+    Detect query intent.
+
+    Returns:
+        intent
+        confidence
     """
 
     q = normalize_without_accents(query)
 
-    if not q:
-        return "general_information", 0.0
-
-    query_tokens = set(q.split())
     scores: Dict[str, float] = {}
 
-    from rapidfuzz import fuzz
+    query_tokens = set(q.split())
 
-    # =========================================================
-    # 1. Phrase matching
-    # =========================================================
-    for intent, phrases in INTENT_PHRASES.items():
+    for intent, keywords in INTENT_KEYWORDS.items():
 
-        best_score = 0.0
+        best = 0.0
 
-        for phrase, weight in phrases:
-            phrase = normalize_without_accents(phrase)
+        for keyword in keywords:
 
-            if not phrase:
+            keyword = normalize_without_accents(keyword)
+
+            if keyword in q:
+                # Exact phrase
+                best = max(best, 1.0)
                 continue
 
-            # Exact phrase
-            if phrase in q:
-                best_score = max(best_score, weight)
+            keyword_tokens = set(keyword.split())
+
+            if not keyword_tokens:
                 continue
 
-            # Token overlap
-            phrase_tokens = set(phrase.split())
+            overlap = len(keyword_tokens & query_tokens)
 
-            if phrase_tokens:
-                overlap = len(
-                    phrase_tokens & query_tokens
-                )
+            score = overlap / len(keyword_tokens)
 
-                overlap_score = (
-                    overlap / len(phrase_tokens)
-                ) * weight
+            best = max(best, score)
 
-                best_score = max(
-                    best_score,
-                    overlap_score
-                )
+        scores[intent] = best
 
-            # Fuzzy phrase
-            fuzzy_score = (
-                fuzz.partial_ratio(
-                    phrase,
-                    q,
-                ) / 100.0
-            )
-
-            if fuzzy_score >= 0.80:
-                fuzzy_weighted = (
-                    0.85 * fuzzy_score * weight
-                )
-
-                best_score = max(
-                    best_score,
-                    fuzzy_weighted
-                )
-
-        scores[intent] = clamp(best_score)
-
-    # =========================================================
-    # 2. Strong rules
-    # =========================================================
-    if any(
-        x in q
-        for x in [
-            "giay to",
-            "ho so",
-            "thanh phan ho so",
-            "chuan bi",
-            "can nhung gi",
-        ]
-    ):
+    # Special rules for common Vietnamese questions
+    if any(x in q for x in [
+        "giay to",
+        "ho so",
+        "thanh phan",
+        "chuan bi",
+    ]):
         scores["required_documents"] = max(
-            scores.get("required_documents", 0.0),
+            scores["required_documents"],
             1.0,
         )
 
-    if any(
-        x in q
-        for x in [
-            "bao lau",
-            "thoi gian",
-            "thoi han",
-            "khi nao co ket qua",
-            "bao gio co ket qua",
-        ]
-    ):
+    if any(x in q for x in [
+        "bao lau",
+        "thoi gian",
+        "thoi han",
+    ]):
         scores["processing_time"] = max(
-            scores.get("processing_time", 0.0),
+            scores["processing_time"],
             1.0,
         )
 
-    if any(
-        x in q
-        for x in [
-            "le phi",
-            "bao nhieu tien",
-            "phi bao nhieu",
-            "mat phi",
-        ]
-    ):
+    if any(x in q for x in [
+        "le phi",
+        "mat phi",
+        "bao nhieu tien",
+    ]):
         scores["fee"] = max(
-            scores.get("fee", 0.0),
+            scores["fee"],
             1.0,
         )
 
-    if any(
-        x in q
-        for x in [
-            "o dau",
-            "nop o dau",
-            "dia diem",
-            "noi nop",
-            "tiep nhan o dau",
-        ]
-    ):
+    if any(x in q for x in [
+        "o dau",
+        "nop o dau",
+        "dia diem",
+        "noi nop",
+    ]):
         scores["location"] = max(
-            scores.get("location", 0.0),
+            scores["location"],
             1.0,
         )
 
-    # =========================================================
-    # 3. Best intent
-    # =========================================================
-    best_intent = max(
-        scores,
-        key=scores.get,
-    )
-
+    best_intent = max(scores, key=scores.get)
     best_score = scores[best_intent]
 
+    # If no clear intent
     if best_score <= 0:
         return "general_information", 0.0
 
-    return best_intent, clamp(best_score)
+    return best_intent, min(best_score, 1.0)
 
 
 # =============================================================================
@@ -874,46 +558,20 @@ STOPWORDS = {
 
 def keyword_score(query: str, text: str) -> float:
     """
-    Keyword similarity using exact + fuzzy token matching.
-
-    Exact matches receive 1.0. Fuzzy matches are accepted only when the
-    similarity is high enough. Very short tokens are excluded from fuzzy
-    matching to reduce false positives.
+    Lexical overlap score between query and candidate text.
     """
 
     q_tokens = set(tokenize(query))
     t_tokens = set(tokenize(text))
 
     q_tokens -= STOPWORDS
-    t_tokens -= STOPWORDS
 
-    if not q_tokens or not t_tokens:
+    if not q_tokens:
         return 0.0
 
-    matched_scores: List[float] = []
+    overlap = q_tokens & t_tokens
 
-    for q_token in q_tokens:
-        best_score = 0.0
-
-        for t_token in t_tokens:
-
-            # Exact token match
-            if q_token == t_token:
-                best_score = 1.0
-                break
-
-            # Do not fuzzy-match very short tokens.
-            if len(q_token) < 4 or len(t_token) < 4:
-                continue
-
-            fuzzy_score = fuzz.ratio(q_token, t_token) / 100.0
-
-            if fuzzy_score >= 0.80:
-                best_score = max(best_score, fuzzy_score)
-
-        matched_scores.append(best_score)
-
-    return sum(matched_scores) / len(matched_scores)
+    return len(overlap) / len(q_tokens)
 
 
 # =============================================================================
@@ -1256,52 +914,6 @@ def connect_qdrant() -> QdrantClient:
 
 
 # =============================================================================
-# PROCEDURE INDEX FROM QDRANT
-# =============================================================================
-
-
-def load_procedure_names(
-    client: QdrantClient,
-    batch_size: int = 256,
-) -> List[str]:
-    """
-    Load unique procedure names directly from Qdrant payloads.
-
-    This keeps procedure detection data-driven: the retriever automatically
-    uses every procedure present in the collection instead of hard-coding a
-    small list in the source code.
-    """
-
-    procedures = set()
-    offset = None
-
-    while True:
-        points, next_offset = client.scroll(
-            collection_name=COLLECTION_NAME,
-            limit=batch_size,
-            offset=offset,
-            with_payload=True,
-            with_vectors=False,
-        )
-
-        for point in points:
-            data = extract_payload_data(point)
-            procedure = data.get("procedure", "").strip()
-
-            if procedure:
-                procedures.add(procedure)
-
-        if next_offset is None:
-            break
-
-        offset = next_offset
-
-    result = sorted(procedures)
-
-    return result
-
-
-# =============================================================================
 # QDRANT SEARCH
 # =============================================================================
 
@@ -1385,148 +997,43 @@ def calculate_procedure_score(
     detected_procedure: Optional[str],
     candidate_procedure: str,
 ) -> float:
-    """
-    Calculate procedure similarity with protection against
-    partial-name false positives.
 
-    Exact procedure = 1.0.
-    A shorter procedure name must not automatically match
-    a longer, more specific procedure at 1.0.
-    """
+    if not detected_procedure:
+        return 0.0
 
-    if not detected_procedure or not candidate_procedure:
+    if not candidate_procedure:
         return 0.0
 
     detected = normalize_without_accents(
         detected_procedure
-    ).strip()
+    )
 
     candidate = normalize_without_accents(
         candidate_procedure
-    ).strip()
+    )
 
-    if not detected or not candidate:
-        return 0.0
-
-    # =========================================================
-    # 1. Exact match
-    # =========================================================
+    # Exact match
     if detected == candidate:
         return 1.0
+
+    # One contained in the other
+    if detected in candidate or candidate in detected:
+        return 0.90
 
     detected_tokens = set(detected.split())
     candidate_tokens = set(candidate.split())
 
-    if not detected_tokens or not candidate_tokens:
+    if not detected_tokens:
         return 0.0
 
-    # =========================================================
-    # 2. Remove generic words
-    # =========================================================
-    generic_words = {
-        "thu",
-        "tuc",
-        "dang",
-        "ky",
-        "giai",
-        "quyet",
-        "thuc",
-        "hien",
-        "cap",
-    }
-
-    detected_specific = detected_tokens - generic_words
-    candidate_specific = candidate_tokens - generic_words
-
-    if not detected_specific:
-        detected_specific = detected_tokens
-
-    if not candidate_specific:
-        candidate_specific = candidate_tokens
-
-    # =========================================================
-    # 3. Exact token overlap
-    # =========================================================
-    overlap = detected_specific & candidate_specific
-
-    detected_coverage = (
-        len(overlap) / len(detected_specific)
+    overlap = len(
+        detected_tokens & candidate_tokens
     )
 
-    candidate_coverage = (
-        len(overlap) / len(candidate_specific)
+    return clamp(
+        overlap / len(detected_tokens)
     )
 
-    # =========================================================
-    # 4. Penalize extra specific candidate information
-    #
-    # Example:
-    # "ket hon"
-    # vs
-    # "ket hon co yeu to nuoc ngoai"
-    #
-    # detected_coverage = 1.0
-    # candidate_coverage < 1.0
-    # =========================================================
-
-    balanced_overlap = min(
-        detected_coverage,
-        candidate_coverage,
-    )
-
-    # =========================================================
-    # 5. Fuzzy similarity
-    # =========================================================
-    from rapidfuzz import fuzz
-
-    fuzzy_score = (
-        fuzz.token_set_ratio(
-            detected,
-            candidate,
-        ) / 100.0
-    )
-
-    # =========================================================
-    # 6. Conflicting / distinguishing phrases
-    # =========================================================
-    distinguishing_terms = {
-        "nuoc ngoai",
-        "quoc tich",
-        "co yeu to nuoc ngoai",
-        "luu dong",
-        "lan dau",
-        "cap lai",
-        "cap doi",
-        "thay doi",
-        "tam ngung",
-        "cham dut",
-        "tiep tuc",
-    }
-
-    detected_lower = set(detected.split())
-    candidate_lower = set(candidate.split())
-
-    # If candidate contains additional specific terms
-    # that are completely absent from the detected procedure,
-    # don't allow a perfect score.
-    extra_terms = candidate_specific - detected_specific
-
-    has_extra_specific = bool(extra_terms)
-
-    # =========================================================
-    # 7. Final score
-    # =========================================================
-    score = max(
-        balanced_overlap,
-        0.70 * fuzzy_score,
-    )
-
-    # Do not let a shorter procedure get score 1.0
-    # against a more specific procedure.
-    if has_extra_specific and candidate != detected:
-        score = min(score, 0.89)
-
-    return clamp(score)
 
 def calculate_text_intent_score(
     detected_intent: str,
@@ -1869,9 +1376,14 @@ def filter_final_results(
     if not results:
         return []
 
-    # ---------------------------------------------------------
-    # 1. Prefer same procedure
-    # ---------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # For a clearly identified procedure + intent:
+    #
+    # We prefer candidates from the same procedure.
+    #
+    # But we NEVER return zero just because metadata is imperfect.
+    # -------------------------------------------------------------------------
+
     if detected_procedure:
 
         same_procedure = [
@@ -1886,26 +1398,8 @@ def filter_final_results(
         if same_procedure:
             results = same_procedure
 
-    # ---------------------------------------------------------
-    # 2. Prefer exact chunk type for the detected intent
-    # ---------------------------------------------------------
-    exact_chunk = [
-        r
-        for r in results
-        if get_chunk_type_score(
-            detected_intent,
-            r.chunk_type,
-        ) >= 1.0
-    ]
-
-    # Only replace the result pool when an exact chunk
-    # exists. Otherwise keep all candidates.
-    if exact_chunk:
-        results = exact_chunk
-
-    # ---------------------------------------------------------
-    # 3. Remove very weak vector matches
-    # ---------------------------------------------------------
+    # Remove extremely weak vector results only when there are enough
+    # alternatives.
     strong = [
         r
         for r in results
@@ -1915,10 +1409,11 @@ def filter_final_results(
     if strong:
         results = strong
 
-    # ---------------------------------------------------------
-    # 4. Final top-k
-    # ---------------------------------------------------------
-    return results[:FINAL_TOP_K]
+    # Final top-k
+    results = results[:FINAL_TOP_K]
+
+    return results
+
 
 # =============================================================================
 # PRINT RESULTS
@@ -2028,7 +1523,6 @@ def retrieve(
     query: str,
     model: SentenceTransformer,
     client: QdrantClient,
-    procedures: List[str],
     top_k: int = QDRANT_TOP_K,
     final_top_k: int = FINAL_TOP_K,
 ) -> List[RetrievalResult]:
@@ -2051,24 +1545,8 @@ def retrieve(
     # -------------------------------------------------------------------------
 
     detected_procedure, procedure_confidence = detect_procedure(
-        query,
-        procedures,
+        query
     )
-
-   # -------------------------------------------------------------------------
-# STOP WHEN PROCEDURE CANNOT BE DETERMINED
-# -------------------------------------------------------------------------
-    if detected_procedure is None:
-        print()
-        print("[WARNING] Cannot determine administrative procedure.")
-        print(
-            "Không đủ thông tin để xác định thủ tục hành chính."
-        )
-        print(
-            "Vui lòng cho biết tên hoặc nội dung cụ thể của thủ tục."
-        )
-        print()
-        return []
 
     # -------------------------------------------------------------------------
     # STEP 3: EMBEDDING
@@ -2144,14 +1622,12 @@ def run_query(
     query: str,
     model: SentenceTransformer,
     client: QdrantClient,
-    procedures: List[str],
 ) -> List[RetrievalResult]:
 
     results = retrieve(
         query=query,
         model=model,
         client=client,
-        procedures=procedures,
     )
 
     print_results(
@@ -2179,7 +1655,6 @@ TEST_QUERIES = [
 def run_test_suite(
     model: SentenceTransformer,
     client: QdrantClient,
-    procedures: List[str],
 ) -> None:
 
     print_header(
@@ -2210,7 +1685,6 @@ def run_test_suite(
             query=query,
             model=model,
             client=client,
-            procedures=procedures,
         )
 
         print_results(
@@ -2258,7 +1732,6 @@ def run_test_suite(
 def interactive_mode(
     model: SentenceTransformer,
     client: QdrantClient,
-    procedures: List[str],
 ) -> None:
 
     print_header(
@@ -2307,7 +1780,6 @@ def interactive_mode(
                 query,
                 model,
                 client,
-                procedures,
             )
 
         except Exception as exc:
@@ -2359,22 +1831,6 @@ def main() -> None:
 
     client = connect_qdrant()
 
-    # -------------------------------------------------------------------------
-    # Build dynamic procedure index from Qdrant
-    # -------------------------------------------------------------------------
-    procedures = load_procedure_names(client)
-
-    print()
-    print(f"Procedure index: {len(procedures)} unique procedures")
-
-    for index, procedure in enumerate(procedures, start=1):
-        print(f"{index:02d}. {procedure}")
-
-    if not procedures:
-        raise RuntimeError(
-            "No procedure names were found in Qdrant payloads."
-        )
-
     try:
 
         # ---------------------------------------------------------------------
@@ -2384,7 +1840,6 @@ def main() -> None:
         run_test_suite(
             model=model,
             client=client,
-            procedures=procedures,
         )
 
         # ---------------------------------------------------------------------
@@ -2423,7 +1878,6 @@ def main() -> None:
             interactive_mode(
                 model=model,
                 client=client,
-                procedures=procedures,
             )
 
     finally:
