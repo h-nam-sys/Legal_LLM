@@ -2,6 +2,9 @@ from pydantic import BaseModel, Field
 
 # ============ User-facing API ============
 
+class LoginRequest(BaseModel):
+    username: str = Field(..., description="The user's username for deterministic ID generation")
+
 class ChatRequest(BaseModel):
     user_prompt: str = Field(..., description="The legal question from the user")
 
@@ -9,6 +12,7 @@ class ChatResponse(BaseModel):
     answer: str = Field(..., description="The model's legal advice response")
     status: str = Field("success", description="Status of the request")
     sources: list[str] = Field(default=[], description="Legal documents used for the answer")
+    message_id: int | None = None  # Add this line
 
 # ============ RAG Service Contract ============
 
@@ -51,5 +55,4 @@ class ConversationSchema(BaseModel):
 
 class StartConversationRequest(BaseModel):
     """Request to start a new conversation"""
-    user_id: str = Field(..., description="Unique user identifier")
     title: str = Field(default="Legal Consultation", description="Conversation title")

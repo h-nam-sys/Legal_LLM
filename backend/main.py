@@ -1,10 +1,12 @@
 import os
+import uuid
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 from routers import chat
 from database import init_db
+from schemas import LoginRequest
 
 load_dotenv()
 init_db()
@@ -28,6 +30,13 @@ def serve_chat_ui():
     return FileResponse("static/index.html")
 
 app.include_router(chat.router)
+
+# LOG-IN (IMPORTANT)
+@app.post("/mock-login")
+def mock_login(request: LoginRequest):
+    # Generates a deterministic UUID based on the username string
+    user_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, request.username)
+    return {"user_id": str(user_uuid)}
 
 @app.get("/")
 def health_check():

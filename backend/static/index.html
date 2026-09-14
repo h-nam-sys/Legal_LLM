@@ -5,36 +5,61 @@
     <title>Tư Vấn Pháp Lý</title>
     <style>
         body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; background: #f9f9f9; }
+
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 300px; }
+        .login-box h2 { margin-top: 0; color: #2c3e50; }
+        .login-box input { width: 90%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        .login-box button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .login-box button:hover { background: #2980b9; }
+
         #sidebar { width: 260px; background: #2c3e50; color: white; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; }
-        #sidebar h3 { margin-top: 0; font-size: 16px; color: #ecf0f1; }
+        #sidebar h3 { margin-top: 0; font-size: 16px; color: #ecf0f1; display: flex; justify-content: space-between; align-items: center; }
+        .logout-btn { background: #e74c3c; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
+        .logout-btn:hover { background: #c0392b; }
         .new-chat-btn { width: 100%; padding: 10px; margin-bottom: 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .new-chat-btn:hover { background: #2ecc71; }
         .conv-item { padding: 10px; margin-bottom: 5px; background: #34495e; border-radius: 4px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .conv-item:hover { background: #3d566e; }
         .conv-item.active { background: #2980b9; border-left: 4px solid #3498db; }
-        
+
         #main { flex: 1; display: flex; flex-direction: column; }
         #chat-window { flex: 1; padding: 20px; overflow-y: auto; background: #fff; }
         #input-area { padding: 15px; background: #fff; border-top: 1px solid #ddd; display: flex; align-items: center; }
-        input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-        input:focus { outline: none; border-color: #3498db; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        input[type="text"]:focus { outline: none; border-color: #3498db; }
         button.send-btn { padding: 12px 20px; margin-left: 10px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button.send-btn:hover { background: #2980b9; }
-        
-        .message { margin-bottom: 15px; padding: 12px 15px; border-radius: 8px; max-width: 75%; line-height: 1.5; }
+
+        .message { margin-bottom: 5px; padding: 12px 15px; border-radius: 8px; max-width: 75%; line-height: 1.5; }
         .user { background: #e3f2fd; align-self: flex-end; margin-left: auto; color: #0d47a1; border-bottom-right-radius: 0; }
         .bot { background: #f1f2f6; align-self: flex-start; margin-right: auto; color: #2c3e50; border-bottom-left-radius: 0; }
         .sources { font-size: 0.85em; color: #7f8c8d; margin-top: 8px; border-top: 1px dashed #bdc3c7; padding-top: 5px; }
-        .msg-wrapper { display: flex; width: 100%; flex-direction: column; }
+        .msg-wrapper { display: flex; width: 100%; flex-direction: column; margin-bottom: 20px; }
+
+        .feedback-btns { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 10px; align-self: flex-start; }
+        .feedback-btn { background: none; border: 1px solid #bdc3c7; border-radius: 4px; cursor: pointer; padding: 4px 10px; color: #7f8c8d; font-size: 12px; transition: all 0.2s; }
+        .feedback-btn:hover { background: #ecf0f1; color: #2c3e50; }
+        .feedback-btn.active-up { background: #27ae60; color: white; border-color: #27ae60; }
+        .feedback-btn.active-down { background: #e74c3c; color: white; border-color: #e74c3c; }
+        .rag-score { font-size: 0.85em; color: #d35400; margin-top: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>Đăng Nhập</h2>
+            <input type="text" id="username-input" placeholder="Nhập tên đăng nhập..." onkeypress="if(event.key==='Enter') performLogin()">
+            <button onclick="performLogin()">Vào Chat</button>
+        </div>
+    </div>
+
     <div id="sidebar">
-        <h3>Lịch sử tư vấn</h3>
+        <h3>Lịch sử tư vấn <button class="logout-btn" onclick="logout()">Thoát</button></h3>
         <button class="new-chat-btn" onclick="startNewChat()">+ Cuộc trò chuyện mới</button>
         <div id="history-list"></div>
     </div>
-    
+
     <div id="main">
         <div id="chat-window"></div>
         <div id="input-area">
@@ -45,24 +70,80 @@
 
     <script>
         let currentConvId = null;
-        const userId = "client_web_user_1"; 
+        let userId = localStorage.getItem("user_id");
 
-        window.onload = loadSidebar;
+        window.onload = () => {
+            if (userId) {
+                document.getElementById("login-overlay").style.display = "none";
+                loadSidebar();
+            }
+        };
+
+        async function performLogin() {
+            const username = document.getElementById("username-input").value.trim();
+            if (!username) return alert("Vui lòng nhập tên đăng nhập!");
+
+            try {
+                const res = await fetch('/mock-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username })
+                });
+                const data = await res.json();
+
+                userId = data.user_id;
+                localStorage.setItem("user_id", userId);
+
+                document.getElementById("login-overlay").style.display = "none";
+                loadSidebar();
+            } catch (err) {
+                alert("Lỗi đăng nhập. Vui lòng thử lại.");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("user_id");
+            window.location.reload();
+        }
+
+        function getAuthHeaders() {
+            return {
+                "Content-Type": "application/json",
+                "X-User-ID": userId
+            };
+        }
 
         function handleEnter(e) {
             if (e.key === 'Enter') sendMessage();
         }
 
+        function extractSourceData(sourceArray) {
+            let actualSources = [];
+            let ragScore = null;
+            if (sourceArray && sourceArray.length > 0) {
+                sourceArray.forEach(src => {
+                    if (src.startsWith("RAG_SCORE:")) {
+                        ragScore = parseFloat(src.split(":")[1]).toFixed(4);
+                    } else {
+                        actualSources.push(src);
+                    }
+                });
+            }
+            return { actualSources, ragScore };
+        }
+
         async function loadSidebar() {
-            const res = await fetch(`/conversations/${userId}`);
+            if (!userId) return;
+            const res = await fetch(`/conversations`, { headers: getAuthHeaders() });
             const data = await res.json();
             const list = document.getElementById("history-list");
             list.innerHTML = "";
-            
+
             data.forEach(conv => {
                 const div = document.createElement("div");
                 div.className = `conv-item ${conv.id === currentConvId ? 'active' : ''}`;
-                div.innerText = `Chat #${conv.id} - ${conv.created_at.split("T")[0]}`;
+                div.innerText = conv.title;
+                div.title = conv.title;
                 div.onclick = () => loadChatHistory(conv.id);
                 list.appendChild(div);
             });
@@ -71,8 +152,8 @@
         async function startNewChat() {
             const res = await fetch("/start-conversation", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: userId, title: "Tư vấn mới" })
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ title: "Tư vấn mới" })
             });
             const data = await res.json();
             currentConvId = data.conversation_id;
@@ -80,28 +161,63 @@
             loadSidebar();
         }
 
+        async function submitFeedback(messageId, rating, btnElement) {
+            if (!messageId) return console.warn("Missing message ID for feedback");
+
+            try {
+                const res = await fetch(`/feedback/${messageId}`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ rating: rating })
+                });
+
+                if (res.ok) {
+                    const wrapper = btnElement.closest('.feedback-btns');
+                    wrapper.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active-up', 'active-down'));
+                    if (rating === 3) btnElement.classList.add('active-up');
+                    if (rating === 1) btnElement.classList.add('active-down');
+                }
+            } catch (err) {
+                console.error("Failed to submit feedback:", err);
+            }
+        }
+
         async function loadChatHistory(convId) {
             currentConvId = convId;
-            loadSidebar(); 
-            
-            const res = await fetch(`/history/${convId}`);
+            loadSidebar();
+
+            const res = await fetch(`/history/${convId}`, { headers: getAuthHeaders() });
             const data = await res.json();
-            
+
             const chatWindow = document.getElementById("chat-window");
             chatWindow.innerHTML = "";
-            
+
             data.messages.forEach(msg => {
                 const isUser = msg.role === "user";
-                let sourceHtml = (!isUser && msg.sources && msg.sources.length > 0) 
-                    ? `<div class="sources">Nguồn: ${msg.sources.join(" | ")}</div>` 
+                let sourceHtml = "";
+                let scoreHtml = "";
+
+                if (!isUser) {
+                    const { actualSources, ragScore } = extractSourceData(msg.sources);
+                    if (actualSources.length > 0) sourceHtml = `<div class="sources">Nguồn: ${actualSources.join(" | ")}</div>`;
+                    if (ragScore !== null) scoreHtml = `<div class="rag-score">Điểm tin cậy (RAG): ${ragScore}</div>`;
+                }
+
+                let feedbackHtml = (!isUser && msg.id)
+                    ? `<div class="feedback-btns">
+                           <button class="feedback-btn ${msg.rating === 3 ? 'active-up' : ''}" onclick="submitFeedback(${msg.id}, 1, this)">👍 Phù hợp</button>
+                           <button class="feedback-btn ${msg.rating === 1 ? 'active-down' : ''}" onclick="submitFeedback(${msg.id}, 0, this)">👎 Không phù hợp</button>
+                       </div>`
                     : "";
-                
+
                 chatWindow.innerHTML += `
                     <div class="msg-wrapper">
                         <div class="message ${isUser ? 'user' : 'bot'}">
                             ${msg.content.replace(/\n/g, '<br>')}
+                            ${scoreHtml}
                             ${sourceHtml}
                         </div>
+                        ${feedbackHtml}
                     </div>
                 `;
             });
@@ -110,7 +226,7 @@
 
         async function sendMessage() {
             if (!currentConvId) await startNewChat();
-            
+
             const input = document.getElementById("prompt");
             const text = input.value.trim();
             if (!text) return;
@@ -127,21 +243,33 @@
             try {
                 const res = await fetch(`/chat/${currentConvId}`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ user_prompt: text })
                 });
                 const data = await res.json();
-                
-                let sourceHtml = (data.sources && data.sources.length > 0) 
-                    ? `<div class="sources">Nguồn: ${data.sources.join(" | ")}</div>` 
+
+                let sourceHtml = "";
+                let scoreHtml = "";
+
+                const { actualSources, ragScore } = extractSourceData(data.sources);
+                if (actualSources.length > 0) sourceHtml = `<div class="sources">Nguồn: ${actualSources.join(" | ")}</div>`;
+                if (ragScore !== null) scoreHtml = `<div class="rag-score">Điểm tin cậy (RAG): ${ragScore}</div>`;
+
+                let feedbackHtml = data.message_id
+                    ? `<div class="feedback-btns">
+                           <button class="feedback-btn" onclick="submitFeedback(${data.message_id}, 3, this)">👍 Phù hợp</button>
+                           <button class="feedback-btn" onclick="submitFeedback(${data.message_id}, 1, this)">👎 Không phù hợp</button>
+                       </div>`
                     : "";
-                    
+
                 chatWindow.innerHTML += `
                     <div class="msg-wrapper">
                         <div class="message bot">
                             ${data.answer.replace(/\n/g, '<br>')}
+                            ${scoreHtml}
                             ${sourceHtml}
                         </div>
+                        ${feedbackHtml}
                     </div>
                 `;
                 chatWindow.scrollTop = chatWindow.scrollHeight;

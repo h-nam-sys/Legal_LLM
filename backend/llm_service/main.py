@@ -2,17 +2,31 @@ import os
 import re
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
-from llama_cpp import Llama
+from llama_cpp import Llama, llama_supports_gpu_offload
 
 app = FastAPI(title="Legal LLM Service (Port 8001)")
 
 MODEL_PATH = os.getenv("MODEL_PATH", r"models\qwen_legal_q4_k_m.gguf")
 
+# Dynamically configure hardware
+if llama_supports_gpu_offload():
+    print("[INFO] GPU support detected! Offloading all layers to VRAM.")
+    hardware_kwargs = {
+        "n_gpu_layers": -1  # -1 offloads all layers to the GPU
+    }
+else:
+    # Use max physical CPU cores minus 1 (leaving 1 for the OS)
+    threads = max(1, (os.cpu_count() or 4) - 1)
+    print(f"[INFO] No GPU offload detected. Using {threads} CPU threads.")
+    hardware_kwargs = {
+        "n_threads": threads
+    }
+
 llm = Llama(
     model_path=MODEL_PATH,
     n_ctx=2048,
-    n_threads=4,
-    verbose=False
+    verbose=False,
+    **hardware_kwargs
 )
 
 class LLMServiceRequest(BaseModel):

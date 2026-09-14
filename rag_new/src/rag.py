@@ -1,156 +1,84 @@
 import sys
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from pydantic import BaseModel
-
-# ============================================================
-# Encoding
-# ============================================================
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
-
-# ============================================================
-# Global RAG components
-# ============================================================
-
 model = None
 client = None
-
-
-# ============================================================
-# Request / Response
-# ============================================================
+procedures = []
 
 class RetrieveRequest(BaseModel):
     query: str
-
+    top_k: int = 5
 
 class RetrieveResponse(BaseModel):
     documents: list[str]
     scores: list[float]
 
-
-# ============================================================
-# Startup / Shutdown
-# ============================================================
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
-    global model, client
-
+    global model, client, procedures
     print("[RAG] Loading model...", file=sys.stderr, flush=True)
 
-    from retrieval import load_model, connect_qdrant
+    # Import from your new retrieval script
+    from retrieval import load_model, connect_qdrant, load_procedure_names
 
     model = load_model()
-
     print("[RAG] Connecting to Qdrant...", file=sys.stderr, flush=True)
-
     client = connect_qdrant()
 
-    print("[RAG] RAG service ready", file=sys.stderr, flush=True)
+    print("[RAG] Loading procedure index...", file=sys.stderr, flush=True)
+    procedures = load_procedure_names(client)
 
+    print("[RAG] RAG service ready", file=sys.stderr, flush=True)
     yield
 
     if client is not None:
         client.close()
         print("[RAG] Qdrant client closed", file=sys.stderr, flush=True)
 
-
-# ============================================================
-# FastAPI
-# ============================================================
-
 app = FastAPI(
     title="Vietnamese Legal RAG Service",
-    description="RAG retrieval service using BKAI Embedding and Qdrant",
     version="1.0.0",
     lifespan=lifespan
 )
 
-
-# ============================================================
-# Health Check
-# ============================================================
-
 @app.get("/health")
 def health():
-
-    return {
-        "status": "ok",
-        "service": "vietnamese-legal-rag"
-    }
-
-
-# ============================================================
-# Retrieve
-# ============================================================
+    return {"status": "ok", "service": "vietnamese-legal-rag"}
 
 @app.post("/retrieve", response_model=RetrieveResponse)
 def retrieve_documents(request: RetrieveRequest):
-
-    global model, client
-
+    global model, client, procedures
     if model is None or client is None:
         raise RuntimeError("RAG components are not initialized")
 
     from retrieval import retrieve
 
-    print(
-        f"[RAG] Query: {request.query}",
-        file=sys.stderr,
-        flush=True
-    )
-
+    # Pass the required procedures list and use the new parameter names
     results = retrieve(
-        request.query,
-        model,
-        client
+        query=request.query,
+        model=model,
+        client=client,
+        procedures=procedures,
+        top_k=20,
+        final_top_k=request.top_k
     )
 
-    documents = []
-    scores = []
+    MIN_THRESHOLD = 0.30
 
-    for item in results:
+    # Access object attributes (.final_score and .text) instead of dict keys
+    valid_results = [res for res in results if res.final_score >= MIN_THRESHOLD]
+    limited_results = valid_results[:2]
 
-        result = item["result"]
+    documents = [res.text for res in limited_results]
+    scores = [res.final_score for res in limited_results]
 
-        payload = result.payload or {}
-
-        text = payload.get("text", "")
-
-        score = float(item["final_score"])
-
-        documents.append(text)
-        scores.append(score)
-
-    print(
-        f"[RAG] Returned {len(documents)} documents",
-        file=sys.stderr,
-        flush=True
-    )
-
-    return {
-        "documents": documents,
-        "scores": scores
-    }
-
-
-# ============================================================
-# Local Run
-# ============================================================
+    return {"documents": documents, "scores": scores}
 
 if __name__ == "__main__":
-
     import uvicorn
-
-    uvicorn.run(
-        "rag:app",
-        host="0.0.0.0",
-        port=8002,
-        reload=False
-    )
+    uvicorn.run("rag:app", host="0.0.0.0", port=8002, reload=False)

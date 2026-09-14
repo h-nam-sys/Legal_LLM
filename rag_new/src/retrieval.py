@@ -47,6 +47,8 @@ Expected vector:
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 import re
 import sys
 import time
@@ -66,7 +68,9 @@ from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "bkai-foundation-models/vietnamese-bi-encoder"
 
-QDRANT_STORAGE_PATH = r"D:/legal-rag/qdrant_storage"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+QDRANT_STORAGE_PATH = str(PROJECT_ROOT / "qdrant_data")
+
 COLLECTION_NAME = "vietnamese_administrative_procedures"
 
 
@@ -402,7 +406,7 @@ def detect_procedure(
     "lau",
     "ngay",
     "khi",
-    
+
     "qua",
 
     "co",
