@@ -431,46 +431,31 @@ def create_chunks_for_document(row):
     chunks = []
 
     # ========================================================
-    # 1. REQUIRED DOCUMENTS
-    # ========================================================
-
+# 1. REQUIRED DOCUMENTS
+# ========================================================
     required_documents = clean_text(
         row.get("required_documents", "")
     )
 
     if required_documents:
+        logical_text = (
+            f"Tên thủ tục hành chính: "
+            f"{procedure_name}\n\n"
+            f"Thành phần hồ sơ:\n"
+            f"{required_documents}"
+    )
 
-        document_items = split_required_documents(
-            required_documents
-        )
-
-        for item in document_items:
-
-            logical_text = (
-                f"Tên thủ tục hành chính: "
-                f"{procedure_name}\n\n"
-                f"Thành phần hồ sơ:\n"
-                f"{item}"
-            )
-
-            # Normally one item = one chunk.
-            # If an item is too long, split semantically.
-            pieces = split_long_text(
-                logical_text,
-                MAX_CHUNK_LENGTH
-            )
-
-            for piece in pieces:
-
-                add_chunk(
-                    chunks=chunks,
-                    document_id=document_id,
-                    procedure_name=procedure_name,
-                    field=field,
-                    submission_method=submission_method,
-                    chunk_type="required_documents",
-                    text=piece,
-                )
+    # Giữ toàn bộ thành phần hồ sơ thành MỘT chunk.
+    # Không tách theo từng giấy tờ / từng dòng.
+        add_chunk(
+            chunks=chunks,
+            document_id=document_id,
+            procedure_name=procedure_name,
+            field=field,
+            submission_method=submission_method,
+            chunk_type="required_documents",
+            text=logical_text,
+    )
 
     # ========================================================
     # 2. PROCESSING TIME

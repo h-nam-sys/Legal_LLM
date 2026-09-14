@@ -1,1458 +1,1832 @@
-from sentence_transformers import SentenceTransformer
+"""
+
+VIETNAMESE ADMINISTRATIVE PROCEDURES
+
+LEGAL RAG RETRIEVER
+
+Pipeline:
+
+    User Query
+
+        |
+
+        v
+
+    BKAI Vietnamese Bi-Encoder
+
+        |
+
+        v
+
+    Qdrant Vector Search
+
+        |
+
+        v
+
+    Candidate Retrieval
+
+        |
+
+        v
+
+    Procedure / Intent Detection
+
+        |
+
+        v
+
+    Candidate Scoring
+
+        |
+
+        v
+
+    Reranking
+
+        |
+
+        v
+
+    Final Results
+
+Expected:
+
+    Qdrant URL: http://localhost:6333
+
+    Collection: vietnamese_administrative_procedures
+
+    Vector dimension: 768
+
+    Distance: COSINE
+
+"""
+
+from __future__ import annotations
+
+import re
+
+import sys
+
+import time
+
+import unicodedata
+
+from typing import Any, Dict, List, Optional, Tuple
+
+import torch
+
 from qdrant_client import QdrantClient
 
+from sentence_transformers import SentenceTransformer
 
-# ============================================================
-# CONFIG
-# ============================================================
+# =============================================================================
 
-EMBEDDING_MODEL = "bkai-foundation-models/vietnamese-bi-encoder"
+# CONFIGURATION
+
+# =============================================================================
+
+MODEL_NAME = "bkai-foundation-models/vietnamese-bi-encoder"
 
 QDRANT_URL = "http://localhost:6333"
 
 COLLECTION_NAME = "vietnamese_administrative_procedures"
 
-# Số lượng candidate lấy từ Qdrant
-RETRIEVAL_K = 20
+# Retrieve more candidates than the final number so reranking has room to work.
 
-# Số lượng kết quả cuối cùng đưa sang LLM
-FINAL_K = 5
+QDRANT_TOP_K = 30
 
+FINAL_TOP_K = 5
 
-# ============================================================
-# LOAD MODEL
-# ============================================================
+# Only used for reporting / optional fallback decisions.
 
-def load_model():
+MIN_VECTOR_SCORE = 0.20
 
-    print("=" * 80)
-    print("LOADING BKAI EMBEDDING MODEL")
-    print("=" * 80)
+# Device
 
-    print(f"\nModel: {EMBEDDING_MODEL}")
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+# =============================================================================
+
+# PRINT HELPERS
+
+# =============================================================================
+
+def print_separator(char: str = "=", width: int = 80) -> None:
+
+    print(char * width)
+
+def print_header(title: str) -> None:
+
+    print()
+
+    print_separator("=")
+
+    print(title)
+
+    print_separator("=")
+
+# =============================================================================
+
+# TEXT NORMALIZATION
+
+# =============================================================================
+
+def normalize_text(text: Any) -> str:
+
+    """
+
+    Lowercase + remove Vietnamese accents + normalize punctuation.
+
+    Used only for lexical matching.
+
+    Original Vietnamese text is NOT modified in Qdrant or output.
+
+    """
+
+    if text is None:
+
+        return ""
+
+    text = str(text).strip().lower()
+
+    text = text.replace("đ", "d")
+
+    text = unicodedata.normalize("NFD", text)
+
+    text = "".join(
+
+        char
+
+        for char in text
+
+        if unicodedata.category(char) != "Mn"
+
+    )
+
+    text = re.sub(r"[^a-z0-9*\s*]", " ", text)
+
+    text = re.sub(r"\s+", " ", text).strip()
+
+    return text
+
+def tokenize(text: Any) -> List[str]:
+
+    normalized = normalize_text(text)
+
+    return normalized.split() if normalized else []
+
+# =============================================================================
+
+# PROCEDURE / INTENT DETECTION
+
+# =============================================================================
+
+# These are only aliases for common user wording.
+
+# The actual procedure names are loaded from Qdrant payloads.
+
+PROCEDURE_ALIASES = {
+
+    "Thủ tục đăng ký khai sinh": [
+
+        "dang ky khai sinh",
+
+        "khai sinh",
+
+        "lam khai sinh",
+
+        "dang ky giay khai sinh",
+
+        "giay khai sinh",
+
+    ],
+
+    "Thủ tục đăng ký kết hôn": [
+
+        "dang ky ket hon",
+
+        "ket hon",
+
+        "lam dang ky ket hon",
+
+        "dang ky hon nhan",
+
+    ],
+
+    "Thủ tục đăng ký khai tử": [
+
+        "dang ky khai tu",
+
+        "khai tu",
+
+        "lam khai tu",
+
+        "giay khai tu",
+
+    ],
+
+    "Thủ tục xác nhận tình trạng hôn nhân": [
+
+        "xac nhan tinh trang hon nhan",
+
+        "tinh trang hon nhan",
+
+        "xac nhan hon nhan",
+
+        "giay xac nhan tinh trang hon nhan",
+
+    ],
+
+}
+
+INTENT_KEYWORDS = {
+
+    "location": [
+
+        "nop ho so o dau",
+
+        "nop o dau",
+
+        "o dau",
+
+        "dia diem",
+
+        "dia chi",
+
+        "noi nop",
+
+        "noi tiep nhan",
+
+        "co quan nao",
+
+        "co quan tiep nhan",
+
+        "tiep nhan ho so",
+
+    ],
+
+    "processing_time": [
+
+        "mat bao lau",
+
+        "bao lau",
+
+        "thoi gian",
+
+        "thoi han",
+
+        "bao nhieu ngay",
+
+        "trong bao nhieu ngay",
+
+        "giai quyet bao lau",
+
+        "khi nao co ket qua",
+
+        "bao gio co ket qua",
+
+    ],
+
+    "fee": [
+
+        "le phi",
+
+        "phi",
+
+        "mat phi",
+
+        "co mat phi",
+
+        "co mat tien",
+
+        "bao nhieu tien",
+
+        "chi phi",
+
+        "thu phi",
+
+        "khong thu phi",
+
+    ],
+
+    "required_documents": [
+
+        "giay to gi",
+
+        "giay to",
+
+        "ho so",
+
+        "ho so gom",
+
+        "ho so can",
+
+        "thanh phan ho so",
+
+        "thanh phan",
+
+        "can nhung gi",
+
+        "can gi",
+
+        "chuan bi gi",
+
+        "can chuan bi",
+
+        "nop nhung gi",
+
+    ],
+
+    "procedure": [
+
+        "trinh tu",
+
+        "cac buoc",
+
+        "thuc hien nhu the nao",
+
+        "quy trinh",
+
+        "cach thuc thuc hien",
+
+        "cach thuc",
+
+    ],
+
+}
+
+def detect_intent(query: str) -> Tuple[str, float]:
+
+    """
+
+    Detect the most likely user intent.
+
+    Priority is intentional:
+
+        location > processing_time > fee > required_documents > procedure
+
+    This prevents a query such as
+
+    "đăng ký khai sinh nộp hồ sơ ở đâu?"
+
+    from being classified as required_documents just because
+
+    it contains "hồ sơ".
+
+    """
+
+    q = normalize_text(query)
+
+    if not q:
+
+        return "general", 0.0
+
+    # Strong phrase checks first.
+
+    priority = [
+
+        "location",
+
+        "processing_time",
+
+        "fee",
+
+        "required_documents",
+
+        "procedure",
+
+    ]
+
+    scores: Dict[str, float] = {}
+
+    for intent in priority:
+
+        best = 0.0
+
+        for keyword in INTENT_KEYWORDS[intent]:
+
+            kw = normalize_text(keyword)
+
+            if kw in q:
+
+                best = max(best, 1.0)
+
+                continue
+
+            kw_tokens = set(kw.split())
+
+            q_tokens = set(q.split())
+
+            if kw_tokens:
+
+                overlap = len(kw_tokens & q_tokens)
+
+                best = max(best, overlap / len(kw_tokens))
+
+        scores[intent] = best
+
+    best_intent = max(
+
+        priority,
+
+        key=lambda intent: (
+
+            scores[intent],
+
+            -priority.index(intent),
+
+        ),
+
+    )
+
+    best_score = scores[best_intent]
+
+    if best_score <= 0:
+
+        return "general", 0.0
+
+    return best_intent, min(best_score, 1.0)
+
+def _alias_procedure(query: str) -> Optional[str]:
+
+    """
+
+    Fast alias-based detection for the four common civil-status procedures.
+
+    """
+
+    q = normalize_text(query)
+
+    best_name = None
+
+    best_len = 0
+
+    for procedure, aliases in PROCEDURE_ALIASES.items():
+
+        for alias in aliases:
+
+            alias_norm = normalize_text(alias)
+
+            if alias_norm and alias_norm in q:
+
+                if len(alias_norm) > best_len:
+
+                    best_name = procedure
+
+                    best_len = len(alias_norm)
+
+    return best_name
+
+def _procedure_token_score(query: str, procedure_name: str) -> float:
+
+    q_tokens = set(tokenize(query))
+
+    p_tokens = set(tokenize(procedure_name))
+
+    # Words too generic to identify a procedure.
+
+    stopwords = {
+
+        "thu", "tuc", "can", "gi", "nhung", "nhu", "the",
+
+        "nao", "toi", "muon", "cho", "hoi", "ho", "so",
+
+        "giay", "to", "lam", "thuc", "hien", "dang",
+
+        "ky", "cap", "xin", "co", "yeu", "cau",
+
+    }
+
+    q_tokens -= stopwords
+
+    p_tokens -= stopwords
+
+    if not p_tokens:
+
+        return 0.0
+
+    overlap = q_tokens & p_tokens
+
+    coverage = len(overlap) / len(p_tokens)
+
+    union = q_tokens | p_tokens
+
+    jaccard = len(overlap) / len(union) if union else 0.0
+
+    return 0.7 * coverage + 0.3 * jaccard
+
+def detect_procedure(
+
+    query: str,
+
+    procedure_names: Optional[List[str]] = None,
+
+) -> Tuple[Optional[str], float]:
+
+    """
+
+    Detect procedure from:
+
+        1. Known aliases
+
+        2. Exact/substring match against actual Qdrant procedure names
+
+        3. Token similarity against actual procedure names
+
+    The returned procedure name is the REAL payload value whenever
+
+    procedure_names are available.
+
+    """
+
+    alias_match = _alias_procedure(query)
+
+    if procedure_names:
+
+        q = normalize_text(query)
+
+        # First prefer an exact procedure phrase in the actual dataset.
+
+        normalized = [
+
+            (name, normalize_text(name))
+
+            for name in procedure_names
+
+            if normalize_text(name)
+
+        ]
+
+        normalized.sort(key=lambda x: len(x[1]), reverse=True)
+
+        for original, name_norm in normalized:
+
+            if name_norm in q:
+
+                return original, 1.0
+
+        # If an alias was detected, find the actual dataset procedure
+
+        # that corresponds to it.
+
+        if alias_match:
+
+            alias_norm = normalize_text(alias_match)
+
+            best_actual = None
+
+            best_score = 0.0
+
+            for original, name_norm in normalized:
+
+                score = _procedure_token_score(
+
+                    alias_norm,
+
+                    name_norm,
+
+                )
+
+                if score > best_score:
+
+                    best_score = score
+
+                    best_actual = original
+
+            if best_actual and best_score >= 0.40:
+
+                return best_actual, min(0.95, best_score + 0.40)
+
+        # General token matching against actual dataset procedures.
+
+        scored = []
+
+        for original in procedure_names:
+
+            score = _procedure_token_score(
+
+                query,
+
+                original,
+
+            )
+
+            if score > 0:
+
+                scored.append((score, original))
+
+        if scored:
+
+            scored.sort(
+
+                key=lambda item: (
+
+                    item[0],
+
+                    len(normalize_text(item[1])),
+
+                ),
+
+                reverse=True,
+
+            )
+
+            best_score, best_name = scored[0]
+
+            if best_score >= 0.45:
+
+                return best_name, best_score
+
+    if alias_match:
+
+        return alias_match, 0.90
+
+    return None, 0.0
+
+# =============================================================================
+
+# PAYLOAD HELPERS
+
+# =============================================================================
+
+def payload_get(
+
+    payload: Dict[str, Any],
+
+    keys: List[str],
+
+    default: str = "",
+
+) -> str:
+
+    if not isinstance(payload, dict):
+
+        return default
+
+    for key in keys:
+
+        value = payload.get(key)
+
+        if value is not None:
+
+            if isinstance(value, (dict, list)):
+
+                return str(value)
+
+            return str(value)
+
+    return default
+
+def extract_payload(point: Any) -> Dict[str, Any]:
+
+    payload = getattr(point, "payload", None)
+
+    if payload is None and isinstance(point, dict):
+
+        payload = point.get("payload", {})
+
+    if not isinstance(payload, dict):
+
+        payload = {}
+
+    return {
+
+        "chunk_id": payload_get(
+
+            payload,
+
+            ["chunk_id", "chunkId", "id"],
+
+        ),
+
+        "document_id": payload_get(
+
+            payload,
+
+            ["document_id", "documentId", "doc_id"],
+
+        ),
+
+        "procedure": payload_get(
+
+            payload,
+
+            [
+
+                "procedure_name",
+
+                "procedure",
+
+                "procedureName",
+
+                "ten_thu_tuc",
+
+                "Tên thủ tục hành chính",
+
+            ],
+
+        ),
+
+        "field": payload_get(
+
+            payload,
+
+            [
+
+                "field",
+
+                "linh_vuc",
+
+                "category",
+
+                "Lĩnh vực",
+
+            ],
+
+        ),
+
+        "submission": payload_get(
+
+            payload,
+
+            [
+
+                "submission_method",
+
+                "submission",
+
+                "submission_type",
+
+                "form",
+
+                "Hình thức nộp",
+
+            ],
+
+        ),
+
+        "chunk_type": payload_get(
+
+            payload,
+
+            [
+
+                "chunk_type",
+
+                "type",
+
+                "section_type",
+
+                "loai_chunk",
+
+            ],
+
+        ),
+
+        "text": payload_get(
+
+            payload,
+
+            [
+
+                "text",
+
+                "content",
+
+                "page_content",
+
+                "chunk",
+
+            ],
+
+        ),
+
+        "payload": payload,
+
+    }
+
+# =============================================================================
+
+# MODEL
+
+# =============================================================================
+
+def check_gpu() -> None:
+
+    print_header("PYTORCH / GPU CHECK")
+
+    print(f"PyTorch version : {torch.__version__}")
+
+    print(f"CUDA available  : {torch.cuda.is_available()}")
+
+    print(f"CUDA version    : {torch.version.cuda}")
+
+    if torch.cuda.is_available():
+
+        print(f"GPU             : {torch.cuda.get_device_name(0)}")
+
+        total_memory = (
+
+            torch.cuda.get_device_properties(0).total_memory
+
+            / (1024 ** 3)
+
+        )
+
+        print(f"GPU memory      : {total_memory:.2f} GB")
+
+    else:
+
+        print("GPU             : NONE")
+
+    print_separator("=")
+
+def load_model() -> SentenceTransformer:
+
+    print_header("LOADING BKAI EMBEDDING MODEL")
+
+    print(f"\nModel: {MODEL_NAME}")
+
+    print(f"Device: {DEVICE}")
 
     model = SentenceTransformer(
-        EMBEDDING_MODEL
+
+        MODEL_NAME,
+
+        device=DEVICE,
+
+        trust_remote_code=True,
+
     )
 
-    print("[OK] BKAI model loaded")
+    model.eval()
 
-    print(
-        f"Embedding dimension: "
-        f"{model.get_embedding_dimension()}"
-    )
+    dimension = model.get_embedding_dimension()
+
+    print("\n[OK] BKAI model loaded")
+
+    print(f"Embedding dimension: {dimension}")
+
+    if dimension != 768:
+
+        print(
+
+            "[WARNING] Model dimension is not 768. "
+
+            "Your Qdrant collection must use the same dimension."
+
+        )
 
     return model
 
+# =============================================================================
 
-# ============================================================
-# CONNECT QDRANT
-# ============================================================
+# EMBEDDING
 
-def connect_qdrant():
+# =============================================================================
 
-    print()
-    print("=" * 80)
-    print("CONNECTING TO QDRANT SERVER")
-    print("=" * 80)
+def encode_query(
 
-    print(f"\nQdrant URL: {QDRANT_URL}")
+    model: SentenceTransformer,
 
-    client = QdrantClient(
-        url=QDRANT_URL
-    )
+    query: str,
 
-    print("[OK] Qdrant connected")
-
-    collections = client.get_collections()
-
-    collection_names = [
-        collection.name
-        for collection in collections.collections
-    ]
-
-    if COLLECTION_NAME not in collection_names:
-
-        raise ValueError(
-            f"Collection '{COLLECTION_NAME}' not found."
-        )
-
-    print(
-        f"Collection: {COLLECTION_NAME}"
-    )
-
-    # Kiểm tra collection có đúng 768 chiều không
-    collection_info = client.get_collection(
-        collection_name=COLLECTION_NAME
-    )
-
-    print(
-        f"Vectors: "
-        f"{collection_info.points_count}"
-    )
-
-    return client
-
-
-# ============================================================
-# EMBED QUERY
-# ============================================================
-
-def embed_query(model, query):
+) -> List[float]:
 
     query = str(query).strip()
 
     if not query:
-        raise ValueError(
-            "Query cannot be empty."
+
+        raise ValueError("Query cannot be empty.")
+
+    with torch.inference_mode():
+
+        embedding = model.encode(
+
+            query,
+
+            batch_size=1,
+
+            show_progress_bar=False,
+
+            convert_to_numpy=True,
+
+            normalize_embeddings=True,
+
         )
 
-    vector = model.encode(
-        query,
-        normalize_embeddings=True
-    )
+    return embedding.tolist()
 
-    return vector.tolist()
+# =============================================================================
 
+# QDRANT
 
-# ============================================================
-# GLOBAL SEARCH
-# ============================================================
+# =============================================================================
+
+def connect_qdrant() -> QdrantClient:
+
+    print_header("CONNECTING TO QDRANT SERVER")
+
+    print(f"\nQdrant URL: {QDRANT_URL}")
+
+    client = QdrantClient(url=QDRANT_URL)
+
+    try:
+
+        client.get_collections()
+
+    except Exception as exc:
+
+        print("\n[ERROR] Cannot connect to Qdrant")
+
+        print(f"Reason: {exc}")
+
+        raise
+
+    print("[OK] Qdrant connected")
+
+    try:
+
+        info = client.get_collection(
+
+            collection_name=COLLECTION_NAME,
+
+        )
+
+    except Exception as exc:
+
+        print(
+
+            f"\n[ERROR] Collection not found: "
+
+            f"{COLLECTION_NAME}"
+
+        )
+
+        print(f"Reason: {exc}")
+
+        raise
+
+    print(f"Collection: {COLLECTION_NAME}")
+
+    print(f"Points: {info.points_count}")
+
+    # Check vector size when available.
+
+    try:
+
+        vectors = info.config.params.vectors
+
+        if hasattr(vectors, "size"):
+
+            vector_size = vectors.size
+
+            print(f"Vector dimension: {vector_size}")
+
+            if vector_size != 768:
+
+                raise ValueError(
+
+                    f"Qdrant vector dimension is {vector_size}, "
+
+                    f"but BKAI model outputs 768."
+
+                )
+
+    except AttributeError:
+
+        # Some qdrant-client versions expose this differently.
+
+        pass
+
+    return client
 
 def search_qdrant(
-    client,
-    query_vector,
-    top_k=RETRIEVAL_K
-):
 
-    results = client.query_points(
+    client: QdrantClient,
+
+    query_vector: List[float],
+
+    top_k: int = QDRANT_TOP_K,
+
+) -> List[Any]:
+
+    """
+
+    Works with modern qdrant-client and falls back to the old search API.
+
+    """
+
+    try:
+
+        response = client.query_points(
+
+            collection_name=COLLECTION_NAME,
+
+            query=query_vector,
+
+            limit=top_k,
+
+            with_payload=True,
+
+            with_vectors=False,
+
+        )
+
+        return response.points
+
+    except (AttributeError, TypeError):
+
+        pass
+
+    # Older qdrant-client
+
+    return client.search(
 
         collection_name=COLLECTION_NAME,
 
-        query=query_vector,
+        query_vector=query_vector,
 
         limit=top_k,
 
-        with_payload=True
+        with_payload=True,
+
+        with_vectors=False,
 
     )
 
-    return results.points
+def load_procedure_names(
 
+    client: QdrantClient,
 
-# ============================================================
-# QUERY INTENT
-# ============================================================
+    limit: int = 1000,
 
-def detect_intent(query):
+) -> List[str]:
 
-    query_lower = query.lower().strip()
+    """
 
-    # ========================================================
-    # LOCATION
-    # ========================================================
-    #
-    # LOCATION phải kiểm tra trước required_documents.
-    #
-    # Ví dụ:
-    #
-    # "Tôi muốn đăng ký khai sinh thì nộp hồ sơ ở đâu?"
-    #
-    # Query có cả "hồ sơ" và "ở đâu".
-    # Intent đúng phải là LOCATION.
-    # ========================================================
+    Read actual procedure_name values from Qdrant.
 
-    location_keywords = [
+    This removes the old hard-coded assumption that the collection
 
-        "nộp hồ sơ ở đâu",
+    contains only four procedures.
 
-        "nộp ở đâu",
+    """
 
-        "ở đâu",
+    names = set()
 
-        "địa điểm",
+    offset = None
 
-        "địa chỉ",
+    while True:
 
-        "cơ quan nào",
+        points, next_offset = client.scroll(
 
-        "nơi nào",
+            collection_name=COLLECTION_NAME,
 
-        "nơi tiếp nhận",
+            limit=limit,
 
-        "tiếp nhận hồ sơ",
+            offset=offset,
 
-        "cơ quan tiếp nhận",
+            with_payload=True,
 
-    ]
+            with_vectors=False,
 
-    if any(
-        keyword in query_lower
-        for keyword in location_keywords
-    ):
+        )
 
-        return "location"
+        for point in points:
 
+            payload = point.payload or {}
 
-    # ========================================================
-    # PROCESSING TIME
-    # ========================================================
+            name = payload_get(
 
-    processing_time_keywords = [
+                payload,
 
-        "mất bao lâu",
+                [
 
-        "bao lâu",
+                    "procedure_name",
 
-        "thời gian",
+                    "procedure",
 
-        "thời hạn",
+                    "procedureName",
 
-        "bao nhiêu ngày",
+                    "ten_thu_tuc",
 
-        "trong bao nhiêu ngày",
+                    "Tên thủ tục hành chính",
 
-        "khi nào có kết quả",
+                ],
 
-        "bao giờ có kết quả",
+            ).strip()
 
-    ]
+            if name:
 
-    if any(
-        keyword in query_lower
-        for keyword in processing_time_keywords
-    ):
+                names.add(name)
 
-        return "processing_time"
+        if next_offset is None:
 
+            break
 
-    # ========================================================
-    # FEE
-    # ========================================================
+        offset = next_offset
 
-    fee_keywords = [
+    result = sorted(
 
-        "lệ phí",
+        names,
 
-        "phí",
+        key=lambda x: len(normalize_text(x)),
 
-        "mất phí",
+        reverse=True,
 
-        "có mất tiền",
+    )
 
-        "bao nhiêu tiền",
+    print(f"Procedure index: {len(result)} unique names")
 
-        "chi phí",
+    return result
 
-        "thu phí",
+# =============================================================================
 
-        "không thu phí",
+# SCORING
 
-    ]
+# =============================================================================
 
-    if any(
-        keyword in query_lower
-        for keyword in fee_keywords
-    ):
+def clamp(
 
-        return "fee"
+    value: float,
 
+    low: float = 0.0,
 
-    # ========================================================
-    # REQUIRED DOCUMENTS
-    # ========================================================
+    high: float = 1.0,
 
-    required_documents_keywords = [
+) -> float:
 
-        "giấy tờ",
+    return max(low, min(high, float(value)))
 
-        "hồ sơ",
+def calculate_procedure_score(
 
-        "chuẩn bị",
+    target_procedure: Optional[str],
 
-        "thành phần hồ sơ",
+    candidate_procedure: str,
 
-        "cần những gì",
+) -> float:
 
-        "cần giấy tờ gì",
+    if not target_procedure or not candidate_procedure:
 
-        "hồ sơ gồm",
+        return 0.0
 
-        "hồ sơ cần",
+    target = normalize_text(target_procedure)
 
-        "cần chuẩn bị",
+    current = normalize_text(candidate_procedure)
 
-    ]
+    if not target or not current:
 
-    if any(
-        keyword in query_lower
-        for keyword in required_documents_keywords
-    ):
+        return 0.0
 
-        return "required_documents"
+    if target == current:
 
+        return 1.0
 
-    # ========================================================
-    # PROCEDURE
-    # ========================================================
+    if target in current:
 
-    procedure_keywords = [
+        return 0.90
 
-        "trình tự",
+    if current in target:
 
-        "các bước",
+        return 0.85
 
-        "thực hiện như thế nào",
+    target_tokens = set(target.split())
 
-        "quy trình",
+    current_tokens = set(current.split())
 
-        "cách thực hiện",
+    overlap = target_tokens & current_tokens
 
-        "cách thức thực hiện",
+    if not target_tokens:
 
-    ]
+        return 0.0
 
-    if any(
-        keyword in query_lower
-        for keyword in procedure_keywords
-    ):
+    return clamp(
 
-        return "procedure"
+        len(overlap) / len(target_tokens)
 
+    )
 
-    # ========================================================
-    # GENERAL
-    # ========================================================
+def calculate_chunk_score(
 
-    return "general"
+    intent: str,
 
+    chunk_type: str,
 
-# ============================================================
-# PROCEDURE DETECTION
-# ============================================================
+) -> float:
 
-def detect_procedure(query):
+    """
 
-    query_lower = query.lower().strip()
+    Score how well the candidate chunk type matches the query intent.
 
-    # ========================================================
-    # Các procedure hiện có trong dataset
-    # ========================================================
+    Do NOT hard-filter here. Scoring is safer because real-world payloads
 
-    procedures = {
+    may have missing or slightly different metadata.
 
-        "xác nhận tình trạng hôn nhân":
-            "Thủ tục xác nhận tình trạng hôn nhân",
+    """
 
-        "tình trạng hôn nhân":
-            "Thủ tục xác nhận tình trạng hôn nhân",
+    intent = normalize_text(intent)
 
-        "đăng ký khai sinh":
-            "Thủ tục đăng ký khai sinh",
+    chunk_type = normalize_text(chunk_type)
 
-        "khai sinh":
-            "Thủ tục đăng ký khai sinh",
+    mapping = {
 
-        "đăng ký khai tử":
-            "Thủ tục đăng ký khai tử",
+        "required_documents": {
 
-        "khai tử":
-            "Thủ tục đăng ký khai tử",
+            "required_documents": 1.00,
 
-        "đăng ký kết hôn":
-            "Thủ tục đăng ký kết hôn",
+            "general_information": 0.20,
 
-        "kết hôn":
-            "Thủ tục đăng ký kết hôn",
+        },
+
+        "processing_time": {
+
+            "processing_time": 1.00,
+
+            "general_information": 0.20,
+
+        },
+
+        "fee": {
+
+            "fee": 1.00,
+
+            "general_information": 0.20,
+
+        },
+
+        "location": {
+
+            "location": 1.00,
+
+            "general_information": 0.20,
+
+        },
+
+        "procedure": {
+
+            "procedure": 1.00,
+
+            "general_information": 0.20,
+
+        },
+
+        "general": {
+
+            "general_information": 1.00,
+
+        },
 
     }
 
-    # Match cụm dài trước
-    # để tránh match sai.
+    for key, score in mapping.get(intent, {}).items():
 
-    sorted_procedures = sorted(
-        procedures.items(),
-        key=lambda item: len(item[0]),
-        reverse=True
-    )
+        if normalize_text(key) == chunk_type:
 
-    for keyword, procedure_name in sorted_procedures:
+            return score
 
-        if keyword in query_lower:
-
-            return procedure_name
-
-    return None
-
-
-# ============================================================
-# TEXT INTENT CUES
-# ============================================================
+    return 0.0
 
 INTENT_TEXT_CUES = {
 
     "location": [
 
-        (
-            "địa điểm tiếp nhận hồ sơ",
-            1.00
-        ),
+        ("địa điểm tiếp nhận hồ sơ", 1.00),
 
-        (
-            "địa điểm tiếp nhận",
-            0.95
-        ),
+        ("địa điểm tiếp nhận", 0.95),
 
-        (
-            "nơi tiếp nhận hồ sơ",
-            0.90
-        ),
+        ("nơi tiếp nhận hồ sơ", 0.90),
 
-        (
-            "cơ quan tiếp nhận",
-            0.90
-        ),
+        ("cơ quan tiếp nhận", 0.90),
 
-        (
-            "tiếp nhận hồ sơ",
-            0.85
-        ),
+        ("tiếp nhận hồ sơ", 0.85),
 
     ],
-
 
     "processing_time": [
 
-        (
-            "thời gian giải quyết:",
-            1.00
-        ),
+        ("thời gian giải quyết", 1.00),
 
-        (
-            "thời gian giải quyết",
-            0.95
-        ),
+        ("thời hạn giải quyết", 0.95),
 
-        (
-            "thời hạn giải quyết:",
-            0.95
-        ),
-
-        (
-            "thời hạn giải quyết",
-            0.90
-        ),
-
-        (
-            "ngày làm việc",
-            0.70
-        ),
+        ("ngày làm việc", 0.70),
 
     ],
-
 
     "fee": [
 
-        (
-            "lệ phí:",
-            1.00
-        ),
+        ("lệ phí", 1.00),
 
-        (
-            "lệ phí",
-            0.95
-        ),
+        ("không thu phí", 0.90),
 
-        (
-            "không thu phí",
-            0.90
-        ),
+        ("thu phí", 0.80),
 
-        (
-            "thu phí",
-            0.80
-        ),
-
-        (
-            "đồng/bản",
-            0.75
-        ),
+        ("đồng/bản", 0.75),
 
     ],
-
 
     "required_documents": [
 
-        (
-            "thành phần hồ sơ:",
-            1.00
-        ),
+        ("thành phần hồ sơ", 1.00),
 
-        (
-            "thành phần hồ sơ",
-            0.95
-        ),
-
-        (
-            "hồ sơ gồm:",
-            0.90
-        ),
-
-        (
-            "hồ sơ gồm",
-            0.85
-        ),
+        ("hồ sơ gồm", 0.90),
 
     ],
 
-
     "procedure": [
 
-        (
-            "trình tự thực hiện:",
-            1.00
-        ),
+        ("trình tự thực hiện", 1.00),
 
-        (
-            "trình tự thực hiện",
-            0.95
-        ),
+        ("các bước thực hiện", 0.90),
 
-        (
-            "các bước thực hiện",
-            0.90
-        ),
+        ("quy trình thực hiện", 0.90),
 
-        (
-            "quy trình thực hiện",
-            0.90
-        ),
+        ("cách thức thực hiện", 0.85),
 
-        (
-            "cách thức thực hiện",
-            0.85
-        ),
-
-    ]
+    ],
 
 }
 
-
-# ============================================================
-# TEXT INTENT SCORE
-# ============================================================
-
 def calculate_text_intent_score(
-    text,
-    intent
-):
+
+    text: str,
+
+    intent: str,
+
+) -> float:
 
     if not text:
+
         return 0.0
 
-    if intent not in INTENT_TEXT_CUES:
+    cues = INTENT_TEXT_CUES.get(intent, [])
+
+    if not cues:
+
         return 0.0
 
-    text_lower = text.lower()
+    normalized = normalize_text(text)
 
-    matched_scores = []
+    original_lower = text.lower()
 
-    for cue, weight in INTENT_TEXT_CUES[intent]:
+    best = 0.0
 
-        if cue in text_lower:
+    for cue, weight in cues:
 
-            matched_scores.append(
-                weight
-            )
+        # Check both original Vietnamese and normalized form.
 
-    if not matched_scores:
-        return 0.0
+        if cue in original_lower or normalize_text(cue) in normalized:
 
-    # Chỉ lấy cue mạnh nhất
-    # tránh cộng điểm quá mức.
+            best = max(best, weight)
 
-    return max(
-        matched_scores
-    )
+    return best
 
+STOPWORDS = {
 
-# ============================================================
-# KEYWORD SCORE
-# ============================================================
+    "toi", "muon", "cho", "hoi", "la", "gi", "nhung",
+
+    "mot", "cua", "co", "can", "the", "nao", "thi",
+
+    "nho", "xin", "hay", "ve", "duoc", "khong", "bao",
+
+    "nhieu", "ho", "so", "giay", "to",
+
+}
 
 def calculate_keyword_score(
-    query,
-    text
-):
 
-    if not text:
-        return 0.0
+    query: str,
 
-    query_lower = query.lower().strip()
+    text: str,
 
-    text_lower = text.lower()
+) -> float:
 
-    query_words = set(
-        query_lower.split()
-    )
+    q_tokens = set(tokenize(query))
 
-    if not query_words:
-        return 0.0
+    t_tokens = set(tokenize(text))
 
-    matched_words = sum(
+    q_tokens -= STOPWORDS
 
-        1
-
-        for word in query_words
-
-        if len(word) > 2
-        and word in text_lower
-
-    )
-
-    return (
-        matched_words
-        /
-        max(len(query_words), 1)
-    )
-
-
-# ============================================================
-# PROCEDURE SCORE
-# ============================================================
-
-def calculate_procedure_score(
-    target_procedure,
-    procedure_name
-):
-
-    if not target_procedure:
-        return 0.0
-
-    if not procedure_name:
-        return 0.0
-
-    target = target_procedure.lower()
-
-    current = procedure_name.lower()
-
-    # Exact match
-
-    if current == target:
-        return 1.0
-
-    # Substring match
-
-    if target in current:
-        return 0.80
-
-    if current in target:
-        return 0.70
-
-    return 0.0
-
-
-# ============================================================
-# CHUNK SCORE
-# ============================================================
-
-def calculate_chunk_score(
-    intent,
-    chunk_type
-):
-
-    if not chunk_type:
-        return 0.0
-
-    # ========================================================
-    # Required documents
-    # ========================================================
-
-    if intent == "required_documents":
-
-        if chunk_type == "required_documents":
-            return 1.0
+    if not q_tokens or not t_tokens:
 
         return 0.0
 
+    overlap = q_tokens & t_tokens
 
-    # ========================================================
-    # Processing time
-    # ========================================================
+    return len(overlap) / len(q_tokens)
 
-    if intent == "processing_time":
+# =============================================================================
 
-        if chunk_type == "processing_time":
-            return 1.0
+# CANDIDATE PREPARATION
 
-        # general_information vẫn là fallback
-        if chunk_type == "general_information":
-            return 0.80
+# =============================================================================
 
-        return 0.0
+def prepare_candidates(
 
+    points: List[Any],
 
-    # ========================================================
-    # Fee
-    # ========================================================
+    query: str,
 
-    if intent == "fee":
+    target_procedure: Optional[str],
 
-        if chunk_type == "fee":
-            return 1.0
+    intent: str,
 
-        # general_information vẫn là fallback
-        if chunk_type == "general_information":
-            return 0.80
+) -> List[Dict[str, Any]]:
 
-        return 0.0
+    candidates = []
 
+    for point in points:
 
-    # ========================================================
-    # Location
-    # ========================================================
+        data = extract_payload(point)
 
-    if intent == "location":
+        vector_score = clamp(
 
-        if chunk_type == "location":
-            return 1.0
-
-        # general_information vẫn là fallback
-        if chunk_type == "general_information":
-            return 0.80
-
-        return 0.0
-
-
-    # ========================================================
-    # Procedure
-    # ========================================================
-
-    if intent == "procedure":
-
-        if chunk_type == "procedure":
-            return 1.0
-
-        if chunk_type == "general_information":
-            return 0.80
-
-        return 0.0
-
-
-    # ========================================================
-    # General
-    # ========================================================
-
-    return 0.0
-
-
-# ============================================================
-# PROCEDURE FILTER
-# ============================================================
-
-def filter_by_procedure(
-    results,
-    target_procedure
-):
-
-    if not target_procedure:
-        return results
-
-    target = target_procedure.lower()
-
-    procedure_results = []
-
-    for result in results:
-
-        payload = result.payload or {}
-
-        procedure_name = payload.get(
-            "procedure_name",
-            ""
-        )
-
-        if not procedure_name:
-            continue
-
-        current = procedure_name.lower()
-
-        if current == target:
-
-            procedure_results.append(
-                result
-            )
-
-    return procedure_results
-
-
-# ============================================================
-# FILTER BY INTENT
-# ============================================================
-
-def filter_by_intent(
-    results,
-    intent
-):
-
-    if not results:
-        return results
-
-    # ========================================================
-    # Mapping intent → chunk_type
-    #
-    # Đây là phần quan trọng đã sửa.
-    #
-    # Dataset mới có:
-    #
-    # required_documents
-    # processing_time
-    # fee
-    # location
-    # notes
-    # form_link
-    # general_information
-    # ========================================================
-
-    intent_to_chunk_type = {
-
-        "required_documents":
-            "required_documents",
-
-        "processing_time":
-            "processing_time",
-
-        "fee":
-            "fee",
-
-        "location":
-            "location",
-
-    }
-
-    # ========================================================
-    # Intent có chunk_type cụ thể
-    # ========================================================
-
-    if intent in intent_to_chunk_type:
-
-        target_chunk_type = (
-            intent_to_chunk_type[intent]
-        )
-
-        filtered = [
-
-            result
-
-            for result in results
-
-            if (
-                result.payload or {}
-            ).get("chunk_type")
-            == target_chunk_type
-
-        ]
-
-        return filtered
-
-
-    # ========================================================
-    # Procedure
-    #
-    # Dataset hiện tại chưa tạo procedure chunk riêng.
-    #
-    # Vì vậy dùng general_information làm fallback.
-    # ========================================================
-
-    if intent == "procedure":
-
-        filtered = [
-
-            result
-
-            for result in results
-
-            if (
-                result.payload or {}
-            ).get("chunk_type")
-            in [
-                "procedure",
-                "general_information"
-            ]
-
-        ]
-
-        return filtered
-
-
-    # ========================================================
-    # General
-    # ========================================================
-
-    return results
-
-
-# ============================================================
-# SMART CANDIDATE SELECTION
-# ============================================================
-
-def select_candidates(
-    candidates,
-    query,
-    final_k=FINAL_K
-):
-
-    intent = detect_intent(query)
-
-    target_procedure = detect_procedure(query)
-
-    print()
-    print("=" * 80)
-    print("CANDIDATE SELECTION")
-    print("=" * 80)
-
-    print(
-        f"Detected intent    : {intent}"
-    )
-
-    print(
-        f"Detected procedure : "
-        f"{target_procedure}"
-    )
-
-    # ========================================================
-    # CASE 1:
-    # Có procedure
-    # ========================================================
-
-    if target_procedure:
-
-        # ----------------------------------------------------
-        # Bước 1: Procedure filter
-        # ----------------------------------------------------
-
-        procedure_candidates = filter_by_procedure(
-
-            candidates,
-
-            target_procedure
+            float(getattr(point, "score", 0.0))
 
         )
 
-        print(
-            f"Procedure candidates: "
-            f"{len(procedure_candidates)}"
-        )
+        procedure_score = calculate_procedure_score(
 
-        # ----------------------------------------------------
-        # Bước 2: Intent filter
-        # ----------------------------------------------------
+            target_procedure,
 
-        intent_candidates = filter_by_intent(
-
-            procedure_candidates,
-
-            intent
+            data["procedure"],
 
         )
 
-        print(
-            f"Intent candidates    : "
-            f"{len(intent_candidates)}"
-        )
+        chunk_score = calculate_chunk_score(
 
-        # ----------------------------------------------------
-        # Nếu tìm thấy ít nhất 1 candidate đúng intent
-        #
-        # KHÔNG yêu cầu phải đủ FINAL_K.
-        #
-        # Ví dụ:
-        #
-        # "Đăng ký khai sinh mất bao lâu?"
-        #
-        # chỉ có 1 processing_time chunk.
-        #
-        # Vẫn phải lấy chunk đó.
-        # ----------------------------------------------------
+            intent,
 
-        if intent_candidates:
-
-            return intent_candidates[:final_k]
-
-        # ----------------------------------------------------
-        # Nếu không tìm thấy đúng intent
-        # fallback về procedure
-        # ----------------------------------------------------
-
-        if procedure_candidates:
-
-            return procedure_candidates[:final_k]
-
-        # ----------------------------------------------------
-        # Fallback cuối cùng
-        # ----------------------------------------------------
-
-        return candidates[:final_k]
-
-
-    # ========================================================
-    # CASE 2:
-    # Không detect được procedure
-    # ========================================================
-
-    intent_candidates = filter_by_intent(
-
-        candidates,
-
-        intent
-
-    )
-
-    print(
-        f"Intent candidates: "
-        f"{len(intent_candidates)}"
-    )
-
-    if intent_candidates:
-
-        return intent_candidates[:final_k]
-
-    return candidates[:final_k]
-
-
-# ============================================================
-# RERANK
-# ============================================================
-
-def rerank_results(
-    query,
-    results,
-    final_k=FINAL_K
-):
-
-    intent = detect_intent(
-        query
-    )
-
-    target_procedure = detect_procedure(
-        query
-    )
-
-    print()
-    print("=" * 80)
-    print("RERANKING INFORMATION")
-    print("=" * 80)
-
-    print(
-        f"Detected intent     : "
-        f"{intent}"
-    )
-
-    print(
-        f"Detected procedure  : "
-        f"{target_procedure}"
-    )
-
-    scored_results = []
-
-    for result in results:
-
-        payload = result.payload or {}
-
-        text = payload.get(
-            "text",
-            ""
-        )
-
-        procedure_name = payload.get(
-            "procedure_name",
-            ""
-        )
-
-        chunk_type = payload.get(
-            "chunk_type",
-            ""
-        )
-
-        # ====================================================
-        # 1. VECTOR SCORE
-        # ====================================================
-
-        vector_score = float(
-            result.score
-        )
-
-        # ====================================================
-        # 2. PROCEDURE SCORE
-        # ====================================================
-
-        procedure_score = (
-            calculate_procedure_score(
-
-                target_procedure,
-
-                procedure_name
-
-            )
-        )
-
-        # ====================================================
-        # 3. CHUNK SCORE
-        # ====================================================
-
-        chunk_score = (
-            calculate_chunk_score(
-
-                intent,
-
-                chunk_type
-
-            )
-        )
-
-        # ====================================================
-        # 4. KEYWORD SCORE
-        # ====================================================
-
-        keyword_score = (
-            calculate_keyword_score(
-
-                query,
-
-                text
-
-            )
-        )
-
-        # ====================================================
-        # 5. TEXT INTENT SCORE
-        # ====================================================
-
-        text_intent_score = (
-            calculate_text_intent_score(
-
-                text,
-
-                intent
-
-            )
-        )
-
-        # ====================================================
-        # 6. FINAL SCORE
-        # ====================================================
-        #
-        # Vector       = 50%
-        # Procedure    = 25%
-        # Chunk type   = 15%
-        # Keyword      = 5%
-        # Text intent  = 5%
-        #
-        # ====================================================
-
-        final_score = (
-
-            0.50 * vector_score
-
-            +
-
-            0.25 * procedure_score
-
-            +
-
-            0.15 * chunk_score
-
-            +
-
-            0.05 * keyword_score
-
-            +
-
-            0.05 * text_intent_score
+            data["chunk_type"],
 
         )
 
-        scored_results.append(
+        keyword_score = calculate_keyword_score(
+
+            query,
+
+            " ".join(
+
+                [
+
+                    data["procedure"],
+
+                    data["field"],
+
+                    data["chunk_type"],
+
+                    data["text"],
+
+                ]
+
+            ),
+
+        )
+
+        text_intent_score = calculate_text_intent_score(
+
+            data["text"],
+
+            intent,
+
+        )
+
+        candidates.append(
 
             {
 
-                "result": result,
+                "point": point,
 
-                "vector_score":
-                    vector_score,
+                "data": data,
 
-                "procedure_score":
-                    procedure_score,
+                "vector_score": vector_score,
 
-                "chunk_score":
-                    chunk_score,
+                "procedure_score": procedure_score,
 
-                "keyword_score":
-                    keyword_score,
+                "chunk_score": chunk_score,
 
-                "text_intent_score":
-                    text_intent_score,
+                "keyword_score": keyword_score,
 
-                "final_score":
-                    final_score
+                "text_intent_score": text_intent_score,
 
             }
 
         )
 
-    # ========================================================
-    # SORT
-    # ========================================================
+    return candidates
 
-    scored_results.sort(
+# =============================================================================
 
-        key=lambda item:
-            item["final_score"],
+# RERANKING
 
-        reverse=True
+# =============================================================================
+
+def rerank_candidates(
+
+    candidates: List[Dict[str, Any]],
+
+    final_k: int = FINAL_TOP_K,
+
+) -> List[Dict[str, Any]]:
+
+    """
+
+    Score ALL retrieved candidates first, then take final_k.
+
+    This is important: do not select only 3-5 candidates before reranking,
+
+    otherwise the reranker has no opportunity to recover a better result.
+
+    """
+
+    scored = []
+
+    for candidate in candidates:
+
+        vector = candidate["vector_score"]
+
+        procedure = candidate["procedure_score"]
+
+        chunk = candidate["chunk_score"]
+
+        keyword = candidate["keyword_score"]
+
+        text_intent = candidate["text_intent_score"]
+
+        final_score = (
+
+            0.50 * vector
+
+            + 0.25 * procedure
+
+            + 0.15 * chunk
+
+            + 0.05 * keyword
+
+            + 0.05 * text_intent
+
+        )
+
+        # Small bonus for exact procedure / exact intent chunk.
+
+        if procedure >= 1.0:
+
+            final_score += 0.05
+
+        if chunk >= 1.0:
+
+            final_score += 0.05
+
+        candidate = dict(candidate)
+
+        candidate["final_score"] = clamp(final_score)
+
+        scored.append(candidate)
+
+    scored.sort(
+
+        key=lambda item: item["final_score"],
+
+        reverse=True,
 
     )
 
-    return scored_results[:final_k]
+    return scored[:final_k]
 
+# =============================================================================
 
-# ============================================================
-# DISPLAY RESULTS
-# ============================================================
-
-def display_results(
-    query,
-    results
-):
-
-    print()
-    print("=" * 80)
-    print("FINAL RETRIEVAL RESULTS")
-    print("=" * 80)
-
-    print()
-
-    print("Query:")
-
-    print(query)
-
-    print()
-
-    print(
-        f"Top {len(results)} results:"
-    )
-
-    for rank, item in enumerate(
-
-        results,
-
-        start=1
-
-    ):
-
-        result = item["result"]
-
-        payload = result.payload or {}
-
-        print()
-
-        print("-" * 80)
-
-        print(
-            f"Rank             : {rank}"
-        )
-
-        print(
-            f"Final score      : "
-            f"{item['final_score']:.4f}"
-        )
-
-        print(
-            f"Vector score     : "
-            f"{item['vector_score']:.4f}"
-        )
-
-        print(
-            f"Procedure score  : "
-            f"{item['procedure_score']:.4f}"
-        )
-
-        print(
-            f"Chunk score      : "
-            f"{item['chunk_score']:.4f}"
-        )
-
-        print(
-            f"Keyword score    : "
-            f"{item['keyword_score']:.4f}"
-        )
-
-        print(
-            f"Text intent      : "
-            f"{item['text_intent_score']:.4f}"
-        )
-
-        print(
-            f"Chunk ID         : "
-            f"{payload.get('chunk_id', '')}"
-        )
-
-        print(
-            f"Document ID      : "
-            f"{payload.get('document_id', '')}"
-        )
-
-        print(
-            f"Procedure        : "
-            f"{payload.get('procedure_name', '')}"
-        )
-
-        print(
-            f"Field            : "
-            f"{payload.get('field', '')}"
-        )
-
-        print(
-            f"Submission       : "
-            f"{payload.get('submission_method', '')}"
-        )
-
-        print(
-            f"Chunk type       : "
-            f"{payload.get('chunk_type', '')}"
-        )
-
-        print()
-
-        print("TEXT:")
-
-        print(
-            payload.get(
-                "text",
-                ""
-            )
-        )
-
-
-# ============================================================
 # RETRIEVE
-# ============================================================
+
+# =============================================================================
 
 def retrieve(
-    query,
-    model,
-    client,
-    retrieval_k=RETRIEVAL_K,
-    final_k=FINAL_K
-):
 
-    # ========================================================
-    # 1. Embed query
-    # ========================================================
+    query: str,
 
-    query_vector = embed_query(
+    model: SentenceTransformer,
+
+    client: QdrantClient,
+
+    procedure_names: Optional[List[str]] = None,
+
+    top_k: int = QDRANT_TOP_K,
+
+    final_k: int = FINAL_TOP_K,
+
+) -> List[Dict[str, Any]]:
+
+    query = str(query).strip()
+
+    if not query:
+
+        return []
+
+    # 1. Intent
+
+    intent, intent_confidence = detect_intent(query)
+
+    # 2. Procedure
+
+    target_procedure, procedure_confidence = detect_procedure(
+
+        query,
+
+        procedure_names,
+
+    )
+
+    print()
+
+    print("=" * 80)
+
+    print("QUERY ANALYSIS")
+
+    print("=" * 80)
+
+    print(f"Query               : {query}")
+
+    print(f"Detected intent     : {intent}")
+
+    print(f"Intent confidence   : {intent_confidence:.4f}")
+
+    print(f"Detected procedure  : {target_procedure}")
+
+    print(f"Procedure confidence: {procedure_confidence:.4f}")
+
+    # 3. Embed
+
+    query_vector = encode_query(
 
         model,
 
-        query
+        query,
 
     )
 
-    # ========================================================
-    # 2. Qdrant Global Retrieval
-    #
-    # Lấy Top-20 candidate.
-    # ========================================================
+    # 4. Vector retrieval
 
-    candidates = search_qdrant(
+    points = search_qdrant(
 
         client,
 
         query_vector,
 
-        retrieval_k
+        top_k,
 
     )
 
-    print(
-        f"\nQdrant candidates: "
-        f"{len(candidates)}"
+    print(f"\nQdrant candidates: {len(points)}")
+
+    if not points:
+
+        return []
+
+    # 5. Prepare ALL candidates
+
+    candidates = prepare_candidates(
+
+        points,
+
+        query,
+
+        target_procedure,
+
+        intent,
+
     )
 
-    # ========================================================
-    # 3. Candidate Filtering
-    # ========================================================
+    procedure_matches = sum(
 
-    selected_candidates = select_candidates(
+        1
+
+        for item in candidates
+
+        if item["procedure_score"] >= 0.80
+
+    )
+
+    intent_matches = sum(
+
+        1
+
+        for item in candidates
+
+        if item["chunk_score"] >= 0.80
+
+        or item["text_intent_score"] >= 0.80
+
+    )
+
+    print()
+
+    print("=" * 80)
+
+    print("CANDIDATE SELECTION")
+
+    print("=" * 80)
+
+    print(f"Procedure candidates: {procedure_matches}")
+
+    print(f"Intent candidates   : {intent_matches}")
+
+    print(f"Candidates retained : {len(candidates)}")
+
+    # 6. Rerank ALL candidates.
+
+    final_results = rerank_candidates(
 
         candidates,
 
-        query,
-
-        final_k
-
-    )
-
-    print(
-        f"Selected candidates: "
-        f"{len(selected_candidates)}"
-    )
-
-    # ========================================================
-    # 4. Reranking
-    # ========================================================
-
-    final_results = rerank_results(
-
-        query,
-
-        selected_candidates,
-
-        final_k
+        final_k,
 
     )
 
     return final_results
 
+# =============================================================================
 
-# ============================================================
-# TEST DATA
-# ============================================================
+# DISPLAY
 
-TEST_QUESTIONS = [
+# =============================================================================
 
-    # --------------------------------------------------------
-    # Required documents
-    # --------------------------------------------------------
+def display_results(
+
+    query: str,
+
+    results: List[Dict[str, Any]],
+
+) -> None:
+
+    print_header("FINAL RETRIEVAL RESULTS")
+
+    print("\nQuery:")
+
+    print(query)
+
+    if not results:
+
+        print("\nNo retrieval results.")
+
+        return
+
+    print(f"\nTop {len(results)} results:")
+
+    for rank, item in enumerate(results, start=1):
+
+        data = item["data"]
+
+        print()
+
+        print_separator("-")
+
+        print(f"Rank             : {rank}")
+
+        print(f"Final score      : {item['final_score']:.4f}")
+
+        print(f"Vector score     : {item['vector_score']:.4f}")
+
+        print(f"Procedure score  : {item['procedure_score']:.4f}")
+
+        print(f"Chunk score      : {item['chunk_score']:.4f}")
+
+        print(f"Keyword score    : {item['keyword_score']:.4f}")
+
+        print(f"Text intent      : {item['text_intent_score']:.4f}")
+
+        print(f"Chunk ID          : {data['chunk_id']}")
+
+        print(f"Document ID       : {data['document_id']}")
+
+        print(f"Procedure         : {data['procedure']}")
+
+        print(f"Field             : {data['field']}")
+
+        print(f"Submission        : {data['submission']}")
+
+        print(f"Chunk type        : {data['chunk_type']}")
+
+        print("\nTEXT:")
+
+        print(data["text"])
+
+# =============================================================================
+
+# TEST SUITE
+
+# =============================================================================
+
+TEST_QUERIES = [
 
     "Đăng ký khai sinh cần những giấy tờ gì?",
 
     "Đăng ký kết hôn cần chuẩn bị hồ sơ gì?",
 
-
-    # --------------------------------------------------------
-    # Processing time
-    # --------------------------------------------------------
-
     "Thủ tục xác nhận tình trạng hôn nhân mất bao lâu?",
-
-
-    # --------------------------------------------------------
-    # Fee
-    # --------------------------------------------------------
 
     "Đăng ký khai tử có mất lệ phí không?",
 
-
-    # --------------------------------------------------------
-    # Location
-    # --------------------------------------------------------
-
     "Tôi muốn đăng ký khai sinh thì nộp hồ sơ ở đâu?",
-
-
-    # --------------------------------------------------------
-    # Additional tests
-    # --------------------------------------------------------
 
     "Đăng ký khai tử nộp hồ sơ ở đâu?",
 
@@ -1462,104 +1836,304 @@ TEST_QUESTIONS = [
 
     "Xác nhận tình trạng hôn nhân cần giấy tờ gì?",
 
-    "Đăng ký kết hôn thực hiện như thế nào?",
+    "Đăng ký kết hôn không?",
 
 ]
 
+def run_test_suite(
 
-# ============================================================
-# MAIN
-# ============================================================
+    model: SentenceTransformer,
 
-def main():
+    client: QdrantClient,
 
-    print("=" * 80)
-    print(
-        "VIETNAMESE ADMINISTRATIVE PROCEDURES"
-    )
-    print(
-        "LEGAL RAG RETRIEVER"
-    )
-    print("=" * 80)
+    procedure_names: List[str],
 
-    model = None
-    client = None
+) -> None:
 
-    try:
+    print_header("RUNNING RETRIEVAL TEST SUITE")
 
-        # ====================================================
-        # 1. Load model
-        # ====================================================
+    total = len(TEST_QUERIES)
 
-        model = load_model()
+    success = 0
 
-        # ====================================================
-        # 2. Connect Qdrant
-        # ====================================================
+    start_time = time.time()
 
-        client = connect_qdrant()
+    for index, query in enumerate(TEST_QUERIES, start=1):
 
-        # ====================================================
-        # 3. Run tests
-        # ====================================================
+        print()
 
-        for question in TEST_QUESTIONS:
+        print_separator("=")
+
+        print(f"[TEST {index}/{total}]")
+
+        print_separator("=")
+
+        try:
 
             results = retrieve(
 
-                question,
+                query=query,
 
-                model,
+                model=model,
 
-                client,
+                client=client,
 
-                RETRIEVAL_K,
+                procedure_names=procedure_names,
 
-                FINAL_K
+                top_k=QDRANT_TOP_K,
+
+                final_k=FINAL_TOP_K,
 
             )
 
             display_results(
 
-                question,
+                query,
 
-                results
+                results,
 
             )
 
-        # ====================================================
-        # DONE
-        # ====================================================
+            if results:
+
+                success += 1
+
+        except Exception as exc:
+
+            print("\n[ERROR] Test failed")
+
+            print(f"Reason: {exc}")
+
+    elapsed = time.time() - start_time
+
+    print()
+
+    print_separator("=")
+
+    print("TEST SUMMARY")
+
+    print_separator("=")
+
+    print(f"Tests        : {total}")
+
+    print(f"Successful   : {success}")
+
+    print(f"Failed       : {total - success}")
+
+    print(f"Success rate : {success / total * 100:.2f}%")
+
+    print(f"Elapsed time : {elapsed:.2f}s")
+
+# =============================================================================
+
+# INTERACTIVE MODE
+
+# =============================================================================
+
+def interactive_mode(
+
+    model: SentenceTransformer,
+
+    client: QdrantClient,
+
+    procedure_names: List[str],
+
+) -> None:
+
+    print_header("INTERACTIVE RETRIEVAL MODE")
+
+    print("\nNhập câu hỏi pháp luật hành chính.")
+
+    print("Gõ 'exit' hoặc 'quit' để thoát.\n")
+
+    while True:
+
+        try:
+
+            query = input("Question > ").strip()
+
+        except (KeyboardInterrupt, EOFError):
+
+            print("\nExiting...")
+
+            break
+
+        if not query:
+
+            continue
+
+        if query.lower() in {"exit", "quit", "q"}:
+
+            print("Exiting...")
+
+            break
+
+        try:
+
+            results = retrieve(
+
+                query=query,
+
+                model=model,
+
+                client=client,
+
+                procedure_names=procedure_names,
+
+                top_k=QDRANT_TOP_K,
+
+                final_k=FINAL_TOP_K,
+
+            )
+
+            display_results(
+
+                query,
+
+                results,
+
+            )
+
+        except Exception as exc:
+
+            print()
+
+            print_separator("-")
+
+            print("[ERROR] Retrieval failed")
+
+            print(f"Reason: {exc}")
+
+            print_separator("-")
+
+# =============================================================================
+
+# MAIN
+
+# =============================================================================
+
+def main() -> None:
+
+    print_separator("=")
+
+    print("VIETNAMESE ADMINISTRATIVE PROCEDURES")
+
+    print("LEGAL RAG RETRIEVER")
+
+    print_separator("=")
+
+    model = None
+
+    client = None
+
+    try:
+
+        # 1. GPU
+
+        check_gpu()
+
+        # 2. Model
+
+        model = load_model()
+
+        # 3. Qdrant
+
+        client = connect_qdrant()
+
+        # 4. Load procedure names ONCE.
+
+        #    Do not scan the whole Qdrant collection for every query.
+
+        procedure_names = load_procedure_names(client)
+
+        # 5. Test suite
+
+        run_test_suite(
+
+            model,
+
+            client,
+
+            procedure_names,
+
+        )
+
+        # 6. Interactive mode
 
         print()
 
-        print("=" * 80)
+        print_separator("=")
 
-        print(
-            "RETRIEVAL TEST COMPLETED"
-        )
+        print("RETRIEVAL TEST COMPLETED")
 
-        print("=" * 80)
+        print_separator("=")
+
+        print("\nInteractive mode? Type 'yes' to continue.")
+
+        try:
+
+            answer = input("> ").strip().lower()
+
+        except (KeyboardInterrupt, EOFError):
+
+            answer = "no"
+
+        if answer in {"yes", "y"}:
+
+            interactive_mode(
+
+                model,
+
+                client,
+
+                procedure_names,
+
+            )
 
     finally:
 
-        # ====================================================
-        # Close Qdrant client
-        # ====================================================
-
         if client is not None:
 
-            client.close()
+            try:
 
-            print(
-                "\n[OK] Qdrant client closed"
-            )
+                client.close()
 
+            except Exception:
 
-# ============================================================
+                pass
+
+            print("\n[OK] Qdrant client closed")
+
+# =============================================================================
+
 # ENTRY POINT
-# ============================================================
+
+# =============================================================================
 
 if __name__ == "__main__":
 
-    main()
+    try:
+
+        main()
+
+    except KeyboardInterrupt:
+
+        print("\n[INFO] Program interrupted by user.")
+
+        sys.exit(0)
+
+    except Exception as exc:
+
+        print()
+
+        print_separator("=")
+
+        print("[FATAL ERROR]")
+
+        print_separator("=")
+
+        print(exc)
+
+        print_separator("=")
+
+        sys.exit(1)
