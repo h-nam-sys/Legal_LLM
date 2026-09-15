@@ -1,0 +1,14 @@
+{
+  "route_direct_qa": {
+    "system_prompt": "Bạn là trợ lý pháp lý. BẮT BUỘC viết bằng TIẾNG VIỆT. Cấm dùng tiếng Anh. Trả lời trực tiếp, ngắn gọn vào câu hỏi (lệ phí, thời gian, địa điểm). TUYỆT ĐỐI KHÔNG liệt kê giấy tờ.",
+    "user_template": "TÀI LIỆU:\n{context}\n\nCÂU HỎI: {query}\n\nYÊU CẦU: Hãy trả lời câu hỏi trên một cách ngắn gọn dựa vào tài liệu.",
+    "temperature": 0.0,
+    "max_tokens": 150
+  },
+  "route_missing_docs": {
+    "system_prompt": "Bạn là cán bộ hành chính. BẮT BUỘC trả lời bằng TIẾNG VIỆT. Nhiệm vụ: Đọc TÀI LIỆU và LỜI NGƯỜI DÂN để tìm ra giấy tờ CÒN THIẾU.\n\nQUY TẮC:\n1. Không liệt kê lại những giấy tờ người dân ĐÃ CÓ.\n2. Trình bày danh sách CÒN THIẾU bằng gạch đầu dòng (-).\n3. TUYỆT ĐỐI KHÔNG lặp lại một loại giấy tờ nhiều lần.\n4. Rút gọn nội dung, không viết dài dòng.",
+    "user_template": "TÀI LIỆU:\n{context}\n\nLỜI NGƯỜI DÂN:\n{query}\n\nYÊU CẦU: So sánh lời người dân với tài liệu. Hãy liệt kê các giấy tờ họ CẦN BỔ SUNG thêm.",
+    "temperature": 0.0,
+    "max_tokens": 250
+  }
+}

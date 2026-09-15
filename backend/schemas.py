@@ -27,8 +27,11 @@ class RAGServiceResponse(BaseModel):
 # ============ LLM Service Contract ============
 
 class LLMServiceRequest(BaseModel):
-    prompt: str = Field(..., description="The legal question")
+    system_prompt: str = Field(..., description="The system instructions (formatting, constraints)")
+    user_prompt: str = Field(..., description="The user's question and RAG context")
     context: list[str] = Field(default=[], description="Retrieved legal documents as context")
+    max_tokens: int = Field(default=300, description="Max tokens to generate")
+    temperature: float = Field(default=0.0, description="Generation temperature")
 
 class LLMServiceResponse(BaseModel):
     answer: str = Field(..., description="Generated legal response")

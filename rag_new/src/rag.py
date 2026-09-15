@@ -81,4 +81,4 @@ def retrieve_documents(request: RetrieveRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("rag:app", host="0.0.0.0", port=8002, reload=False)
+    uvicorn.run("rag:app", host="0.0.0.0", port=8001, reload=False)

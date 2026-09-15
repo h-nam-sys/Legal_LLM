@@ -1,42 +1,42 @@
 import os
 import re
+import asyncio
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
-from llama_cpp import Llama, llama_supports_gpu_offload
+from llama_cpp import Llama
+from transformers import AutoTokenizer
 
-app = FastAPI(title="Legal LLM Service (Port 8001)")
+app = FastAPI(title="Legal LLM Service (Port 8002)")
 
+# Path to the GGUF model
 MODEL_PATH = os.getenv("MODEL_PATH", r"models\qwen_legal_q4_k_m.gguf")
+TOKENIZER_NAME = os.getenv("TOKENIZER_NAME", "Qwen/Qwen3-0.6B")
 
-# Dynamically configure hardware
-if llama_supports_gpu_offload():
-    print("[INFO] GPU support detected! Offloading all layers to VRAM.")
-    hardware_kwargs = {
-        "n_gpu_layers": -1  # -1 offloads all layers to the GPU
-    }
-else:
-    # Use max physical CPU cores minus 1 (leaving 1 for the OS)
-    threads = max(1, (os.cpu_count() or 4) - 1)
-    print(f"[INFO] No GPU offload detected. Using {threads} CPU threads.")
-    hardware_kwargs = {
-        "n_threads": threads
-    }
+print(f"[INFO] Loading Tokenizer ({TOKENIZER_NAME}) for prompt formatting...")
+tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_NAME)
 
+print("[INFO] Loading Llama.cpp engine (CPU mode)...")
 llm = Llama(
     model_path=MODEL_PATH,
     n_ctx=2048,
-    verbose=False,
-    **hardware_kwargs
+    n_threads=4,
+    n_gpu_layers=0,  # 0 forces CPU execution
+    verbose=False
 )
 
+# Robust schema accepting both old and new payload structures
 class LLMServiceRequest(BaseModel):
-    prompt: str = Field(..., description="The user prompt")
-    context: list[str] = Field(default=[], description="Retrieved documents")
+    system_prompt: str | None = Field(default=None, description="System instructions")
+    user_prompt: str | None = Field(default=None, description="User prompt + context")
+    prompt: str | None = Field(default=None, description="Fallback raw prompt")
+    context: list[str] = Field(default=[], description="Retrieved context chunks")
+    max_tokens: int = Field(default=300, description="Max tokens to generate")
+    temperature: float = Field(default=0.0, description="Sampling temperature")
 
 class LLMServiceResponse(BaseModel):
-    answer: str = Field(..., description="Generated response")
-    confidence: float = Field(..., description="Model confidence score (0-1)")
-    sources: list[str] = Field(default=[], description="Which documents were referenced")
+    answer: str
+    confidence: float
+    sources: list[str]
 
 def extract_sources(docs: list[str]) -> list[str]:
     sources = []
@@ -48,39 +48,48 @@ def extract_sources(docs: list[str]) -> list[str]:
                 sources.append(proc_name)
     return sources
 
+def generate_text_sync(system: str | None, user: str, max_tokens: int, temp: float) -> str:
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": user})
+
+    # Apply ChatML formatting with thinking tokens explicitly suppressed
+    formatted_prompt = tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+        enable_thinking=False
+    )
+
+    response = llm(
+        formatted_prompt,
+        max_tokens=max_tokens,
+        temperature=temp,
+        repeat_penalty=1.1,
+        stop=["<|im_end|>"]
+    )
+    return response["choices"][0]["text"].strip()
+
 @app.post("/generate", response_model=LLMServiceResponse)
 async def generate(payload: LLMServiceRequest):
-    if not payload.context:
+    if not payload.context and not payload.user_prompt and not payload.prompt:
         return LLMServiceResponse(
             answer="Không tìm thấy tài liệu liên quan.",
             confidence=0.0,
             sources=[]
         )
 
-    context_str = "\n\n".join(payload.context)
+    # Determine user content from either user_prompt or fallback prompt
+    user_content = payload.user_prompt or payload.prompt or ""
 
-    system_prompt = (
-        "Bạn là trợ lý giải đáp thủ tục hành chính Việt Nam. "
-        "Hãy dựa vào tài liệu được cung cấp để trả lời câu hỏi trực tiếp và ngắn gọn nhất có thể."
+    raw_answer = await asyncio.to_thread(
+        generate_text_sync,
+        payload.system_prompt,
+        user_content,
+        payload.max_tokens,
+        payload.temperature
     )
-
-    prompt_template = (
-        f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
-        f"<|im_start|>user\n"
-        f"{context_str}\n\n"
-        f"Câu hỏi: {payload.prompt}<|im_end|>\n"
-        f"<|im_start|>assistant\n"
-    )
-
-    output = llm(
-        prompt_template,
-        max_tokens=300,
-        temperature=0.1,
-        repeat_penalty=1.1,
-        stop=["<|im_end|>"]
-    )
-
-    raw_answer = output["choices"][0]["text"].strip()
 
     return LLMServiceResponse(
         answer=raw_answer,
@@ -90,4 +99,4 @@ async def generate(payload: LLMServiceRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8002)
