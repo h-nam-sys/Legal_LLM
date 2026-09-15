@@ -1,0 +1,16 @@
+﻿metric,value
+Total Queries,162.0
+Overall Pass Rate,0.5740740740740741
+Retrieval Query Count,142.0
+Hit@1,0.528169014084507
+Hit@3,0.528169014084507
+Hit@5,0.528169014084507
+MRR,0.528169014084507
+Ambiguous Count,10.0
+Ambiguous Pass Rate,0.8
+Out-of-Dataset Count,10.0
+Out-of-Dataset Pass Rate,1.0
+Latency Mean (ms),29.731404937783623
+Latency P50 (ms),42.32154999044724
+Latency P95 (ms),55.79606001556384
+Latency Max (ms),436.28359999274835
