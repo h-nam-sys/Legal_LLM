@@ -293,131 +293,39 @@ def tokenize(text: Any) -> List[str]:
 # =============================================================================
 
 
-def _procedure_variants(procedure: str) -> List[str]:
+def _procedure_variants(
+    procedure: str,
+) -> List[str]:
     """
-    Build normalized variants for one procedure name.
+    Build normalized matching variants for one procedure.
 
-    We do not hard-code procedure names or aliases. The source of truth is
-    the procedure_name field stored in Qdrant.
+    Example:
+        "Thủ tục đăng ký khai sinh"
+
+    variants:
+        - "thu tuc dang ky khai sinh"
+        - "dang ky khai sinh"
+        - "khai sinh"
+
+    The last variant is important for natural-language queries such as:
+        "làm giấy khai sinh cho con cần những gì"
     """
-    normalized = normalize_without_accents(procedure)
+
+    normalized = normalize_without_accents(
+        procedure
+    )
+
     if not normalized:
         return []
 
-    variants = {normalized}
+    tokens = normalized.split()
 
-    # Most records start with ``thu tuc``. Keep a shorter variant so a user
-    # query such as ``dang ky khai sinh`` can still match strongly.
-    if normalized.startswith("thu tuc "):
-        shortened = normalized[len("thu tuc "):].strip()
-        if shortened:
-            variants.add(shortened)
+    variants = {
+        normalized
+    }
 
-    return list(variants)
-
-
-def detect_procedure(
-    query: str,
-    procedures: List[str],
-) -> Tuple[Optional[str], float]:
-    """
-    Detect the most likely administrative procedure.
-
-    Important rule:
-        - Generic questions such as:
-            "hồ sơ gồm những gì?"
-            "nộp ở đâu?"
-            "bao lâu?"
-          must return None.
-
-        - If the query contains procedure-specific words such as:
-            "khai sinh"
-            "khai tử"
-            "kết hôn"
-            "hộ kinh doanh"
-          the procedure should still be detected even when
-          the rest of the query contains generic intent words.
-    """
-
-    q = normalize_without_accents(query)
-
-    if not q or not procedures:
-        return None, 0.0
-
-# ---------------------------------------------------------------------
-# Normalize common abbreviations used in Vietnamese administrative
-# procedure queries.
-# ---------------------------------------------------------------------
-    q = re.sub(r"\bđk\b", "dang ky", q)
-    q = re.sub(r"\bdk\b", "dang ky", q)
-
-    query_tokens = set(q.split())
-
-    # ---------------------------------------------------------------------
-    # Words that belong to the QUESTION / INTENT, not the procedure name.
-    # These words should NOT help procedure detection.
-    # ---------------------------------------------------------------------
-    QUERY_GENERIC_WORDS = {
-    "toi",
-    "muon",
-    "cho",
-    "hoi",
-    "xin",
-    "nho",
-    "hay",
-    "biet",
-
-    "gi",
-    "nhung",
-    "nao",
-    "the",
-
-    "ho",
-    "so",
-    "gom",
-    "giay",
-    "to",
-
-    "can",
-    "chuan",
-    "bi",
-    "nop",
-
-    "phi",
-    "le",
-    "chi",
-    "tien",
-    "mat",
-    "ton",
-
-    "o",
-    "dau",
-    "dia",
-    "diem",
-    "noi",
-    "tai",
-    "tiep",
-    "nhan",
-
-    "thoi",
-    "gian",
-    "han",
-    "bao",
-    "lau",
-    "ngay",
-    "khi",
-
-    "qua",
-
-    "co",
-    "khong",
-}
-
-    # ---------------------------------------------------------------------
-    # Administrative words that are common to many procedure names.
-    # They are not strong evidence for one specific procedure.
-    # ---------------------------------------------------------------------
-    PROCEDURE_GENERIC_WORDS = {
+    # Administrative prefix words.
+    generic_words = {
         "thu",
         "tuc",
         "dang",
@@ -428,155 +336,560 @@ def detect_procedure(
         "hien",
     }
 
-    # Only keep words that can identify a concrete procedure.
-    specific_query_tokens = (
-        query_tokens
-        - QUERY_GENERIC_WORDS
-        - PROCEDURE_GENERIC_WORDS
+    # -------------------------------------------------------------
+    # Remove generic words from the beginning.
+    #
+    # "thu tuc dang ky khai sinh"
+    #              ↓
+    # "khai sinh"
+    # -------------------------------------------------------------
+    meaningful_tokens = list(tokens)
+
+    while (
+        meaningful_tokens
+        and meaningful_tokens[0] in generic_words
+    ):
+        meaningful_tokens.pop(0)
+
+    if meaningful_tokens:
+        variants.add(
+            " ".join(meaningful_tokens)
+        )
+
+    # Keep "dang ky ..." variant explicitly.
+    if normalized.startswith("thu tuc "):
+        shortened = normalized[
+            len("thu tuc "):
+        ].strip()
+
+        if shortened:
+            variants.add(shortened)
+
+    return sorted(
+        variants,
+        key=lambda x: (
+            len(x.split()),
+            len(x),
+        ),
+        reverse=True,
     )
 
-    # ---------------------------------------------------------------------
-    # CRITICAL:
-    # No procedure-specific token => do NOT guess a procedure.
+def build_procedure_statistics(
+    procedures: List[str],
+) -> Dict[str, Any]:
+    """
+    Build automatic statistics from the current procedure index.
+
+    Important:
+        No manually maintained list of query words is required.
+
+    The system derives token importance directly from the procedure names.
+    """
+
+    PROCEDURE_GENERIC_WORDS = {
+    "thu",
+    "tuc",
+    "giai",
+    "quyet",
+    "thuc",
+    "hien",
+    "cap",
+}
+    # -------------------------------------------------------------
+    # Group procedure names by normalized procedure key.
     #
     # Example:
-    #   "ho so gom nhung gi"
-    #   => specific_query_tokens = {}
-    #   => procedure = None
-    # ---------------------------------------------------------------------
-    if not specific_query_tokens:
-        return None, 0.0
-
-    best_procedure: Optional[str] = None
-    best_score = 0.0
+    #
+    # "Giấy ..." and "giấy ..."
+    # become the same logical procedure key.
+    # -------------------------------------------------------------
+    grouped: Dict[str, Dict[str, Any]] = {}
 
     for procedure in procedures:
 
-        procedure_best_score = 0.0
+        normalized = normalize_without_accents(
+            procedure
+        )
 
-        for variant in _procedure_variants(procedure):
+        if not normalized:
+            continue
 
-            if not variant:
-                continue
+        if normalized not in grouped:
+            grouped[normalized] = {
+                "display_name": procedure,
+                "variants": set(),
+            }
 
-            variant_tokens = set(variant.split())
-
-            # Remove generic administrative words
-            specific_variant_tokens = (
-                variant_tokens
-                - PROCEDURE_GENERIC_WORDS
+        for variant in _procedure_variants(
+            procedure
+        ):
+            grouped[normalized]["variants"].add(
+                variant
             )
 
-            if not specific_variant_tokens:
-                specific_variant_tokens = variant_tokens
+    # -------------------------------------------------------------
+    # Calculate document frequency for tokens.
+    #
+    # A token appearing in many procedures is less useful.
+    # A token appearing in only one/few procedures is more useful.
+    # -------------------------------------------------------------
+    document_frequency: Dict[str, int] = {}
 
-            # -------------------------------------------------------------
-            # 1. Exact phrase
-            # -------------------------------------------------------------
+    for entry in grouped.values():
+
+        token_set = set()
+
+        for variant in entry["variants"]:
+
+            tokens = set(variant.split())
+
+            tokens -= PROCEDURE_GENERIC_WORDS
+
+            token_set.update(tokens)
+
+        entry["tokens"] = token_set
+
+        for token in token_set:
+            document_frequency[token] = (
+                document_frequency.get(token, 0)
+                + 1
+            )
+
+    procedure_count = len(grouped)
+
+    # -------------------------------------------------------------
+    # Automatic IDF-like weighting.
+    #
+    # Rare token:
+    #   high weight
+    #
+    # Common token:
+    #   low weight
+    # -------------------------------------------------------------
+    token_weights: Dict[str, float] = {}
+
+    for token, df in document_frequency.items():
+
+        token_weights[token] = (
+            1.0
+            + __import__("math").log(
+                (procedure_count + 1)
+                / (df + 1)
+            )
+        )
+
+    # -------------------------------------------------------------
+    # Finalize entries
+    # -------------------------------------------------------------
+    for entry in grouped.values():
+
+        entry["token_weights"] = {
+            token: token_weights[token]
+            for token in entry["tokens"]
+        }
+
+        entry["variants"] = list(
+            entry["variants"]
+        )
+
+    return {
+        "procedures": list(
+            grouped.values()
+        ),
+        "document_frequency": document_frequency,
+        "token_weights": token_weights,
+        "procedure_count": procedure_count,
+        "generic_words": PROCEDURE_GENERIC_WORDS,
+    }
+
+
+def get_intent_query_tokens(
+    detected_intent: str,
+) -> set[str]:
+    """
+    Return tokens that belong to the question/intent part.
+
+    The tokens are derived automatically from INTENT_PHRASES.
+    """
+
+    intent_tokens: set[str] = set()
+
+    phrases = INTENT_PHRASES.get(
+        detected_intent,
+        [],
+    )
+
+    for phrase, _weight in phrases:
+
+        normalized_phrase = (
+            normalize_without_accents(
+                phrase
+            )
+        )
+
+        if not normalized_phrase:
+            continue
+
+        # "dang ky" is important for procedure detection.
+        # Do not remove it from the query.
+        if normalized_phrase == "dang ky":
+            continue
+
+        intent_tokens.update(
+            normalized_phrase.split()
+        )
+
+    return intent_tokens
+
+def detect_procedure(
+    query: str,
+    procedures: List[str],
+    detected_intent: Optional[str] = None,
+) -> Tuple[Optional[str], float]:
+    """
+    Automatically detect the most likely administrative procedure.
+
+    The detector is data-driven:
+
+    1. Normalize the query.
+    2. Normalize common abbreviations.
+    3. Remove intent/question words using INTENT_PHRASES.
+    4. Ignore generic administrative words.
+    5. Keep only query tokens that actually occur in the
+       procedure index.
+    6. Weight rare procedure tokens more strongly.
+    7. Compare weighted query coverage and candidate coverage.
+    8. Detect ambiguity between similar procedures.
+    9. Return None when confidence is insufficient.
+
+    This avoids manually adding words such as:
+        "nhieu", "tien", "ton", "het", "nuoc ngoai", ...
+    """
+
+    q = normalize_without_accents(
+        query
+    )
+
+    if not q or not procedures:
+        return None, 0.0
+
+    # -------------------------------------------------------------
+    # Normalize common user abbreviations / spelling variants
+    # -------------------------------------------------------------
+
+    # "đk", "dk" -> "dang ky"
+    q = re.sub(
+        r"\bdk\b",
+        "dang ky",
+        q,
+    )
+
+    # After accent normalization:
+    # "kí" -> "ki"
+    # Normalize it to "ky"
+    q = re.sub(
+        r"\bki\b",
+        "ky",
+        q,
+    )
+
+    query_tokens = list(
+        dict.fromkeys(
+            q.split()
+        )
+    )
+
+    # -------------------------------------------------------------
+    # Build automatic procedure statistics
+    # -------------------------------------------------------------
+
+    stats = build_procedure_statistics(
+        procedures
+    )
+
+    procedure_entries = stats["procedures"]
+    generic_words = stats["generic_words"]
+    token_weights = stats["token_weights"]
+
+    # -------------------------------------------------------------
+    # Words belonging to the detected intent/question
+    # -------------------------------------------------------------
+
+    intent_tokens = (
+        get_intent_query_tokens(
+            detected_intent
+        )
+        if detected_intent
+        else set()
+)
+
+    # -------------------------------------------------------------
+    # Remove generic question/admin words.
+    #
+    # We do NOT maintain a giant manually written
+    # QUERY_GENERIC_WORDS list.
+    # -------------------------------------------------------------
+
+    remaining_tokens = [
+        token
+        for token in query_tokens
+        if token not in intent_tokens
+        and token not in generic_words
+    ]
+
+    if not remaining_tokens:
+        return None, 0.0
+
+    # -------------------------------------------------------------
+    # Only query tokens that occur somewhere in the procedure index
+    # are useful for procedure identification.
+    #
+    # This automatically ignores words such as:
+    #
+    #   nhieu
+    #   tien
+    #   het
+    #   ton
+    #
+    # without hard-coding them.
+    # -------------------------------------------------------------
+
+    procedure_vocabulary = set(
+        token_weights.keys()
+    )
+
+    meaningful_tokens = [
+        token
+        for token in remaining_tokens
+        if token in procedure_vocabulary
+    ]
+
+    if not meaningful_tokens:
+        return None, 0.0
+
+    query_token_set = set(
+        meaningful_tokens
+    )
+
+    query_total_weight = sum(
+        token_weights.get(
+            token,
+            0.0,
+        )
+        for token in query_token_set
+    )
+
+    if query_total_weight <= 0:
+        return None, 0.0
+
+    # -------------------------------------------------------------
+    # Compare against every procedure
+    # -------------------------------------------------------------
+
+    scored_candidates = []
+
+    for entry in procedure_entries:
+
+        candidate_tokens = set(
+            entry["tokens"]
+        )
+
+        if not candidate_tokens:
+            continue
+
+        overlap = (
+            query_token_set
+            & candidate_tokens
+        )
+
+        if not overlap:
+            continue
+
+        # ---------------------------------------------------------
+        # Weighted query coverage
+        #
+        # How much of the meaningful query is explained?
+        # ---------------------------------------------------------
+
+        overlap_weight = sum(
+            token_weights.get(
+                token,
+                0.0,
+            )
+            for token in overlap
+        )
+
+        query_coverage = (
+            overlap_weight
+            / query_total_weight
+        )
+
+        # ---------------------------------------------------------
+        # Weighted candidate coverage
+        #
+        # How much of this procedure is supported by the query?
+        # ---------------------------------------------------------
+
+        candidate_total_weight = sum(
+            token_weights.get(
+                token,
+                0.0,
+            )
+            for token in candidate_tokens
+        )
+
+        candidate_coverage = (
+            overlap_weight
+            / candidate_total_weight
+            if candidate_total_weight > 0
+            else 0.0
+        )
+
+        # ---------------------------------------------------------
+        # Weighted overlap score
+        #
+        # Query coverage is slightly more important because
+        # additional query-specific words should help select
+        # a more specific procedure.
+        # ---------------------------------------------------------
+
+        weighted_score = (
+            0.40 * query_coverage
+            + 0.60 * candidate_coverage
+            )
+
+        # ---------------------------------------------------------
+        # Fuzzy support
+        # ---------------------------------------------------------
+
+        query_text = " ".join(
+            meaningful_tokens
+        )
+
+        candidate_text = " ".join(
+            sorted(candidate_tokens)
+        )
+
+        fuzzy_score = (
+            fuzz.token_set_ratio(
+                query_text,
+                candidate_text,
+            )
+            / 100.0
+        )
+
+        # Fuzzy is supporting evidence only.
+        final_score = (
+            0.85 * weighted_score
+            + 0.15 * fuzzy_score
+        )
+
+        # ---------------------------------------------------------
+        # Exact variant support
+        #
+        # Only add a small bonus.
+        # It does NOT override additional specific query terms.
+        # ---------------------------------------------------------
+
+        exact_phrase_match = False
+
+        for variant in entry["variants"]:
             if variant in q:
-                procedure_best_score = max(
-                    procedure_best_score,
-                    1.0,
-                )
-                continue
+                exact_phrase_match = True
+                break
 
-            # -------------------------------------------------------------
-            # 2. Exact specific-token overlap
-            # -------------------------------------------------------------
-            overlap = (
-                specific_variant_tokens
-                & specific_query_tokens
-            )
+        if exact_phrase_match:
+            final_score = max(
+                final_score,
+                0.93,
+    )
 
-            if not overlap:
-                continue
+        final_score = clamp(
+            final_score
+        )
 
-            query_coverage = (
-                len(overlap)
-                / len(specific_query_tokens)
-            )
+        scored_candidates.append(
+            {
+                "procedure": entry["display_name"],
+                "score": final_score,
+                "query_coverage": query_coverage,
+                "candidate_coverage": candidate_coverage,
+                "fuzzy_score": fuzzy_score,
+                "overlap": overlap,
+                "candidate_tokens": candidate_tokens,
+            }
+        )
 
-            procedure_coverage = (
-                len(overlap)
-                / len(specific_variant_tokens)
-            )
+    if not scored_candidates:
+        return None, 0.0
 
-            balanced_overlap = min(
-                query_coverage,
-                procedure_coverage,
-            )
+    # -------------------------------------------------------------
+    # Sort candidates
+    # -------------------------------------------------------------
 
-            # -------------------------------------------------------------
-            # 3. Fuzzy matching
-            #
-            # Fuzzy is only allowed when there is already at least
-            # one meaningful procedure-specific token overlap.
-            # This prevents generic questions from randomly matching
-            # a procedure.
-            # -------------------------------------------------------------
-            fuzzy_score = (
-                fuzz.token_set_ratio(
-                    " ".join(sorted(specific_query_tokens)),
-                    " ".join(sorted(specific_variant_tokens)),
-                )
-                / 100.0
-            )
+    scored_candidates.sort(
+        key=lambda x: x["score"],
+        reverse=True,
+    )
 
-            score = max(
-                balanced_overlap,
-                0.70 * fuzzy_score,
-            )
+    best = scored_candidates[0]
 
-            # -------------------------------------------------------------
-            # If only one word overlaps but the procedure contains
-            # multiple meaningful words, do not consider it highly
-            # confident.
-            #
-            # Example:
-            #   query: "khai"
-            #   procedure: "khai sinh"
-            # -------------------------------------------------------------
-            if (
-                len(overlap) == 1
-                and len(specific_variant_tokens) >= 2
-            ):
-                score = min(score, 0.79)
+    best_score = best["score"]
 
-            # -------------------------------------------------------------
-            # Candidate has additional specific words that are absent
-            # from the query -> do not allow 1.0.
-            #
-            # Example:
-            #   query: "ket hon"
-            #   candidate:
-            #       "ket hon co yeu to nuoc ngoai"
-            # -------------------------------------------------------------
-            extra_specific = (
-                specific_variant_tokens
-                - specific_query_tokens
-            )
+    # -------------------------------------------------------------
+    # Confidence threshold
+    # -------------------------------------------------------------
 
-            if extra_specific:
-                score = min(score, 0.89)
-
-            procedure_best_score = max(
-                procedure_best_score,
-                score,
-            )
-
-        if procedure_best_score > best_score:
-            best_score = procedure_best_score
-            best_procedure = procedure
-
-    # ---------------------------------------------------------------------
-    # Final confidence threshold
-    # ---------------------------------------------------------------------
     if best_score < 0.80:
         return None, 0.0
 
-    return best_procedure, clamp(best_score)
+    # -------------------------------------------------------------
+    # Ambiguity detection
+    #
+    # If another procedure is almost as good as the best one,
+    # do not guess.
+    # -------------------------------------------------------------
 
+    if len(scored_candidates) >= 2:
 
+        second = scored_candidates[1]
+
+        margin = (
+            best["score"]
+            - second["score"]
+        )
+
+        AMBIGUITY_MARGIN = 0.08
+
+        if (
+            second["score"] >= 0.75
+            and margin < AMBIGUITY_MARGIN
+        ):
+            print()
+            print(
+                "[WARNING] Ambiguous procedure detected."
+            )
+            print(
+                f"Candidate 1: "
+                f"{best['procedure']} "
+                f"({best['score']:.4f})"
+            )
+            print(
+                f"Candidate 2: "
+                f"{second['procedure']} "
+                f"({second['score']:.4f})"
+            )
+
+            return None, 0.0
+
+    # -------------------------------------------------------------
+    # Return best procedure
+    # -------------------------------------------------------------
+
+    return (
+        best["procedure"],
+        clamp(best_score),
+    )
 # =============================================================================
 # INTENT DETECTION
 # =============================================================================
@@ -1377,6 +1690,620 @@ def qdrant_search(
         raise
 
 
+def lexical_search(
+    client: QdrantClient,
+    query: str,
+    limit: int = QDRANT_TOP_K,
+) -> List[Dict[str, Any]]:
+    """
+    Lexical retrieval ưu tiên:
+
+    1. Tên thủ tục
+    2. Đúng loại thông tin theo intent
+    3. Nội dung text của chunk
+
+    Không dùng keyword_score() trên toàn bộ
+    procedure + chunk_type + text như bản cũ.
+    """
+
+    scored: List[Dict[str, Any]] = []
+
+    # =========================================================
+    # 1. DETECT INTENT
+    # =========================================================
+
+    detected_intent, intent_confidence = detect_intent(
+        query
+    )
+
+    # =========================================================
+    # 2. LOAD PROCEDURES
+    # =========================================================
+
+    procedure_names = load_procedure_names(
+        client
+    )
+
+    # =========================================================
+    # 3. DETECT PROCEDURE
+    # =========================================================
+
+    detected_procedure, procedure_confidence = (
+        detect_procedure(
+            query,
+            procedure_names,
+            detected_intent,
+        )
+    )
+
+    # =========================================================
+    # 4. BUILD PROCEDURE QUERY
+    # =========================================================
+
+    normalized_query = normalize_without_accents(
+        query
+    )
+
+    query_tokens = (
+        normalized_query.split()
+    )
+
+    intent_tokens = (
+        get_intent_query_tokens(
+            detected_intent
+        )
+    )
+
+    procedure_query_tokens = [
+        token
+        for token in query_tokens
+        if token not in intent_tokens
+    ]
+
+    procedure_query = " ".join(
+        procedure_query_tokens
+    )
+
+    # =========================================================
+    # 5. LOAD ALL QDRANT POINTS
+    # =========================================================
+
+    points, next_offset = client.scroll(
+        collection_name=COLLECTION_NAME,
+        limit=256,
+        offset=None,
+        with_payload=True,
+        with_vectors=False,
+    )
+
+    all_points = list(points)
+
+    while next_offset is not None:
+
+        points, next_offset = client.scroll(
+            collection_name=COLLECTION_NAME,
+            limit=256,
+            offset=next_offset,
+            with_payload=True,
+            with_vectors=False,
+        )
+
+        all_points.extend(points)
+
+    # =========================================================
+    # 6. SCORE EVERY CHUNK
+    # =========================================================
+
+    for point in all_points:
+
+        data = extract_payload_data(
+            point
+        )
+
+        procedure = data["procedure"]
+        chunk_type = data["chunk_type"]
+        text = data["text"]
+
+        # -----------------------------------------------------
+        # A. Lexical score on procedure name
+        # -----------------------------------------------------
+
+        procedure_lexical_score = 0.0
+
+        if procedure_query:
+
+            procedure_lexical_score = (
+                keyword_score(
+                    procedure_query,
+                    procedure,
+                )
+            )
+
+        # -----------------------------------------------------
+        # B. Procedure semantic score
+        # -----------------------------------------------------
+
+        procedure_score = calculate_procedure_score(
+            detected_procedure,
+            procedure,
+        )
+
+        # -----------------------------------------------------
+        # C. Intent / chunk type score
+        # -----------------------------------------------------
+
+        chunk_score = get_chunk_type_score(
+            detected_intent,
+            chunk_type,
+        )
+
+        # -----------------------------------------------------
+        # D. Keyword score on TEXT ONLY
+        # -----------------------------------------------------
+
+        text_keyword_score = keyword_score(
+            query,
+            text,
+        )
+
+        # -----------------------------------------------------
+        # E. Exact procedure bonus
+        # -----------------------------------------------------
+
+        exact_procedure_bonus = 0.0
+
+        if (
+            detected_procedure
+            and normalize_without_accents(
+                detected_procedure
+            )
+            == normalize_without_accents(
+                procedure
+            )
+        ):
+            exact_procedure_bonus = 0.10
+
+        # -----------------------------------------------------
+        # F. Final lexical score
+        # -----------------------------------------------------
+
+        lexical_score = (
+            0.50 * procedure_lexical_score
+            + 0.25 * procedure_score
+            + 0.15 * chunk_score
+            + 0.10 * text_keyword_score
+            + exact_procedure_bonus
+        )
+
+        lexical_score = clamp(
+            lexical_score
+        )
+
+        # -----------------------------------------------------
+        # Ignore completely irrelevant chunks
+        # -----------------------------------------------------
+
+        if lexical_score <= 0:
+            continue
+
+        scored.append(
+            {
+                "point": point,
+                "data": data,
+                "lexical_score": lexical_score,
+                "procedure_lexical_score":
+                    procedure_lexical_score,
+                "procedure_score":
+                    procedure_score,
+                "chunk_score":
+                    chunk_score,
+                "text_keyword_score":
+                    text_keyword_score,
+            }
+        )
+
+    # =========================================================
+    # 7. SORT
+    # =========================================================
+
+    scored.sort(
+        key=lambda item: (
+            item["lexical_score"],
+            item["procedure_score"],
+            item["chunk_score"],
+            item["procedure_lexical_score"],
+        ),
+        reverse=True,
+    )
+
+    return scored[:limit]
+
+def rrf_fusion(
+    vector_results: List[Any],
+    lexical_results: List[Dict[str, Any]],
+    detected_intent: str,
+    detected_procedure: Optional[str],
+    k: int = 60,
+    limit: int = QDRANT_TOP_K,
+) -> List[Dict[str, Any]]:
+    """
+    Intent-aware Reciprocal Rank Fusion (RRF).
+
+    Kết hợp:
+        - Vector retrieval
+        - Lexical retrieval
+        - Intent / chunk-type relevance
+        - Procedure relevance
+
+    Base:
+        RRF(d) = 1 / (k + rank_vector)
+               + 1 / (k + rank_lexical)
+
+    Sau đó cộng thêm:
+        - bonus cho đúng chunk type
+        - bonus cho đúng procedure
+
+    Rank bắt đầu từ 1.
+    """
+
+    fused: Dict[str, Dict[str, Any]] = {}
+
+    # =========================================================
+    # 1. VECTOR RESULTS
+    # =========================================================
+
+    for rank, point in enumerate(
+        vector_results,
+        start=1,
+    ):
+
+        data = extract_payload_data(
+            point
+        )
+
+        chunk_id = data["chunk_id"]
+
+        if not chunk_id:
+            chunk_id = str(
+                getattr(
+                    point,
+                    "id",
+                    "",
+                )
+            )
+
+        rrf_score = 1.0 / (
+            k + rank
+        )
+
+        if chunk_id not in fused:
+
+            fused[chunk_id] = {
+                "point": point,
+                "data": data,
+                "vector_rank": rank,
+                "lexical_rank": None,
+                "base_rrf_score": 0.0,
+            }
+
+        fused[chunk_id][
+            "base_rrf_score"
+        ] += rrf_score
+
+    # =========================================================
+    # 2. LEXICAL RESULTS
+    # =========================================================
+
+    for rank, item in enumerate(
+        lexical_results,
+        start=1,
+    ):
+
+        data = item["data"]
+
+        chunk_id = data["chunk_id"]
+
+        if not chunk_id:
+            chunk_id = str(
+                getattr(
+                    item["point"],
+                    "id",
+                    "",
+                )
+            )
+
+        rrf_score = 1.0 / (
+            k + rank
+        )
+
+        if chunk_id not in fused:
+
+            fused[chunk_id] = {
+                "point": item["point"],
+                "data": data,
+                "vector_rank": None,
+                "lexical_rank": rank,
+                "base_rrf_score": rrf_score,
+            }
+
+        else:
+
+            fused[chunk_id][
+                "lexical_rank"
+            ] = rank
+
+            fused[chunk_id][
+                "base_rrf_score"
+            ] += rrf_score
+
+    # =========================================================
+    # 3. INTENT / PROCEDURE BONUS
+    # =========================================================
+
+    results = []
+
+    for item in fused.values():
+
+        data = item["data"]
+
+        chunk_type = data["chunk_type"]
+
+        procedure = data["procedure"]
+
+        # -----------------------------------------------------
+        # Intent score
+        # -----------------------------------------------------
+
+        intent_score = get_chunk_type_score(
+            detected_intent,
+            chunk_type,
+        )
+
+        # -----------------------------------------------------
+        # Procedure score
+        # -----------------------------------------------------
+
+        procedure_score = calculate_procedure_score(
+            detected_procedure,
+            procedure,
+        )
+
+        # -----------------------------------------------------
+        # Bonus
+        # -----------------------------------------------------
+
+        
+        
+           # Intent is stronger than procedure
+# once the procedure has already been identified.
+
+        intent_bonus = (
+            0.020 * intent_score
+        )
+
+        if detected_procedure:
+
+            procedure_bonus = (
+                0.012 * procedure_score
+            )
+
+            if procedure_score < 0.80:
+             procedure_penalty = 0.015
+            else:
+                procedure_penalty = 0.0
+
+        else:
+
+            procedure_bonus = 0.0
+            procedure_penalty = 0.0
+
+        final_rrf_score = (
+            item["base_rrf_score"]
+            + intent_bonus
+            + procedure_bonus
+            - procedure_penalty
+)
+        item["intent_score"] = (
+            intent_score
+        )
+
+        item["procedure_score"] = (
+            procedure_score
+        )
+
+        item["intent_bonus"] = (
+            intent_bonus
+        )
+
+        item["procedure_bonus"] = (
+            procedure_bonus
+        )
+
+        item["rrf_score"] = (
+            final_rrf_score
+        )
+
+        results.append(
+            item
+        )
+
+    # =========================================================
+    # 4. SORT
+    # =========================================================
+
+    results.sort(
+        key=lambda item: (
+            item["rrf_score"],
+            item["intent_score"],
+            item["procedure_score"],
+        ),
+        reverse=True,
+    )
+
+    return results[:limit]
+
+def test_rrf_fusion(
+    client: QdrantClient,
+    model: SentenceTransformer,
+) -> None:
+
+    queries = [
+        "đăng ký hộ kinh doanh",
+        "khai sinh cần giấy tờ gì",
+        "giấy phép xây dựng cần những gì",
+        "cấp lại đăng ký hộ kinh doanh",
+    ]
+
+    print_header(
+        "RRF FUSION TEST"
+    )
+
+    for query in queries:
+
+        print()
+        print_separator("=")
+        print(
+            f"Query: {query}"
+        )
+        print_separator("=")
+
+        # -----------------------------------------------------
+        # 1. Detect intent
+        # -----------------------------------------------------
+
+        detected_intent, _ = detect_intent(
+            query
+        )
+
+        # -----------------------------------------------------
+        # 2. Detect procedure
+        # -----------------------------------------------------
+
+        procedure_names = load_procedure_names(
+            client
+        )
+
+        detected_procedure, _ = detect_procedure(
+            query,
+            procedure_names,
+            detected_intent,
+        )
+
+        print(
+            f"Detected intent    : "
+            f"{detected_intent}"
+        )
+
+        print(
+            f"Detected procedure : "
+            f"{detected_procedure}"
+        )
+
+        # -----------------------------------------------------
+        # 3. Vector retrieval
+        # -----------------------------------------------------
+
+        query_vector = encode_query(
+            model,
+            query,
+        )
+
+        vector_results = qdrant_search(
+            client,
+            query_vector,
+            limit=QDRANT_TOP_K,
+        )
+
+        # -----------------------------------------------------
+        # 4. Lexical retrieval
+        # -----------------------------------------------------
+
+        lexical_results = lexical_search(
+            client,
+            query,
+            limit=QDRANT_TOP_K,
+        )
+
+        # -----------------------------------------------------
+        # 5. Intent-aware RRF
+        # -----------------------------------------------------
+
+        fused_results = rrf_fusion(
+            vector_results,
+            lexical_results,
+            detected_intent,
+            detected_procedure,
+            k=60,
+            limit=5,
+        )
+
+        # -----------------------------------------------------
+        # 6. Display
+        # -----------------------------------------------------
+
+        for rank, item in enumerate(
+            fused_results,
+            start=1,
+        ):
+
+            data = item["data"]
+
+            print(
+                f"{rank}. "
+                f"RRF={item['rrf_score']:.6f} | "
+                f"VRank={item['vector_rank']} | "
+                f"LRank={item['lexical_rank']} | "
+                f"Intent={item['intent_score']:.2f} | "
+                f"Procedure={item['procedure_score']:.2f} | "
+                f"{data['procedure']} | "
+                f"{data['chunk_type']}"
+            )
+            
+def test_lexical_search(
+    client: QdrantClient,
+) -> None:
+
+    queries = [
+        "đăng ký hộ kinh doanh",
+        "cấp lại đăng ký hộ kinh doanh",
+        "khai sinh cần giấy tờ gì",
+        "giấy phép xây dựng cần những gì",
+    ]
+
+    print_header(
+        "LEXICAL SEARCH TEST"
+    )
+
+    for query in queries:
+
+        print()
+        print_separator("=")
+        print(
+            f"Query: {query}"
+        )
+        print_separator("=")
+
+        results = lexical_search(
+            client,
+            query,
+            limit=5,
+        )
+
+        for index, item in enumerate(
+            results,
+            start=1,
+        ):
+
+            data = item["data"]
+
+            print(
+                f"{index}. "
+                f"{item['lexical_score']:.4f} | "
+                f"{data['procedure']} | "
+                f"{data['chunk_type']}"
+            )
+
+
 # =============================================================================
 # SCORE HELPERS
 # =============================================================================
@@ -2057,21 +2984,41 @@ def retrieve(
     detected_procedure, procedure_confidence = detect_procedure(
         query,
         procedures,
+        detected_intent,
     )
 
-   # -------------------------------------------------------------------------
-# STOP WHEN PROCEDURE CANNOT BE DETERMINED
-# -------------------------------------------------------------------------
+    print()
+    print(
+        f"Detected intent    : "
+        f"{detected_intent}"
+    )
+
+    print(
+        f"Detected procedure : "
+        f"{detected_procedure}"
+    )
+
+    # -------------------------------------------------------------------------
+    # STOP WHEN PROCEDURE CANNOT BE DETERMINED
+    # -------------------------------------------------------------------------
+
     if detected_procedure is None:
+
         print()
-        print("[WARNING] Cannot determine administrative procedure.")
+        print(
+            "[WARNING] Cannot determine administrative procedure."
+        )
+
         print(
             "Không đủ thông tin để xác định thủ tục hành chính."
         )
+
         print(
             "Vui lòng cho biết tên hoặc nội dung cụ thể của thủ tục."
         )
+
         print()
+
         return []
 
     # -------------------------------------------------------------------------
@@ -2084,10 +3031,10 @@ def retrieve(
     )
 
     # -------------------------------------------------------------------------
-    # STEP 4: QDRANT
+    # STEP 4: VECTOR RETRIEVAL
     # -------------------------------------------------------------------------
 
-    points = qdrant_search(
+    vector_results = qdrant_search(
         client,
         query_vector,
         limit=top_k,
@@ -2095,26 +3042,75 @@ def retrieve(
 
     print()
     print(
-        f"Qdrant candidates: "
-        f"{len(points)}"
+        f"Vector candidates: "
+        f"{len(vector_results)}"
     )
 
-    if not points:
+    if not vector_results:
         return []
 
     # -------------------------------------------------------------------------
-    # STEP 5: CANDIDATE SELECTION
+    # STEP 5: LEXICAL RETRIEVAL
+    # -------------------------------------------------------------------------
+
+    lexical_results = lexical_search(
+        client,
+        query,
+        limit=top_k,
+    )
+
+    print(
+        f"Lexical candidates: "
+        f"{len(lexical_results)}"
+    )
+
+    # -------------------------------------------------------------------------
+    # STEP 6: RRF FUSION
+    # -------------------------------------------------------------------------
+
+    fused_results = rrf_fusion(
+        vector_results,
+        lexical_results,
+        detected_intent,
+        detected_procedure,
+        k=60,
+        limit=top_k,
+    )
+
+    print(
+        f"Hybrid candidates: "
+        f"{len(fused_results)}"
+    )
+
+    if not fused_results:
+        return []
+
+    # -------------------------------------------------------------------------
+    # STEP 7: CONVERT FUSED RESULTS BACK TO POINTS
+    #
+    # RRF decides which documents survive into the final candidate pool.
+    # The existing candidate selection + reranking logic then performs
+    # the detailed legal ranking.
+    # -------------------------------------------------------------------------
+
+    fused_points = [
+        item["point"]
+        for item in fused_results
+    ]
+
+    # -------------------------------------------------------------------------
+    # STEP 8: CANDIDATE SELECTION
     # -------------------------------------------------------------------------
 
     candidates = select_candidates(
-        points,
+        fused_points,
         query,
         detected_intent,
         detected_procedure,
     )
 
     # -------------------------------------------------------------------------
-    # STEP 6: RERANK
+    # STEP 9: RERANK
     # -------------------------------------------------------------------------
 
     reranked = rerank_candidates(
@@ -2125,7 +3121,7 @@ def retrieve(
     )
 
     # -------------------------------------------------------------------------
-    # STEP 7: FINAL FILTER
+    # STEP 10: FINAL FILTER
     # -------------------------------------------------------------------------
 
     final_results = filter_final_results(
@@ -2134,8 +3130,13 @@ def retrieve(
         detected_intent,
     )
 
-    # Ensure requested top_k
-    final_results = final_results[:final_top_k]
+    # -------------------------------------------------------------------------
+    # STEP 11: FINAL TOP-K
+    # -------------------------------------------------------------------------
+
+    final_results = final_results[
+        :final_top_k
+    ]
 
     return final_results
 
@@ -2450,12 +3451,28 @@ def main() -> None:
 if __name__ == "__main__":
 
     try:
-        main()
+
+        client = connect_qdrant()
+
+        model = load_model()
+
+        procedures = load_procedure_names(
+            client
+        )
+
+        run_test_suite(
+            model,
+            client,
+            procedures,
+        )
+
+        client.close()
 
     except KeyboardInterrupt:
 
         print()
         print()
+
         print(
             "[INFO] Program interrupted by user."
         )

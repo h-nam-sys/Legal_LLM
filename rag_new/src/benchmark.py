@@ -1,17 +1,14 @@
 """
-Benchmark retrieval.py using 50 queries:
-- 25 on-topic
-- 25 off-topic
-- Hit@1 / Hit@3 / Hit@5
-- MRR
-- Latency Mean / P50 / P95 / Max
-- Maximum raw Qdrant cosine score
-- Threshold tuning 0.40 -> 0.85, step 0.05
-- Precision / Recall / F1
-- CSV results + threshold table + histogram
+LEGAL RAG - BENCHMARK
 
-Important:
-This benchmark follows the CURRENT retrieval.py pipeline:
+Benchmark:
+    - Benchmark_84
+    - Robustness_Queries
+
+Dataset:
+    data/benchmark/legal_rag_benchmark_84_plus_robustness.xlsx
+
+Pipeline thực tế:
 
     Query
       ↓
@@ -19,42 +16,50 @@ This benchmark follows the CURRENT retrieval.py pipeline:
       ↓
     detect_procedure()
       ↓
-    encode_query()
+    Vector Retrieval
       ↓
-    search_qdrant()
+    Lexical Retrieval
       ↓
-    prepare_candidates()
+    RRF Hybrid Fusion
       ↓
-    rerank_candidates()
+    Candidate Selection
+      ↓
+    Reranking
+      ↓
+    Final Filter
       ↓
     Final Top-K
 
-Run from D:\\legal-rag:
+QUAN TRỌNG:
+    Benchmark gọi trực tiếp retrieve() trong retrieval.py.
+    Không tự dựng lại pipeline retrieval.
+
+Chạy từ:
+    D:\\legal-rag
 
     python src/benchmark.py
 """
 
-import io
-import time
-import contextlib
-from pathlib import Path
-import re
-import unicodedata
+from __future__ import annotations
 
-import pandas as pd
+import contextlib
+import io
+import re
+import time
+import unicodedata
+from pathlib import Path
+from typing import Any
+
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from retrieval import (
-    load_model,
     connect_qdrant,
     detect_intent,
     detect_procedure,
-    encode_query,
-    search_qdrant,
-    prepare_candidates,
-    rerank_candidates,
-    QDRANT_TOP_K,
-    FINAL_TOP_K,
+    load_model,
+    load_procedure_names,
+    retrieve,
 )
 
 
@@ -68,7 +73,7 @@ BENCHMARK_FILE = (
     BASE_DIR
     / "data"
     / "benchmark"
-    / "benchmark_50_queries.csv"
+    / "legal_rag_benchmark_84_plus_robustness.xlsx"
 )
 
 RESULT_DIR = (
@@ -80,34 +85,38 @@ RESULT_DIR = (
 
 
 # =============================================================================
-# THRESHOLDS
+# SPECIAL LABELS
 # =============================================================================
 
-THRESHOLDS = [
-    round(0.40 + 0.05 * i, 2)
-    for i in range(10)
-]
+AMBIGUOUS = "AMBIGUOUS"
+OUT_OF_DATASET = "OUT_OF_DATASET"
 
 
 # =============================================================================
 # TEXT NORMALIZATION
 # =============================================================================
 
-def normalize_text(text):
+def normalize_text(text: Any) -> str:
     """
-    Normalize text only for evaluation matching.
+    Normalize Vietnamese text only for benchmark comparison.
 
-    Does NOT modify the original query or Qdrant payload.
+    Không thay đổi query gốc.
+    Không thay đổi dữ liệu Qdrant.
     """
+
     if text is None:
         return ""
 
     text = str(text).strip().lower()
 
-    # Vietnamese đ/Đ
+    # Vietnamese đ
     text = text.replace("đ", "d")
 
-    text = unicodedata.normalize("NFD", text)
+    # Remove Vietnamese accents
+    text = unicodedata.normalize(
+        "NFD",
+        text,
+    )
 
     text = "".join(
         ch
@@ -115,158 +124,539 @@ def normalize_text(text):
         if unicodedata.category(ch) != "Mn"
     )
 
-    text = re.sub(r"[^a-z0-9]+", " ", text)
+    # Keep only alphanumeric + spaces
+    text = re.sub(
+        r"[^a-z0-9]+",
+        " ",
+        text,
+    )
 
-    return re.sub(r"\s+", " ", text).strip()
+    return re.sub(
+        r"\s+",
+        " ",
+        text,
+    ).strip()
 
 
 # =============================================================================
-# PROCEDURE MATCHING
+# PROCEDURE MATCH
 # =============================================================================
 
-def procedure_match(expected, actual):
+def procedure_match(
+    expected: Any,
+    actual: Any,
+) -> bool:
     """
-    Check whether the retrieved procedure matches the expected procedure.
+    Exact normalized procedure matching.
 
-    Exact normalized matching is intentionally used to avoid
-    giving partial credit to an incorrect procedure.
+    Không cho partial credit:
+        "Đăng ký kết hôn"
+    không được coi là giống
+        "Đăng ký kết hôn có yếu tố nước ngoài"
     """
 
     if expected is None:
         return False
 
+    if actual is None:
+        return False
+
     expected = str(expected).strip()
+    actual = str(actual).strip()
 
-    if expected.upper() == "NONE":
+    if not expected or not actual:
         return False
 
-    if not actual:
+    special_values = {
+        AMBIGUOUS,
+        OUT_OF_DATASET,
+        "NONE",
+    }
+
+    if expected.upper() in special_values:
         return False
 
-    return normalize_text(expected) == normalize_text(actual)
+    return (
+        normalize_text(expected)
+        == normalize_text(actual)
+    )
 
 
 # =============================================================================
-# ONE QUERY
+# RESULT HELPERS
+# =============================================================================
+
+def get_result_procedure(
+    result: Any,
+) -> str:
+    """
+    Hỗ trợ cả:
+        - RetrievalResult object
+        - dict
+    """
+
+    # Nếu result là dict
+    if isinstance(result, dict):
+
+        data = result.get(
+            "data",
+            result,
+        )
+
+        return str(
+            data.get(
+                "procedure",
+                "",
+            )
+        ).strip()
+
+    # Nếu result là object
+    return str(
+        getattr(
+            result,
+            "procedure",
+            "",
+        )
+    ).strip()
+
+
+def get_result_score(
+    result: Any,
+) -> float:
+    """
+    Lấy final score an toàn.
+    """
+
+    if isinstance(result, dict):
+
+        value = result.get(
+            "final_score",
+            result.get(
+                "score",
+                0.0,
+            ),
+        )
+
+    else:
+
+        value = getattr(
+            result,
+            "final_score",
+            getattr(
+                result,
+                "score",
+                0.0,
+            ),
+        )
+
+    try:
+        return float(value)
+    except (
+        TypeError,
+        ValueError,
+    ):
+        return 0.0
+
+
+# =============================================================================
+# RUN ONE QUERY
 # =============================================================================
 
 def run_one_query(
-    query,
-    model,
-    client,
-    procedure_names,
-):
+    query: str,
+    model: Any,
+    client: Any,
+    procedure_names: list[str],
+) -> dict[str, Any]:
     """
-    Run exactly the same logical retrieval pipeline as retrieval.py.
+    Chạy đúng pipeline hiện tại trong retrieval.py.
 
-    Pipeline:
-
-        detect_intent
-            ↓
-        detect_procedure
-            ↓
-        encode_query
-            ↓
-        search_qdrant
-            ↓
-        prepare_candidates
-            ↓
-        rerank_candidates
-
-    expected_procedure is NOT passed into this function.
-    Therefore benchmark does not leak the ground-truth answer
-    into the retrieval pipeline.
+    Benchmark không truyền expected_procedure
+    vào retrieval -> tránh leakage.
     """
 
     start = time.perf_counter()
 
     # -------------------------------------------------------------------------
-    # 1. Intent detection
+    # DETECT INTENT
     # -------------------------------------------------------------------------
 
-    intent, intent_confidence = detect_intent(query)
-
-    # -------------------------------------------------------------------------
-    # 2. Procedure detection
-    # -------------------------------------------------------------------------
-
-    detected_procedure, procedure_confidence = detect_procedure(
-        query,
-        procedure_names,
+    detected_intent, intent_confidence = (
+        detect_intent(query)
     )
 
     # -------------------------------------------------------------------------
-    # 3. Query embedding
+    # DETECT PROCEDURE
     # -------------------------------------------------------------------------
 
-    query_vector = encode_query(
-        model,
-        query,
-    )
-
-    # -------------------------------------------------------------------------
-    # 4. Qdrant vector retrieval
-    # -------------------------------------------------------------------------
-
-    points = search_qdrant(
-        client,
-        query_vector,
-        QDRANT_TOP_K,
-    )
-
-    # Keep RAW Qdrant cosine score.
-    # Do NOT clamp this value because threshold tuning should use
-    # the actual Qdrant similarity score.
-    max_cosine_score = max(
-        (
-            float(getattr(point, "score", 0.0))
-            for point in points
-        ),
-        default=0.0,
-    )
-
-    # -------------------------------------------------------------------------
-    # 5. Candidate preparation
-    # -------------------------------------------------------------------------
-
-    # retrieval.py prints diagnostic information during normal retrieval.
-    # Suppress it during benchmark execution so the benchmark output
-    # remains readable.
-    with contextlib.redirect_stdout(io.StringIO()):
-
-        candidates = prepare_candidates(
-            points,
+    detected_procedure, procedure_confidence = (
+        detect_procedure(
             query,
-            detected_procedure,
-            intent,
+            procedure_names,
+            detected_intent,
         )
+    )
 
-        # ---------------------------------------------------------------------
-        # 6. Rerank ALL candidates
-        # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # CURRENT RETRIEVAL PIPELINE
+    # -------------------------------------------------------------------------
 
-        final_results = rerank_candidates(
-            candidates,
-            FINAL_TOP_K,
+    # retrieve() đã tự:
+    #   detect intent
+    #   detect procedure
+    #   vector retrieval
+    #   lexical retrieval
+    #   RRF
+    #   candidate selection
+    #   rerank
+    #   final filter
+
+    with contextlib.redirect_stdout(
+        io.StringIO()
+    ):
+
+        final_results = retrieve(
+            query=query,
+            model=model,
+            client=client,
+            procedures=procedure_names,
         )
 
     # -------------------------------------------------------------------------
-    # Latency
+    # LATENCY
     # -------------------------------------------------------------------------
 
     latency_ms = (
-        time.perf_counter() - start
+        time.perf_counter()
+        - start
     ) * 1000
 
     return {
         "results": final_results,
-        "intent": intent,
-        "intent_confidence": intent_confidence,
-        "detected_procedure": detected_procedure,
-        "procedure_confidence": procedure_confidence,
-        "max_cosine_score": max_cosine_score,
+
+        "intent": detected_intent,
+        "intent_confidence": (
+            float(intent_confidence)
+        ),
+
+        "detected_procedure": (
+            detected_procedure
+            if detected_procedure
+            else ""
+        ),
+
+        "procedure_confidence": (
+            float(procedure_confidence)
+        ),
+
         "latency_ms": latency_ms,
-        "num_qdrant_candidates": len(points),
+    }
+
+
+# =============================================================================
+# EVALUATE ONE QUERY
+# =============================================================================
+
+def evaluate_one_query(
+    item: pd.Series,
+    output: dict[str, Any],
+) -> dict[str, Any]:
+    """
+    Evaluate:
+        - Hit@1
+        - Hit@3
+        - Hit@5
+        - MRR
+        - ambiguity handling
+        - out-of-dataset handling
+    """
+
+    query_id = int(
+        item["id"]
+    )
+
+    query = str(
+        item["query"]
+    ).strip()
+
+    expected_procedure = str(
+        item["expected_procedure"]
+    ).strip()
+
+    expected_intent = str(
+        item.get(
+            "expected_intent",
+            "",
+        )
+    ).strip()
+
+    variant_type = str(
+        item.get(
+            "type",
+            item.get(
+                "variant_type",
+                "",
+            ),
+        )
+    ).strip()
+
+    notes = str(
+        item.get(
+            "notes",
+            item.get(
+                "test_focus",
+                "",
+            ),
+        )
+    ).strip()
+
+    # -------------------------------------------------------------------------
+    # RETRIEVAL RESULTS
+    # -------------------------------------------------------------------------
+
+    results = output["results"]
+
+    procedures = []
+
+    for result in results:
+
+        procedure = get_result_procedure(
+            result
+        )
+
+        if procedure:
+            procedures.append(
+                procedure
+            )
+
+    # -------------------------------------------------------------------------
+    # FIND CORRECT RANK
+    # -------------------------------------------------------------------------
+
+    correct_ranks = []
+
+    for rank, procedure in enumerate(
+        procedures,
+        start=1,
+    ):
+
+        if procedure_match(
+            expected_procedure,
+            procedure,
+        ):
+            correct_ranks.append(
+                rank
+            )
+
+    first_correct_rank = (
+        min(correct_ranks)
+        if correct_ranks
+        else None
+    )
+
+    # -------------------------------------------------------------------------
+    # HIT@K
+    # -------------------------------------------------------------------------
+
+    hit_at_1 = int(
+        first_correct_rank is not None
+        and first_correct_rank <= 1
+    )
+
+    hit_at_3 = int(
+        first_correct_rank is not None
+        and first_correct_rank <= 3
+    )
+
+    hit_at_5 = int(
+        first_correct_rank is not None
+        and first_correct_rank <= 5
+    )
+
+    reciprocal_rank = (
+        1.0 / first_correct_rank
+        if first_correct_rank is not None
+        else 0.0
+    )
+
+    # -------------------------------------------------------------------------
+    # SPECIAL CASES
+    # -------------------------------------------------------------------------
+
+    expected_ambiguous = (
+        expected_procedure.upper()
+        == AMBIGUOUS
+    )
+
+    expected_out_of_dataset = (
+        expected_procedure.upper()
+        == OUT_OF_DATASET
+    )
+
+    no_results = (
+        len(results) == 0
+    )
+
+    detected_procedure = (
+        output["detected_procedure"]
+    )
+
+    # -------------------------------------------------------------------------
+    # AMBIGUOUS PASS
+    #
+    # Kỳ vọng:
+    #   - không tự chọn procedure
+    #   - không trả kết quả
+    # -------------------------------------------------------------------------
+
+    ambiguity_pass = int(
+        expected_ambiguous
+        and no_results
+        and not detected_procedure
+    )
+
+    # -------------------------------------------------------------------------
+    # OUT-OF-DATASET PASS
+    #
+    # Kỳ vọng:
+    #   - không tự map sang procedure
+    # -------------------------------------------------------------------------
+
+    out_of_dataset_pass = int(
+        expected_out_of_dataset
+        and no_results
+        and not detected_procedure
+    )
+
+    # -------------------------------------------------------------------------
+    # NORMAL ON-TOPIC PASS
+    # -------------------------------------------------------------------------
+
+    normal_query = (
+        not expected_ambiguous
+        and not expected_out_of_dataset
+    )
+
+    normal_pass = int(
+        normal_query
+        and first_correct_rank is not None
+    )
+
+    # -------------------------------------------------------------------------
+    # OVERALL BENCHMARK PASS
+    # -------------------------------------------------------------------------
+
+    if expected_ambiguous:
+
+        benchmark_pass = ambiguity_pass
+
+    elif expected_out_of_dataset:
+
+        benchmark_pass = out_of_dataset_pass
+
+    else:
+
+        benchmark_pass = normal_pass
+
+    # -------------------------------------------------------------------------
+    # TOP 1
+    # -------------------------------------------------------------------------
+
+    top1_procedure = (
+        procedures[0]
+        if procedures
+        else ""
+    )
+
+    top1_score = (
+        get_result_score(
+            results[0]
+        )
+        if results
+        else 0.0
+    )
+
+    # -------------------------------------------------------------------------
+    # RETURN
+    # -------------------------------------------------------------------------
+
+    return {
+        "id": query_id,
+        "query": query,
+
+        "type": variant_type,
+
+        "expected_procedure": (
+            expected_procedure
+        ),
+
+        "expected_intent": (
+            expected_intent
+        ),
+
+        "notes": notes,
+
+        "detected_intent": (
+            output["intent"]
+        ),
+
+        "intent_confidence": (
+            output[
+                "intent_confidence"
+            ]
+        ),
+
+        "detected_procedure": (
+            detected_procedure
+        ),
+
+        "procedure_confidence": (
+            output[
+                "procedure_confidence"
+            ]
+        ),
+
+        "top1_procedure": (
+            top1_procedure
+        ),
+
+        "top1_final_score": (
+            top1_score
+        ),
+
+        "num_final_results": (
+            len(results)
+        ),
+
+        "first_correct_rank": (
+            first_correct_rank
+            if first_correct_rank is not None
+            else ""
+        ),
+
+        "hit_at_1": hit_at_1,
+        "hit_at_3": hit_at_3,
+        "hit_at_5": hit_at_5,
+
+        "reciprocal_rank": (
+            reciprocal_rank
+        ),
+
+        "ambiguity_pass": (
+            ambiguity_pass
+        ),
+
+        "out_of_dataset_pass": (
+            out_of_dataset_pass
+        ),
+
+        "benchmark_pass": (
+            benchmark_pass
+        ),
+
+        "latency_ms": (
+            output["latency_ms"]
+        ),
     }
 
 
@@ -274,237 +664,371 @@ def run_one_query(
 # RETRIEVAL METRICS
 # =============================================================================
 
-def evaluate_hit_metrics(rows):
+def calculate_retrieval_metrics(
+    df: pd.DataFrame,
+) -> dict[str, Any]:
     """
-    Calculate Hit@1, Hit@3, Hit@5 and MRR.
+    Hit@K + MRR.
 
-    Only ON-TOPIC queries are used for these retrieval metrics.
-
-    Off-topic queries have no expected procedure, so they are not
-    included in Hit@K / MRR.
+    Chỉ tính trên query có expected procedure
+    bình thường.
     """
 
-    on_rows = [
-        row
-        for row in rows
-        if row["label"] == "on-topic"
-    ]
+    normal = df[
+        ~df["expected_procedure"].isin(
+            [
+                AMBIGUOUS,
+                OUT_OF_DATASET,
+            ]
+        )
+    ].copy()
 
-    n = len(on_rows)
+    n = len(normal)
 
     if n == 0:
+
         return {
-            "num_on_topic": 0,
-            "hit_at_1_count": 0,
+            "count": 0,
             "hit_at_1": 0.0,
-            "hit_at_3_count": 0,
             "hit_at_3": 0.0,
-            "hit_at_5_count": 0,
             "hit_at_5": 0.0,
             "mrr": 0.0,
         }
 
-    hit1 = sum(
-        row["hit_at_1"]
-        for row in on_rows
-    )
-
-    hit3 = sum(
-        row["hit_at_3"]
-        for row in on_rows
-    )
-
-    hit5 = sum(
-        row["hit_at_5"]
-        for row in on_rows
-    )
-
-    rr_sum = sum(
-        row["reciprocal_rank"]
-        for row in on_rows
-    )
-
     return {
-        "num_on_topic": n,
+        "count": n,
 
-        "hit_at_1_count": hit1,
-        "hit_at_1": hit1 / n,
+        "hit_at_1": float(
+            normal[
+                "hit_at_1"
+            ].mean()
+        ),
 
-        "hit_at_3_count": hit3,
-        "hit_at_3": hit3 / n,
+        "hit_at_3": float(
+            normal[
+                "hit_at_3"
+            ].mean()
+        ),
 
-        "hit_at_5_count": hit5,
-        "hit_at_5": hit5 / n,
+        "hit_at_5": float(
+            normal[
+                "hit_at_5"
+            ].mean()
+        ),
 
-        "mrr": rr_sum / n,
+        "mrr": float(
+            normal[
+                "reciprocal_rank"
+            ].mean()
+        ),
     }
 
 
 # =============================================================================
-# THRESHOLD EVALUATION
+# ROBUSTNESS METRICS
 # =============================================================================
 
-def evaluate_thresholds(rows):
-    """
-    Evaluate whether a query should be classified as on-topic
-    based on maximum raw Qdrant cosine similarity.
+def calculate_robustness_metrics(
+    df: pd.DataFrame,
+) -> dict[str, Any]:
 
-    predicted_on_topic:
-        max_cosine_score >= threshold
-    """
+    ambiguous_df = df[
+        df[
+            "expected_procedure"
+        ].eq(AMBIGUOUS)
+    ]
 
-    records = []
+    out_df = df[
+        df[
+            "expected_procedure"
+        ].eq(OUT_OF_DATASET)
+    ]
 
-    for threshold in THRESHOLDS:
-
-        tp = 0
-        fp = 0
-        fn = 0
-        tn = 0
-
-        for row in rows:
-
-            predicted_on_topic = (
-                row["max_cosine_score"] >= threshold
-            )
-
-            actual_on_topic = (
-                row["label"] == "on-topic"
-            )
-
-            if actual_on_topic and predicted_on_topic:
-                tp += 1
-
-            elif not actual_on_topic and predicted_on_topic:
-                fp += 1
-
-            elif actual_on_topic and not predicted_on_topic:
-                fn += 1
-
-            else:
-                tn += 1
-
-        precision = (
-            tp / (tp + fp)
-            if (tp + fp)
-            else 0.0
+    ambiguous_rate = (
+        float(
+            ambiguous_df[
+                "ambiguity_pass"
+            ].mean()
         )
+        if len(ambiguous_df)
+        else 0.0
+    )
 
-        recall = (
-            tp / (tp + fn)
-            if (tp + fn)
-            else 0.0
+    out_rate = (
+        float(
+            out_df[
+                "out_of_dataset_pass"
+            ].mean()
         )
+        if len(out_df)
+        else 0.0
+    )
 
-        f1 = (
-            2 * precision * recall
-            / (precision + recall)
-            if (precision + recall)
-            else 0.0
-        )
+    return {
+        "ambiguous_count": (
+            len(ambiguous_df)
+        ),
 
-        accuracy = (
-            (tp + tn)
-            / (tp + tn + fp + fn)
-            if (tp + tn + fp + fn)
-            else 0.0
-        )
+        "ambiguous_pass_rate": (
+            ambiguous_rate
+        ),
 
-        records.append(
-            {
-                "threshold": threshold,
-                "TP": tp,
-                "FP": fp,
-                "FN": fn,
-                "TN": tn,
-                "precision": precision,
-                "recall": recall,
-                "f1": f1,
-                "accuracy": accuracy,
-            }
-        )
+        "out_of_dataset_count": (
+            len(out_df)
+        ),
 
-    return pd.DataFrame(records)
+        "out_of_dataset_pass_rate": (
+            out_rate
+        ),
+    }
 
 
 # =============================================================================
 # LATENCY
 # =============================================================================
 
-def calculate_latency_summary(results_df):
-    """
-    Calculate latency statistics.
-    """
+def calculate_latency(
+    df: pd.DataFrame,
+) -> dict[str, float]:
 
-    values = results_df["latency_ms"]
+    values = df[
+        "latency_ms"
+    ]
 
     return {
-        "latency_mean_ms": values.mean(),
-        "latency_p50_ms": values.quantile(0.50),
-        "latency_p95_ms": values.quantile(0.95),
-        "latency_max_ms": values.max(),
+        "mean_ms": float(
+            values.mean()
+        ),
+
+        "p50_ms": float(
+            values.quantile(
+                0.50
+            )
+        ),
+
+        "p95_ms": float(
+            values.quantile(
+                0.95
+            )
+        ),
+
+        "max_ms": float(
+            values.max()
+        ),
     }
 
 
 # =============================================================================
-# SCORE DISTRIBUTION PLOT
+# CATEGORY SUMMARY
 # =============================================================================
 
-def save_score_distribution(rows):
-    """
-    Save histogram comparing maximum Qdrant cosine scores
-    between on-topic and off-topic queries.
-    """
+def build_category_summary(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
 
-    on_scores = [
-        row["max_cosine_score"]
-        for row in rows
-        if row["label"] == "on-topic"
-    ]
+    rows = []
 
-    off_scores = [
-        row["max_cosine_score"]
-        for row in rows
-        if row["label"] == "off-topic"
-    ]
+    for category, group in df.groupby(
+        "type",
+        dropna=False,
+    ):
 
-    plt.figure(figsize=(10, 6))
+        normal = group[
+            ~group[
+                "expected_procedure"
+            ].isin(
+                [
+                    AMBIGUOUS,
+                    OUT_OF_DATASET,
+                ]
+            )
+        ]
 
-    plt.hist(
-        on_scores,
-        bins=10,
-        alpha=0.6,
-        label="On-topic",
+        rows.append(
+            {
+                "category": category,
+
+                "queries": len(group),
+
+                "pass_rate": float(
+                    group[
+                        "benchmark_pass"
+                    ].mean()
+                ),
+
+                "hit_at_1": (
+                    float(
+                        normal[
+                            "hit_at_1"
+                        ].mean()
+                    )
+                    if len(normal)
+                    else None
+                ),
+
+                "hit_at_3": (
+                    float(
+                        normal[
+                            "hit_at_3"
+                        ].mean()
+                    )
+                    if len(normal)
+                    else None
+                ),
+
+                "hit_at_5": (
+                    float(
+                        normal[
+                            "hit_at_5"
+                        ].mean()
+                    )
+                    if len(normal)
+                    else None
+                ),
+
+                "mrr": (
+                    float(
+                        normal[
+                            "reciprocal_rank"
+                        ].mean()
+                    )
+                    if len(normal)
+                    else None
+                ),
+
+                "avg_latency_ms": float(
+                    group[
+                        "latency_ms"
+                    ].mean()
+                ),
+            }
+        )
+
+    return pd.DataFrame(
+        rows
+    ).sort_values(
+        "category"
+    )
+
+
+# =============================================================================
+# PLOTS
+# =============================================================================
+
+def save_latency_plot(
+    df: pd.DataFrame,
+) -> Path:
+
+    path = (
+        RESULT_DIR
+        / "latency_distribution.png"
+    )
+
+    plt.figure(
+        figsize=(10, 6)
     )
 
     plt.hist(
-        off_scores,
-        bins=10,
-        alpha=0.6,
-        label="Off-topic",
+        df["latency_ms"],
+        bins=20,
     )
 
     plt.xlabel(
-        "Maximum Qdrant Cosine Similarity"
+        "Latency (ms)"
     )
 
     plt.ylabel(
-        "Number of Queries"
+        "Number of queries"
     )
 
     plt.title(
-        "Cosine Similarity Distribution: "
-        "On-topic vs Off-topic"
+        "Benchmark Latency Distribution"
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        path,
+        dpi=150,
+    )
+
+    plt.close()
+
+    return path
+
+
+def save_score_plot(
+    df: pd.DataFrame,
+) -> Path:
+
+    path = (
+        RESULT_DIR
+        / "final_score_distribution.png"
+    )
+
+    plt.figure(
+        figsize=(10, 6)
+    )
+
+    normal = df[
+        ~df[
+            "expected_procedure"
+        ].isin(
+            [
+                AMBIGUOUS,
+                OUT_OF_DATASET,
+            ]
+        )
+    ]
+
+    special = df[
+        df[
+            "expected_procedure"
+        ].isin(
+            [
+                AMBIGUOUS,
+                OUT_OF_DATASET,
+            ]
+        )
+    ]
+
+    if len(normal):
+
+        plt.hist(
+            normal[
+                "top1_final_score"
+            ],
+            bins=15,
+            alpha=0.7,
+            label="On-topic",
+        )
+
+    if len(special):
+
+        plt.hist(
+            special[
+                "top1_final_score"
+            ],
+            bins=15,
+            alpha=0.7,
+            label="Ambiguous / Out-of-dataset",
+        )
+
+    plt.xlabel(
+        "Top-1 Final Score"
+    )
+
+    plt.ylabel(
+        "Number of queries"
+    )
+
+    plt.title(
+        "Final Score Distribution"
     )
 
     plt.legend()
 
     plt.tight_layout()
-
-    path = (
-        RESULT_DIR
-        / "cosine_score_distribution.png"
-    )
 
     plt.savefig(
         path,
@@ -517,92 +1041,171 @@ def save_score_distribution(rows):
 
 
 # =============================================================================
-# THRESHOLD PLOT
+# LOAD BENCHMARK EXCEL
 # =============================================================================
 
-def save_threshold_plot(threshold_df):
+def load_benchmark_excel() -> pd.DataFrame:
     """
-    Save Precision / Recall / F1 against threshold.
+    Đọc cả 2 sheet:
+
+        Benchmark_84
+        Robustness_Queries
+
+    Có thể tự bỏ qua sheet không có cột query.
     """
 
-    plt.figure(figsize=(10, 6))
-
-    plt.plot(
-        threshold_df["threshold"],
-        threshold_df["precision"],
-        marker="o",
-        label="Precision",
+    workbook = pd.ExcelFile(
+        BENCHMARK_FILE
     )
 
-    plt.plot(
-        threshold_df["threshold"],
-        threshold_df["recall"],
-        marker="o",
-        label="Recall",
+    print()
+    print(
+        f"Excel sheets: "
+        f"{workbook.sheet_names}"
     )
 
-    plt.plot(
-        threshold_df["threshold"],
-        threshold_df["f1"],
-        marker="o",
-        label="F1",
+    frames = []
+
+    for sheet_name in (
+        workbook.sheet_names
+    ):
+
+        df = pd.read_excel(
+            BENCHMARK_FILE,
+            sheet_name=sheet_name,
+        )
+
+        if "query" not in df.columns:
+            continue
+
+        df = df.copy()
+
+        # Robustness sheet dùng variant_type.
+        if (
+            "variant_type"
+            in df.columns
+        ):
+
+            df[
+                "type"
+            ] = df[
+                "variant_type"
+            ]
+
+        # Robustness sheet dùng test_focus.
+        if (
+            "test_focus"
+            in df.columns
+        ):
+
+            df[
+                "notes"
+            ] = df[
+                "test_focus"
+            ]
+
+        frames.append(df)
+
+    if not frames:
+
+        raise ValueError(
+            "Không tìm thấy sheet benchmark "
+            "có cột 'query'."
+        )
+
+    benchmark = pd.concat(
+        frames,
+        ignore_index=True,
     )
 
-    plt.xlabel(
-        "Cosine Similarity Threshold"
+    required_columns = {
+        "id",
+        "query",
+        "expected_procedure",
+    }
+
+    missing_columns = (
+        required_columns
+        - set(
+            benchmark.columns
+        )
     )
 
-    plt.ylabel(
-        "Score"
+    if missing_columns:
+
+        raise ValueError(
+            "Thiếu cột benchmark: "
+            + ", ".join(
+                sorted(
+                    missing_columns
+                )
+            )
+        )
+
+    if "type" not in benchmark.columns:
+
+        benchmark["type"] = (
+            "on_topic"
+        )
+
+    if "notes" not in benchmark.columns:
+
+        benchmark["notes"] = ""
+
+    if (
+        "expected_intent"
+        not in benchmark.columns
+    ):
+
+        benchmark[
+            "expected_intent"
+        ] = ""
+
+    # Clean
+    benchmark[
+        "query"
+    ] = (
+        benchmark[
+            "query"
+        ]
+        .fillna("")
+        .astype(str)
+        .str.strip()
     )
 
-    plt.title(
-        "Threshold Tuning"
+    benchmark = benchmark[
+        benchmark[
+            "query"
+        ].ne("")
+    ].copy()
+
+    # Avoid accidental duplicate rows.
+    benchmark = benchmark.drop_duplicates(
+        subset=[
+            "id",
+            "query",
+        ],
+        keep="first",
     )
 
-    plt.ylim(
-        0,
-        1.05,
-    )
-
-    plt.grid(
-        True,
-        alpha=0.25,
-    )
-
-    plt.legend()
-
-    plt.tight_layout()
-
-    path = (
-        RESULT_DIR
-        / "threshold_tuning.png"
-    )
-
-    plt.savefig(
-        path,
-        dpi=150,
-    )
-
-    plt.close()
-
-    return path
+    return benchmark
 
 
 # =============================================================================
 # MAIN
 # =============================================================================
 
-def main():
+def main() -> None:
 
-    print("=" * 80)
+    print("=" * 90)
     print(
-        "VIETNAMESE LEGAL RAG - RETRIEVAL BENCHMARK"
+        "VIETNAMESE LEGAL RAG - "
+        "HYBRID RETRIEVAL BENCHMARK"
     )
-    print("=" * 80)
+    print("=" * 90)
 
     # -------------------------------------------------------------------------
-    # Prepare result directory
+    # RESULT DIRECTORY
     # -------------------------------------------------------------------------
 
     RESULT_DIR.mkdir(
@@ -611,739 +1214,550 @@ def main():
     )
 
     # -------------------------------------------------------------------------
-    # Load benchmark dataset
+    # LOAD BENCHMARK
     # -------------------------------------------------------------------------
 
     if not BENCHMARK_FILE.exists():
 
         raise FileNotFoundError(
-            f"Benchmark file not found:\n"
-            f"{BENCHMARK_FILE}"
+            "\nKhông tìm thấy benchmark file:\n"
+            f"{BENCHMARK_FILE}\n\n"
+            "Hãy kiểm tra file có đúng ở:\n"
+            f"{BASE_DIR / 'data' / 'benchmark'}"
         )
 
-    benchmark = pd.read_csv(
-    BENCHMARK_FILE,
-    encoding="utf-8-sig"
-)
-
-    required_columns = {
-        "id",
-        "query",
-        "label",
-        "expected_procedure",
-    }
-
-    missing_columns = (
-        required_columns
-        - set(benchmark.columns)
+    benchmark = (
+        load_benchmark_excel()
     )
 
-    if missing_columns:
-
-        raise ValueError(
-            "Benchmark CSV is missing required columns: "
-            + ", ".join(
-                sorted(missing_columns)
-            )
-        )
-
-    # -------------------------------------------------------------------------
-    # Dataset information
-    # -------------------------------------------------------------------------
-
-    total_queries = len(benchmark)
-
-    on_topic_count = (
-        benchmark["label"]
-        .astype(str)
-        .str.lower()
-        .eq("on-topic")
-        .sum()
+    total_queries = len(
+        benchmark
     )
 
-    off_topic_count = (
-        benchmark["label"]
-        .astype(str)
-        .str.lower()
-        .eq("off-topic")
-        .sum()
+    print()
+    print(
+        f"Benchmark file : "
+        f"{BENCHMARK_FILE}"
     )
 
     print(
-        f"\nBenchmark file : {BENCHMARK_FILE}"
+        f"Total queries  : "
+        f"{total_queries}"
     )
-
-    print(
-        f"Total queries  : {total_queries}"
-    )
-
-    print(
-        f"On-topic       : {on_topic_count}"
-    )
-
-    print(
-        f"Off-topic      : {off_topic_count}"
-    )
-
-    if total_queries != 50:
-
-        print(
-            "\n[WARNING] Expected 50 queries, "
-            f"but found {total_queries}."
-        )
 
     # -------------------------------------------------------------------------
-    # Load model
+    # LOAD MODEL
     # -------------------------------------------------------------------------
+
+    print()
+    print(
+        "Loading embedding model..."
+    )
 
     model = load_model()
 
     # -------------------------------------------------------------------------
-    # Connect Qdrant
+    # CONNECT QDRANT
     # -------------------------------------------------------------------------
+
+    print()
+    print(
+        "Connecting Qdrant..."
+    )
 
     client = connect_qdrant()
 
-    # -------------------------------------------------------------------------
-    # Load actual procedure names once
-    # -------------------------------------------------------------------------
-
-    # IMPORTANT:
-    # This is exactly how retrieval.py is designed.
-    #
-    # We do NOT scan Qdrant for every query.
-    # We load all unique procedure names once.
-
-    from retrieval import load_procedure_names
-
-    procedure_names = load_procedure_names(
-        client
-    )
-
-    # -------------------------------------------------------------------------
-    # Run benchmark
-    # -------------------------------------------------------------------------
-
-    rows = []
-
     try:
 
-        for index, item in benchmark.iterrows():
+        # ---------------------------------------------------------------------
+        # LOAD PROCEDURES
+        # ---------------------------------------------------------------------
 
-            query_id = int(item["id"])
+        procedure_names = (
+            load_procedure_names(
+                client
+            )
+        )
+
+        print(
+            f"Procedure names: "
+            f"{len(procedure_names)}"
+        )
+
+        # ---------------------------------------------------------------------
+        # RUN
+        # ---------------------------------------------------------------------
+
+        rows = []
+
+        for index, item in benchmark.iterrows():
 
             query = str(
                 item["query"]
             ).strip()
 
-            label = str(
-                item["label"]
-            ).strip().lower()
-
-            expected = str(
-                item["expected_procedure"]
-            ).strip()
-
             print()
-            print(
-                f"[{index + 1:02d}/{total_queries}] "
-                f"{label.upper()} | {query}"
-            )
+            print("-" * 90)
 
-            # -----------------------------------------------------------------
-            # Run retrieval
-            # -----------------------------------------------------------------
+            print(
+                f"[{index + 1:03d}/"
+                f"{total_queries:03d}] "
+                f"{query}"
+            )
 
             output = run_one_query(
                 query=query,
                 model=model,
                 client=client,
-                procedure_names=procedure_names,
+                procedure_names=(
+                    procedure_names
+                ),
             )
 
-            final_results = output["results"]
-
-            intent = output["intent"]
-            intent_confidence = (
-                output["intent_confidence"]
-            )
-
-            detected_procedure = (
-                output["detected_procedure"]
-            )
-
-            procedure_confidence = (
-                output["procedure_confidence"]
-            )
-
-            max_cosine_score = (
-                output["max_cosine_score"]
-            )
-
-            latency_ms = (
-                output["latency_ms"]
-            )
-
-            num_qdrant_candidates = (
-                output["num_qdrant_candidates"]
-            )
-
-            # -----------------------------------------------------------------
-            # Evaluate ranking
-            # -----------------------------------------------------------------
-
-            ranks = []
-
-            top_procedure = ""
-
-            top_final_score = None
-
-            if final_results:
-
-                top_procedure = (
-                    final_results[0]["data"]
-                    .get("procedure", "")
+            evaluated = (
+                evaluate_one_query(
+                    item=item,
+                    output=output,
                 )
-
-                top_final_score = (
-                    final_results[0]
-                    .get("final_score")
-                )
-
-            for rank, result_item in enumerate(
-                final_results,
-                start=1,
-            ):
-
-                data = result_item["data"]
-
-                actual_procedure = data.get(
-                    "procedure",
-                    "",
-                )
-
-                if procedure_match(
-                    expected,
-                    actual_procedure,
-                ):
-
-                    ranks.append(rank)
-
-            first_correct_rank = (
-                min(ranks)
-                if ranks
-                else None
             )
-
-            hit_at_1 = int(
-                first_correct_rank is not None
-                and first_correct_rank <= 1
-            )
-
-            hit_at_3 = int(
-                first_correct_rank is not None
-                and first_correct_rank <= 3
-            )
-
-            hit_at_5 = int(
-                first_correct_rank is not None
-                and first_correct_rank <= 5
-            )
-
-            reciprocal_rank = (
-                1.0 / first_correct_rank
-                if first_correct_rank is not None
-                else 0.0
-            )
-
-            # -----------------------------------------------------------------
-            # Save row
-            # -----------------------------------------------------------------
 
             rows.append(
-                {
-                    "id": query_id,
-                    "query": query,
-                    "label": label,
-                    "expected_procedure": expected,
-
-                    "detected_intent": intent,
-                    "intent_confidence": (
-                        intent_confidence
-                    ),
-
-                    "detected_procedure": (
-                        detected_procedure
-                        if detected_procedure
-                        else ""
-                    ),
-
-                    "procedure_confidence": (
-                        procedure_confidence
-                    ),
-
-                    "top1_procedure": (
-                        top_procedure
-                    ),
-
-                    "top1_final_score": (
-                        top_final_score
-                        if top_final_score is not None
-                        else 0.0
-                    ),
-
-                    "first_correct_rank": (
-                        first_correct_rank
-                        if first_correct_rank is not None
-                        else ""
-                    ),
-
-                    "hit_at_1": hit_at_1,
-                    "hit_at_3": hit_at_3,
-                    "hit_at_5": hit_at_5,
-
-                    "reciprocal_rank": (
-                        reciprocal_rank
-                    ),
-
-                    "max_cosine_score": (
-                        max_cosine_score
-                    ),
-
-                    "num_qdrant_candidates": (
-                        num_qdrant_candidates
-                    ),
-
-                    "latency_ms": (
-                        latency_ms
-                    ),
-                }
-            )
-
-            # -----------------------------------------------------------------
-            # Console output
-            # -----------------------------------------------------------------
-
-            print(
-                f"    Intent        : "
-                f"{intent} "
-                f"({intent_confidence:.4f})"
+                evaluated
             )
 
             print(
-                f"    Procedure     : "
-                f"{detected_procedure}"
+                f"Intent            : "
+                f"{evaluated['detected_intent']} "
+                f"("
+                f"{evaluated['intent_confidence']:.3f}"
+                f")"
             )
 
             print(
-                f"    max cosine   : "
-                f"{max_cosine_score:.4f}"
+                f"Detected procedure: "
+                f"{evaluated['detected_procedure']}"
             )
 
             print(
-                f"    latency      : "
-                f"{latency_ms:.2f} ms"
+                f"Top-1 procedure   : "
+                f"{evaluated['top1_procedure']}"
             )
 
-            if first_correct_rank is not None:
+            print(
+                f"Correct rank      : "
+                f"{evaluated['first_correct_rank']}"
+            )
 
-                print(
-                    f"    correct rank : "
-                    f"{first_correct_rank}"
-                )
+            print(
+                f"Hit@1             : "
+                f"{evaluated['hit_at_1']}"
+            )
 
-            elif label == "on-topic":
+            print(
+                f"Hit@3             : "
+                f"{evaluated['hit_at_3']}"
+            )
 
-                print(
-                    "    correct rank : "
-                    "NOT FOUND"
-                )
+            print(
+                f"Hit@5             : "
+                f"{evaluated['hit_at_5']}"
+            )
 
-            else:
+            print(
+                f"Benchmark pass    : "
+                f"{'YES' if evaluated['benchmark_pass'] else 'NO'}"
+            )
 
-                print(
-                    "    off-topic    : "
-                    "no expected procedure"
-                )
+            print(
+                f"Latency           : "
+                f"{evaluated['latency_ms']:.2f} ms"
+            )
 
     finally:
 
         client.close()
 
-    # =============================================================================
+    # -------------------------------------------------------------------------
     # DATAFRAME
-    # =============================================================================
+    # -------------------------------------------------------------------------
 
     results_df = pd.DataFrame(
         rows
     )
 
-    # =============================================================================
-    # RETRIEVAL METRICS
-    # =============================================================================
+    # -------------------------------------------------------------------------
+    # METRICS
+    # -------------------------------------------------------------------------
 
-    hit_metrics = evaluate_hit_metrics(
-        rows
-    )
-
-    # =============================================================================
-    # LATENCY
-    # =============================================================================
-
-    latency_summary = (
-        calculate_latency_summary(
+    retrieval_metrics = (
+        calculate_retrieval_metrics(
             results_df
         )
     )
 
-    # =============================================================================
-    # THRESHOLD TUNING
-    # =============================================================================
-
-    threshold_df = evaluate_thresholds(
-        rows
+    robustness_metrics = (
+        calculate_robustness_metrics(
+            results_df
+        )
     )
 
-    # Find best threshold by F1.
-    best_idx = threshold_df[
-        "f1"
-    ].idxmax()
+    latency_metrics = (
+        calculate_latency(
+            results_df
+        )
+    )
 
-    best = threshold_df.loc[
-        best_idx
-    ]
+    overall_pass_rate = float(
+        results_df[
+            "benchmark_pass"
+        ].mean()
+    )
 
-    # =============================================================================
+    # -------------------------------------------------------------------------
+    # CATEGORY
+    # -------------------------------------------------------------------------
+
+    category_df = (
+        build_category_summary(
+            results_df
+        )
+    )
+
+    # -------------------------------------------------------------------------
     # SAVE CSV
-    # =============================================================================
+    # -------------------------------------------------------------------------
 
-    results_path = (
+    detailed_csv = (
         RESULT_DIR
-        / "benchmark_results.csv"
+        / "benchmark_detailed_results.csv"
     )
 
-    threshold_path = (
+    category_csv = (
         RESULT_DIR
-        / "threshold_results.csv"
+        / "benchmark_category_summary.csv"
     )
 
-    summary_path = (
+    summary_csv = (
         RESULT_DIR
         / "benchmark_summary.csv"
     )
 
-    # Detailed query-level results
     results_df.to_csv(
-        results_path,
+        detailed_csv,
         index=False,
         encoding="utf-8-sig",
     )
 
-    # Threshold results
-    threshold_df.to_csv(
-        threshold_path,
+    category_df.to_csv(
+        category_csv,
         index=False,
         encoding="utf-8-sig",
     )
 
-    # =============================================================================
-    # SUMMARY CSV
-    # =============================================================================
+    # -------------------------------------------------------------------------
+    # SUMMARY DATA
+    # -------------------------------------------------------------------------
 
     summary_rows = [
-
         {
             "metric": "Total Queries",
             "value": total_queries,
         },
 
         {
-            "metric": "On-topic Queries",
-            "value": on_topic_count,
+            "metric": "Overall Pass Rate",
+            "value": overall_pass_rate,
         },
 
         {
-            "metric": "Off-topic Queries",
-            "value": off_topic_count,
+            "metric": "Retrieval Query Count",
+            "value": retrieval_metrics[
+                "count"
+            ],
         },
 
         {
             "metric": "Hit@1",
-            "value": hit_metrics["hit_at_1"],
+            "value": retrieval_metrics[
+                "hit_at_1"
+            ],
         },
 
         {
             "metric": "Hit@3",
-            "value": hit_metrics["hit_at_3"],
+            "value": retrieval_metrics[
+                "hit_at_3"
+            ],
         },
 
         {
             "metric": "Hit@5",
-            "value": hit_metrics["hit_at_5"],
+            "value": retrieval_metrics[
+                "hit_at_5"
+            ],
         },
 
         {
             "metric": "MRR",
-            "value": hit_metrics["mrr"],
+            "value": retrieval_metrics[
+                "mrr"
+            ],
+        },
+
+        {
+            "metric": "Ambiguous Count",
+            "value": robustness_metrics[
+                "ambiguous_count"
+            ],
+        },
+
+        {
+            "metric": "Ambiguous Pass Rate",
+            "value": robustness_metrics[
+                "ambiguous_pass_rate"
+            ],
+        },
+
+        {
+            "metric": "Out-of-Dataset Count",
+            "value": robustness_metrics[
+                "out_of_dataset_count"
+            ],
+        },
+
+        {
+            "metric": "Out-of-Dataset Pass Rate",
+            "value": robustness_metrics[
+                "out_of_dataset_pass_rate"
+            ],
         },
 
         {
             "metric": "Latency Mean (ms)",
-            "value": latency_summary[
-                "latency_mean_ms"
+            "value": latency_metrics[
+                "mean_ms"
             ],
         },
 
         {
             "metric": "Latency P50 (ms)",
-            "value": latency_summary[
-                "latency_p50_ms"
+            "value": latency_metrics[
+                "p50_ms"
             ],
         },
 
         {
             "metric": "Latency P95 (ms)",
-            "value": latency_summary[
-                "latency_p95_ms"
+            "value": latency_metrics[
+                "p95_ms"
             ],
         },
 
         {
             "metric": "Latency Max (ms)",
-            "value": latency_summary[
-                "latency_max_ms"
-            ],
-        },
-
-        {
-            "metric": "Best Threshold",
-            "value": best[
-                "threshold"
-            ],
-        },
-
-        {
-            "metric": "Best Precision",
-            "value": best[
-                "precision"
-            ],
-        },
-
-        {
-            "metric": "Best Recall",
-            "value": best[
-                "recall"
-            ],
-        },
-
-        {
-            "metric": "Best F1",
-            "value": best[
-                "f1"
-            ],
-        },
-
-        {
-            "metric": "Best Accuracy",
-            "value": best[
-                "accuracy"
+            "value": latency_metrics[
+                "max_ms"
             ],
         },
     ]
 
-    pd.DataFrame(
+    summary_df = pd.DataFrame(
         summary_rows
-    ).to_csv(
-        summary_path,
+    )
+
+    summary_df.to_csv(
+        summary_csv,
         index=False,
         encoding="utf-8-sig",
     )
 
-    # =============================================================================
-    # SAVE PLOTS
-    # =============================================================================
+    # -------------------------------------------------------------------------
+    # EXCEL REPORT
+    # -------------------------------------------------------------------------
+
+    report_xlsx = (
+        RESULT_DIR
+        / "benchmark_report.xlsx"
+    )
+
+    with pd.ExcelWriter(
+        report_xlsx,
+        engine="openpyxl",
+    ) as writer:
+
+        results_df.to_excel(
+            writer,
+            sheet_name="Detailed",
+            index=False,
+        )
+
+        category_df.to_excel(
+            writer,
+            sheet_name="Categories",
+            index=False,
+        )
+
+        summary_df.to_excel(
+            writer,
+            sheet_name="Summary",
+            index=False,
+        )
+
+        for ws in (
+            writer.book.worksheets
+        ):
+
+            ws.freeze_panes = "A2"
+
+    # -------------------------------------------------------------------------
+    # PLOTS
+    # -------------------------------------------------------------------------
+
+    latency_plot = (
+        save_latency_plot(
+            results_df
+        )
+    )
 
     score_plot = (
-        save_score_distribution(
-            rows
+        save_score_plot(
+            results_df
         )
     )
 
-    threshold_plot = (
-        save_threshold_plot(
-            threshold_df
-        )
+    # -------------------------------------------------------------------------
+    # FINAL CONSOLE SUMMARY
+    # -------------------------------------------------------------------------
+
+    print()
+    print()
+    print("=" * 90)
+    print(
+        "BENCHMARK SUMMARY"
     )
-
-    # =============================================================================
-    # CONSOLE SUMMARY
-    # =============================================================================
-
-    print()
-    print("=" * 80)
-    print("BENCHMARK SUMMARY")
-    print("=" * 80)
-
-    print()
+    print("=" * 90)
 
     print(
-        f"Queries       : "
+        f"Total queries            : "
         f"{total_queries}"
     )
 
     print(
-        f"On-topic      : "
-        f"{on_topic_count}"
-    )
-
-    print(
-        f"Off-topic     : "
-        f"{off_topic_count}"
+        f"Overall pass rate        : "
+        f"{overall_pass_rate:.2%}"
     )
 
     print()
-
     print(
-        f"Hit@1 : "
-        f"{hit_metrics['hit_at_1_count']}/"
-        f"{hit_metrics['num_on_topic']} "
-        f"({hit_metrics['hit_at_1']:.2%})"
+        f"Hit@1                    : "
+        f"{retrieval_metrics['hit_at_1']:.2%}"
     )
 
     print(
-        f"Hit@3 : "
-        f"{hit_metrics['hit_at_3_count']}/"
-        f"{hit_metrics['num_on_topic']} "
-        f"({hit_metrics['hit_at_3']:.2%})"
+        f"Hit@3                    : "
+        f"{retrieval_metrics['hit_at_3']:.2%}"
     )
 
     print(
-        f"Hit@5 : "
-        f"{hit_metrics['hit_at_5_count']}/"
-        f"{hit_metrics['num_on_topic']} "
-        f"({hit_metrics['hit_at_5']:.2%})"
+        f"Hit@5                    : "
+        f"{retrieval_metrics['hit_at_5']:.2%}"
     )
 
     print(
-        f"MRR   : "
-        f"{hit_metrics['mrr']:.4f}"
+        f"MRR                      : "
+        f"{retrieval_metrics['mrr']:.4f}"
     )
 
     print()
-
     print(
-        f"Latency Mean : "
-        f"{latency_summary['latency_mean_ms']:.2f} ms"
+        f"Ambiguous pass rate      : "
+        f"{robustness_metrics['ambiguous_pass_rate']:.2%}"
     )
 
     print(
-        f"Latency P50  : "
-        f"{latency_summary['latency_p50_ms']:.2f} ms"
+        f"Out-of-dataset pass rate : "
+        f"{robustness_metrics['out_of_dataset_pass_rate']:.2%}"
     )
-
-    print(
-        f"Latency P95  : "
-        f"{latency_summary['latency_p95_ms']:.2f} ms"
-    )
-
-    print(
-        f"Latency Max  : "
-        f"{latency_summary['latency_max_ms']:.2f} ms"
-    )
-
-    # =============================================================================
-    # THRESHOLD TABLE
-    # =============================================================================
 
     print()
-    print("-" * 80)
-    print("THRESHOLD TUNING")
-    print("-" * 80)
-
-    display_threshold_df = threshold_df[
-        [
-            "threshold",
-            "TP",
-            "FP",
-            "FN",
-            "TN",
-            "precision",
-            "recall",
-            "f1",
-            "accuracy",
-        ]
-    ].copy()
+    print(
+        f"Latency mean             : "
+        f"{latency_metrics['mean_ms']:.2f} ms"
+    )
 
     print(
-        display_threshold_df.to_string(
-            index=False,
-            float_format=lambda x: f"{x:.4f}",
+        f"Latency P50              : "
+        f"{latency_metrics['p50_ms']:.2f} ms"
+    )
+
+    print(
+        f"Latency P95              : "
+        f"{latency_metrics['p95_ms']:.2f} ms"
+    )
+
+    print(
+        f"Latency max              : "
+        f"{latency_metrics['max_ms']:.2f} ms"
+    )
+
+    # -------------------------------------------------------------------------
+    # CATEGORY TABLE
+    # -------------------------------------------------------------------------
+
+    print()
+    print("-" * 90)
+    print(
+        "CATEGORY SUMMARY"
+    )
+    print("-" * 90)
+
+    print(
+        category_df.to_string(
+            index=False
         )
     )
 
-    # =============================================================================
-    # BEST THRESHOLD
-    # =============================================================================
+    # -------------------------------------------------------------------------
+    # FILES
+    # -------------------------------------------------------------------------
 
     print()
+    print("-" * 90)
     print(
-        f"RECOMMENDED THRESHOLD: "
-        f"{best['threshold']:.2f}"
+        "FILES GENERATED"
+    )
+    print("-" * 90)
+
+    print(
+        f"- {detailed_csv}"
     )
 
     print(
-        f"Precision : "
-        f"{best['precision']:.4f}"
+        f"- {category_csv}"
     )
 
     print(
-        f"Recall    : "
-        f"{best['recall']:.4f}"
+        f"- {summary_csv}"
     )
 
     print(
-        f"F1        : "
-        f"{best['f1']:.4f}"
+        f"- {report_xlsx}"
     )
 
     print(
-        f"Accuracy  : "
-        f"{best['accuracy']:.4f}"
-    )
-
-    # =============================================================================
-    # OUTPUT FILES
-    # =============================================================================
-
-    print()
-    print("-" * 80)
-    print("FILES GENERATED")
-    print("-" * 80)
-
-    print(
-        f"- {results_path}"
-    )
-
-    print(
-        f"- {threshold_path}"
-    )
-
-    print(
-        f"- {summary_path}"
+        f"- {latency_plot}"
     )
 
     print(
         f"- {score_plot}"
     )
 
-    print(
-        f"- {threshold_plot}"
-    )
-
     print()
-    print("=" * 80)
-    print("BENCHMARK COMPLETED")
-    print("=" * 80)
+    print("=" * 90)
+    print(
+        "BENCHMARK COMPLETED"
+    )
+    print("=" * 90)
 
 
 # =============================================================================
@@ -1359,20 +1773,23 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
 
         print(
-            "\n[INFO] Benchmark interrupted by user."
+            "\n[INFO] Benchmark interrupted."
         )
 
     except Exception as exc:
 
         print()
-        print("=" * 80)
-        print("[FATAL ERROR]")
-        print("=" * 80)
+        print("=" * 90)
+        print(
+            "[FATAL ERROR]"
+        )
+        print("=" * 90)
 
         print(
-            f"{type(exc).__name__}: {exc}"
+            f"{type(exc).__name__}: "
+            f"{exc}"
         )
 
-        print("=" * 80)
+        print("=" * 90)
 
         raise
