@@ -1,7 +1,0 @@
-.venv/
-__pycache__/
-*.pyc
-.env
-qdrant_storage/
-models/
-data/processed/
