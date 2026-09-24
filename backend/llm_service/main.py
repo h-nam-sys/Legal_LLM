@@ -1,15 +1,16 @@
 import os
 import re
+import json
 import asyncio
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from llama_cpp import Llama
 from transformers import AutoTokenizer
 
 app = FastAPI(title="Legal LLM Service (Port 8002)")
 
-# Path to the GGUF model
-MODEL_PATH = os.getenv("MODEL_PATH", r"models\qwen_legal_q4_k_m.gguf")
+MODEL_PATH = os.getenv("MODEL_PATH", r"models\qwen3_1.7b_q8_0.gguf")
 TOKENIZER_NAME = os.getenv("TOKENIZER_NAME", "Qwen/Qwen3-0.6B")
 
 print(f"[INFO] Loading Tokenizer ({TOKENIZER_NAME}) for prompt formatting...")
@@ -18,13 +19,12 @@ tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_NAME)
 print("[INFO] Loading Llama.cpp engine (CPU mode)...")
 llm = Llama(
     model_path=MODEL_PATH,
-    n_ctx=2048,
-    n_threads=4,
-    n_gpu_layers=0,  # 0 forces CPU execution
+    n_ctx=4096,
+    n_threads=8,
+    n_gpu_layers=-1,
     verbose=False
 )
 
-# Robust schema accepting both old and new payload structures
 class LLMServiceRequest(BaseModel):
     system_prompt: str | None = Field(default=None, description="System instructions")
     user_prompt: str | None = Field(default=None, description="User prompt + context")
@@ -32,11 +32,6 @@ class LLMServiceRequest(BaseModel):
     context: list[str] = Field(default=[], description="Retrieved context chunks")
     max_tokens: int = Field(default=300, description="Max tokens to generate")
     temperature: float = Field(default=0.0, description="Sampling temperature")
-
-class LLMServiceResponse(BaseModel):
-    answer: str
-    confidence: float
-    sources: list[str]
 
 def extract_sources(docs: list[str]) -> list[str]:
     sources = []
@@ -48,54 +43,33 @@ def extract_sources(docs: list[str]) -> list[str]:
                 sources.append(proc_name)
     return sources
 
-def generate_text_sync(system: str | None, user: str, max_tokens: int, temp: float) -> str:
-    messages = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": user})
-
-    # Apply ChatML formatting with thinking tokens explicitly suppressed
-    formatted_prompt = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-        enable_thinking=False
-    )
-
-    response = llm(
-        formatted_prompt,
-        max_tokens=max_tokens,
-        temperature=temp,
-        repeat_penalty=1.1,
-        stop=["<|im_end|>"]
-    )
-    return response["choices"][0]["text"].strip()
-
-@app.post("/generate", response_model=LLMServiceResponse)
-async def generate(payload: LLMServiceRequest):
-    if not payload.context and not payload.user_prompt and not payload.prompt:
-        return LLMServiceResponse(
-            answer="Không tìm thấy tài liệu liên quan.",
-            confidence=0.0,
-            sources=[]
-        )
-
-    # Determine user content from either user_prompt or fallback prompt
+@app.post("/generate_stream")
+async def generate_stream(payload: LLMServiceRequest):
     user_content = payload.user_prompt or payload.prompt or ""
 
-    raw_answer = await asyncio.to_thread(
-        generate_text_sync,
-        payload.system_prompt,
-        user_content,
-        payload.max_tokens,
-        payload.temperature
+    messages = []
+    if payload.system_prompt:
+        messages.append({"role": "system", "content": payload.system_prompt})
+    messages.append({"role": "user", "content": user_content})
+
+    formatted_prompt = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
     )
 
-    return LLMServiceResponse(
-        answer=raw_answer,
-        confidence=0.90,
-        sources=extract_sources(payload.context)
-    )
+    def stream_generator():
+        # Yield the sources first so the frontend has them instantly
+        sources = extract_sources(payload.context)
+        yield f"data: {json.dumps({'type': 'metadata', 'sources': sources})}\n\n"
+
+        # Stream the text chunks as they generate
+        for chunk in llm(formatted_prompt, max_tokens=payload.max_tokens, temperature=payload.temperature, stream=True, stop=["<|im_end|>"]):
+            text = chunk["choices"][0]["text"]
+            if text:
+                yield f"data: {json.dumps({'type': 'chunk', 'text': text})}\n\n"
+
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(stream_generator(), media_type="text/event-stream")
 
 if __name__ == "__main__":
     import uvicorn

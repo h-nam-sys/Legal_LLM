@@ -3,54 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <title>Tư Vấn Pháp Lý</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; background: #f9f9f9; }
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-main: #f8fafc;
+            --bg-sidebar: #0f172a;
+            --text-main: #334155;
+            --text-light: #94a3b8;
+            --bot-bubble: #ffffff;
+            --border-color: #e2e8f0;
+        }
 
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .login-box { background: white; padding: 40px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 300px; }
-        .login-box h2 { margin-top: 0; color: #2c3e50; }
-        .login-box input { width: 90%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-        .login-box button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .login-box button:hover { background: #2980b9; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; display: flex; height: 100vh; background: var(--bg-main); color: var(--text-main); }
 
-        #sidebar { width: 260px; background: #2c3e50; color: white; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; }
-        #sidebar h3 { margin-top: 0; font-size: 16px; color: #ecf0f1; display: flex; justify-content: space-between; align-items: center; }
-        .logout-btn { background: #e74c3c; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
-        .logout-btn:hover { background: #c0392b; }
-        .new-chat-btn { width: 100%; padding: 10px; margin-bottom: 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .new-chat-btn:hover { background: #2ecc71; }
-        .conv-item { padding: 10px; margin-bottom: 5px; background: #34495e; border-radius: 4px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .conv-item:hover { background: #3d566e; }
-        .conv-item.active { background: #2980b9; border-left: 4px solid #3498db; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        #main { flex: 1; display: flex; flex-direction: column; }
-        #chat-window { flex: 1; padding: 20px; overflow-y: auto; background: #fff; }
-        #input-area { padding: 15px; background: #fff; border-top: 1px solid #ddd; display: flex; align-items: center; }
-        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-        input[type="text"]:focus { outline: none; border-color: #3498db; }
-        button.send-btn { padding: 12px 20px; margin-left: 10px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button.send-btn:hover { background: #2980b9; }
+        /* Login Overlay */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 340px; }
+        .login-box h2 { margin-top: 0; color: #0f172a; font-weight: 600; margin-bottom: 25px; }
+        .login-box input { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+        .login-box input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .login-box button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: background 0.2s; }
+        .login-box button:hover { background: var(--primary-hover); }
 
-        .message { margin-bottom: 5px; padding: 12px 15px; border-radius: 8px; max-width: 75%; line-height: 1.5; }
-        .user { background: #e3f2fd; align-self: flex-end; margin-left: auto; color: #0d47a1; border-bottom-right-radius: 0; }
-        .bot { background: #f1f2f6; align-self: flex-start; margin-right: auto; color: #2c3e50; border-bottom-left-radius: 0; }
-        .sources { font-size: 0.85em; color: #7f8c8d; margin-top: 8px; border-top: 1px dashed #bdc3c7; padding-top: 5px; }
-        .msg-wrapper { display: flex; width: 100%; flex-direction: column; margin-bottom: 20px; }
+        /* Sidebar */
+        #sidebar { width: 280px; background: var(--bg-sidebar); color: #f8fafc; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        #sidebar h3 { margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .logout-btn { background: #334155; color: white; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.2s; }
+        .logout-btn:hover { background: #ef4444; }
+        .new-chat-btn { width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-weight: 500; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+        .new-chat-btn:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.2); }
+        .conv-item { padding: 12px 15px; margin-bottom: 8px; background: transparent; border-radius: 8px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #cbd5e1; transition: all 0.2s; }
+        .conv-item:hover { background: rgba(255,255,255,0.05); }
+        .conv-item.active { background: var(--primary); color: white; font-weight: 500; }
 
-        .feedback-btns { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 10px; align-self: flex-start; }
-        .feedback-btn { background: none; border: 1px solid #bdc3c7; border-radius: 4px; cursor: pointer; padding: 4px 10px; color: #7f8c8d; font-size: 12px; transition: all 0.2s; }
-        .feedback-btn:hover { background: #ecf0f1; color: #2c3e50; }
-        .feedback-btn.active-up { background: #27ae60; color: white; border-color: #27ae60; }
-        .feedback-btn.active-down { background: #e74c3c; color: white; border-color: #e74c3c; }
-        .rag-score { font-size: 0.85em; color: #d35400; margin-top: 5px; font-weight: bold; }
+        /* Main Chat Area */
+        #main { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); }
+        #chat-window { flex: 1; padding: 30px; overflow-y: auto; scroll-behavior: smooth; }
+
+        /* Input Area */
+        #input-area { padding: 20px 30px; background: var(--bg-main); display: flex; align-items: center; }
+        .input-wrapper { display: flex; width: 100%; max-width: 800px; margin: 0 auto; background: white; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); padding: 5px; transition: box-shadow 0.2s; }
+        .input-wrapper:focus-within { box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15); border-color: #bfdbfe; }
+        input[type="text"] { flex: 1; padding: 15px 20px; border: none; background: transparent; font-size: 15px; font-family: 'Inter', sans-serif; }
+        input[type="text"]:focus { outline: none; }
+
+        /* Mic Button & Pulse Animation */
+        button#mic-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 0 15px; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; margin: 5px; width: 45px; height: 45px; }
+        button#mic-btn:hover:not(.listening) { background: #f1f5f9; }
+
+        @keyframes mic-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        button#mic-btn.listening {
+            animation: mic-pulse 1.5s infinite;
+            background-color: #ef4444;
+            color: white;
+        }
+
+        button.send-btn { padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: 600; transition: background 0.2s; margin-left: 5px; }
+        button.send-btn:hover { background: var(--primary-hover); }
+
+        /* Messages */
+        .msg-wrapper { display: flex; width: 100%; flex-direction: column; margin-bottom: 24px; }
+        .message { padding: 16px 20px; border-radius: 16px; max-width: 85%; line-height: 1.6; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+
+        .user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 4px; margin-left: auto; }
+        .bot { background: var(--bot-bubble); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; margin-right: auto; border: 1px solid var(--border-color); }
+
+        .sources { font-size: 0.85em; color: var(--text-light); margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 8px; }
+        .rag-score { font-size: 0.85em; color: #ea580c; margin-top: 8px; font-weight: 600; }
+
+        /* Feedback Buttons */
+        .feedback-btns { display: flex; gap: 8px; margin-top: 6px; margin-bottom: 15px; align-self: flex-start; padding-left: 5px; }
+        .feedback-btn { background: transparent; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; padding: 4px 12px; color: var(--text-light); font-size: 12px; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+        .feedback-btn:hover { background: #f1f5f9; color: var(--text-main); }
+        .feedback-btn.active-up { background: #dcfce7; color: #166534; border-color: #22c55e; }
+        .feedback-btn.active-down { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
+
+        /* Quick Action Buttons (Yes/No) */
+        .action-btns { display: flex; gap: 10px; margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 12px; }
+        .action-btn { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; border: none; transition: background 0.2s; }
+        .action-btn.yes { background: var(--primary); color: white; }
+        .action-btn.yes:hover { background: var(--primary-hover); }
+        .action-btn.no { background: #e2e8f0; color: var(--text-main); }
+        .action-btn.no:hover { background: #cbd5e1; }
+
+        /* Markdown Styling */
+        .message ul, .message ol { margin-top: 8px; margin-bottom: 8px; padding-left: 24px; }
+        .message li { margin-bottom: 4px; }
+        .message p { margin: 0 0 10px 0; }
+        .message p:last-child { margin-bottom: 0; }
+        .message strong { color: #0f172a; font-weight: 600; }
+
+        /* Loading Animation */
+        .loading-text { font-style: italic; color: var(--text-light); animation: pulse-text 1.5s infinite; border: none; background: transparent; box-shadow: none; padding: 8px 5px; display: inline-block; }
+        @keyframes pulse-text { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div id="login-overlay">
         <div class="login-box">
-            <h2>Đăng Nhập</h2>
-            <input type="text" id="username-input" placeholder="Nhập tên đăng nhập..." onkeypress="if(event.key==='Enter') performLogin()">
-            <button onclick="performLogin()">Vào Chat</button>
+            <h2>Hệ Thống Tư Vấn Pháp Lý</h2>
+            <input type="text" id="username-input" placeholder="Tên đăng nhập..." onkeypress="if(event.key==='Enter') performLogin()">
+            <button onclick="performLogin()">Vào Hệ Thống</button>
         </div>
     </div>
 
@@ -63,12 +133,17 @@
     <div id="main">
         <div id="chat-window"></div>
         <div id="input-area">
-            <input type="text" id="prompt" placeholder="Nhập câu hỏi pháp lý..." onkeypress="handleEnter(event)">
-            <button class="send-btn" onclick="sendMessage()">Gửi</button>
+            <div class="input-wrapper">
+                <input type="text" id="prompt" placeholder="Nhập câu hỏi pháp lý của bạn vào đây..." autocomplete="off" onkeypress="handleEnter(event)">
+                <button id="mic-btn" title="Dùng giọng nói">🎤</button>
+                <button class="send-btn" onclick="sendMessage()">Gửi</button>
+            </div>
         </div>
     </div>
 
     <script>
+        marked.use({ gfm: true, breaks: true });
+
         let currentConvId = null;
         let userId = localStorage.getItem("user_id");
 
@@ -90,10 +165,8 @@
                     body: JSON.stringify({ username: username })
                 });
                 const data = await res.json();
-
                 userId = data.user_id;
                 localStorage.setItem("user_id", userId);
-
                 document.getElementById("login-overlay").style.display = "none";
                 loadSidebar();
             } catch (err) {
@@ -107,15 +180,64 @@
         }
 
         function getAuthHeaders() {
-            return {
-                "Content-Type": "application/json",
-                "X-User-ID": userId
-            };
+            return { "Content-Type": "application/json", "X-User-ID": userId };
         }
 
         function handleEnter(e) {
             if (e.key === 'Enter') sendMessage();
         }
+
+        // --- NEW ACTION HANDLERS FOR FAST ENDPOINTS ---
+        window.hideActions = function(msgId) {
+            const btnDiv = document.getElementById(`action-btns-${msgId}`);
+            if (btnDiv) btnDiv.style.display = 'none';
+        };
+
+        window.triggerAction = async function(msgId, actionType) {
+            hideActions(msgId);
+
+            const chatWindow = document.getElementById("chat-window");
+            const newMsgId = "bot-msg-" + Date.now();
+
+            chatWindow.innerHTML += `
+                <div class="msg-wrapper">
+                    <div class="message bot">
+                        <span id="${newMsgId}-text" class="loading-text">${actionType === 'mcp' ? 'Đang tra cứu trực tuyến...' : 'Đang lấy biểu mẫu...'}</span>
+                        <div id="${newMsgId}-meta"></div>
+                    </div>
+                </div>
+            `;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            try {
+                const res = await fetch(`/chat/${currentConvId}/action/${actionType}`, {
+                    method: "POST",
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) throw new Error("API call failed");
+                const data = await res.json();
+
+                const textElement = document.getElementById(`${newMsgId}-text`);
+                const metaElement = document.getElementById(`${newMsgId}-meta`);
+
+                textElement.classList.remove("loading-text");
+                textElement.innerHTML = marked.parse(data.text);
+
+                if (data.sources && data.sources.length > 0) {
+                    metaElement.innerHTML = `<div class="sources">Nguồn: ${data.sources.join(" | ")}</div>`;
+                }
+
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                loadSidebar();
+            } catch (err) {
+                const textElement = document.getElementById(`${newMsgId}-text`);
+                if (textElement) {
+                    textElement.classList.remove("loading-text");
+                    textElement.innerHTML = `<span style="color:red;">Lỗi kết nối.</span>`;
+                }
+            }
+        };
 
         function extractSourceData(sourceArray) {
             let actualSources = [];
@@ -162,15 +284,13 @@
         }
 
         async function submitFeedback(messageId, rating, btnElement) {
-            if (!messageId) return console.warn("Missing message ID for feedback");
-
+            if (!messageId) return;
             try {
                 const res = await fetch(`/feedback/${messageId}`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ rating: rating })
                 });
-
                 if (res.ok) {
                     const wrapper = btnElement.closest('.feedback-btns');
                     wrapper.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active-up', 'active-down'));
@@ -185,10 +305,8 @@
         async function loadChatHistory(convId) {
             currentConvId = convId;
             loadSidebar();
-
             const res = await fetch(`/history/${convId}`, { headers: getAuthHeaders() });
             const data = await res.json();
-
             const chatWindow = document.getElementById("chat-window");
             chatWindow.innerHTML = "";
 
@@ -210,10 +328,12 @@
                        </div>`
                     : "";
 
+                const formattedContent = isUser ? msg.content : marked.parse(msg.content);
+
                 chatWindow.innerHTML += `
                     <div class="msg-wrapper">
                         <div class="message ${isUser ? 'user' : 'bot'}">
-                            ${msg.content.replace(/\n/g, '<br>')}
+                            ${formattedContent}
                             ${scoreHtml}
                             ${sourceHtml}
                         </div>
@@ -232,6 +352,7 @@
             if (!text) return;
 
             const chatWindow = document.getElementById("chat-window");
+
             chatWindow.innerHTML += `
                 <div class="msg-wrapper">
                     <div class="message user">${text}</div>
@@ -240,44 +361,194 @@
             input.value = "";
             chatWindow.scrollTop = chatWindow.scrollHeight;
 
+            const msgId = "bot-msg-" + Date.now();
+            chatWindow.innerHTML += `
+                <div class="msg-wrapper">
+                    <div class="message bot">
+                        <span id="${msgId}-text" class="loading-text">Đang phân tích yêu cầu...</span>
+                        <div id="${msgId}-meta"></div>
+                    </div>
+                </div>
+            `;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            const textElement = document.getElementById(`${msgId}-text`);
+            const metaElement = document.getElementById(`${msgId}-meta`);
+
+            const fakeSteps = [
+                "Đang tra cứu cơ sở dữ liệu pháp luật...",
+                "Đang trích xuất quy định hiện hành...",
+                "Đang kết nối tới mô hình AI..."
+            ];
+            const fallbackStep = "Vẫn đang xử lý, vui lòng đợi thêm (có thể đang xếp hàng)...";
+            let step = 0;
+            let loadingTimer;
+
+            function updateLoadingText() {
+                if (!textElement || !textElement.classList.contains("loading-text")) return;
+
+                if (step < fakeSteps.length) {
+                    textElement.innerText = fakeSteps[step];
+                    step++;
+                    const randomDelay = Math.floor(Math.random() * 1300) + 1200;
+                    loadingTimer = setTimeout(updateLoadingText, randomDelay);
+                } else {
+                    textElement.innerText = fallbackStep;
+                }
+            }
+
+            loadingTimer = setTimeout(updateLoadingText, 1000);
+
             try {
                 const res = await fetch(`/chat/${currentConvId}`, {
                     method: "POST",
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ user_prompt: text })
                 });
-                const data = await res.json();
 
-                let sourceHtml = "";
-                let scoreHtml = "";
+                if (!res.ok) throw new Error("Network response was not ok");
 
-                const { actualSources, ragScore } = extractSourceData(data.sources);
-                if (actualSources.length > 0) sourceHtml = `<div class="sources">Nguồn: ${actualSources.join(" | ")}</div>`;
-                if (ragScore !== null) scoreHtml = `<div class="rag-score">Điểm tin cậy (RAG): ${ragScore}</div>`;
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder("utf-8");
 
-                let feedbackHtml = data.message_id
-                    ? `<div class="feedback-btns">
-                           <button class="feedback-btn" onclick="submitFeedback(${data.message_id}, 3, this)">👍 Phù hợp</button>
-                           <button class="feedback-btn" onclick="submitFeedback(${data.message_id}, 1, this)">👎 Không phù hợp</button>
-                       </div>`
-                    : "";
+                let fullText = "";
+                let displayedText = "";
+                let buffer = "";
+                let actualSources = [];
+                let isFirstToken = true;
+                let streamActive = true;
 
-                chatWindow.innerHTML += `
-                    <div class="msg-wrapper">
-                        <div class="message bot">
-                            ${data.answer.replace(/\n/g, '<br>')}
-                            ${scoreHtml}
-                            ${sourceHtml}
-                        </div>
-                        ${feedbackHtml}
-                    </div>
-                `;
-                chatWindow.scrollTop = chatWindow.scrollHeight;
+                function smoothRender() {
+                    if (!isFirstToken && displayedText.length < fullText.length) {
+                        let diff = fullText.length - displayedText.length;
+                        let charsToAdd = Math.ceil(diff / 3);
+
+                        displayedText += fullText.substr(displayedText.length, charsToAdd);
+                        textElement.innerHTML = marked.parse(displayedText);
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    }
+
+                    if (streamActive || displayedText.length < fullText.length) {
+                        requestAnimationFrame(smoothRender);
+                    } else {
+                        textElement.innerHTML = marked.parse(fullText);
+
+                        // --- INJECT YES/NO BUTTONS CLEANLY ---
+                        if (fullText.includes("Bạn có muốn tải biểu mẫu") || fullText.includes("tìm kiếm trực tuyến")) {
+                            const actionType = fullText.includes("Bạn có muốn tải biểu mẫu") ? 'form' : 'mcp';
+                            textElement.innerHTML += `
+                                <div class="action-btns" id="action-btns-${msgId}">
+                                    <button class="action-btn yes" onclick="window.triggerAction('${msgId}', '${actionType}')">Có</button>
+                                    <button class="action-btn no" onclick="window.hideActions('${msgId}')">Không</button>
+                                </div>
+                            `;
+                        }
+
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    }
+                }
+
+                requestAnimationFrame(smoothRender);
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        streamActive = false;
+                        break;
+                    }
+
+                    buffer += decoder.decode(value, { stream: true });
+
+                    let boundary = buffer.indexOf("\n\n");
+                    while (boundary !== -1) {
+                        let chunk = buffer.slice(0, boundary);
+                        buffer = buffer.slice(boundary + 2);
+
+                        if (chunk.startsWith("data: ")) {
+                            const dataStr = chunk.replace("data: ", "").trim();
+                            if (dataStr === "[DONE]") continue;
+
+                            try {
+                                const parsed = JSON.parse(dataStr);
+                                if (parsed.type === "metadata") {
+                                    actualSources = parsed.sources || [];
+                                } else if (parsed.type === "chunk") {
+                                    if (isFirstToken) {
+                                        clearTimeout(loadingTimer);
+                                        textElement.classList.remove("loading-text");
+                                        textElement.innerHTML = "";
+                                        isFirstToken = false;
+                                    }
+                                    fullText += parsed.text;
+                                }
+                            } catch (e) {
+                                console.warn("Stream parse error on chunk:", dataStr);
+                            }
+                        }
+                        boundary = buffer.indexOf("\n\n");
+                    }
+                }
+
+                if (actualSources.length > 0) {
+                    metaElement.innerHTML = `<div class="sources">Nguồn: ${actualSources.join(" | ")}</div>`;
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+
                 loadSidebar();
+
             } catch (err) {
-                chatWindow.innerHTML += `<div class="msg-wrapper"><div class="message bot" style="color:red;">Lỗi kết nối.</div></div>`;
+                clearTimeout(loadingTimer);
+                textElement.classList.remove("loading-text");
+                textElement.innerHTML = `<span style="color:red;">Lỗi kết nối đến máy chủ. Vui lòng thử lại.</span>`;
             }
         }
+
+        // --- VOICE TO TEXT LOGIC ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const micBtn = document.getElementById("mic-btn");
+            const chatInput = document.getElementById("prompt");
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (!SpeechRecognition) {
+                micBtn.style.display = "none";
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'vi-VN';
+            recognition.interimResults = false;
+
+            micBtn.addEventListener("click", () => {
+                if (micBtn.classList.contains("listening")) {
+                    recognition.stop();
+                    return;
+                }
+
+                recognition.start();
+                micBtn.classList.add("listening");
+                micBtn.textContent = "🛑";
+                chatInput.placeholder = "Đang nghe...";
+            });
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                chatInput.value += (chatInput.value ? " " : "") + transcript;
+            };
+
+            recognition.onend = () => {
+                micBtn.classList.remove("listening");
+                micBtn.textContent = "🎤";
+                chatInput.placeholder = "Nhập câu hỏi pháp lý của bạn vào đây...";
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                micBtn.classList.remove("listening");
+                micBtn.textContent = "🎤";
+                chatInput.placeholder = "Lỗi mic, vui lòng gõ phím...";
+            };
+        });
     </script>
 </body>
 </html>

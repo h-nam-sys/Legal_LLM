@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 # ============ User-facing API ============
 
@@ -49,9 +50,13 @@ class MessageSchema(BaseModel):
     created_at: str
 
 class ConversationSchema(BaseModel):
-    """Represents a conversation with full history"""
+    """Represents a conversation with full history and stateful tracking"""
     id: int
     title: str
+    location: Optional[str] = None
+    current_procedure: Optional[str] = None
+    checklist: dict = Field(default_factory=dict)
+    needs_search_permission: bool = False
     created_at: str
     updated_at: str
     messages: list[MessageSchema] = []
@@ -59,3 +64,15 @@ class ConversationSchema(BaseModel):
 class StartConversationRequest(BaseModel):
     """Request to start a new conversation"""
     title: str = Field(default="Legal Consultation", description="Conversation title")
+
+# ============ Audit Log Schemas ============
+
+class AuditLogSchema(BaseModel):
+    """Represents an admin audit log entry"""
+    id: int
+    conversation_id: int
+    user_query: str
+    retrieved_local_context: Optional[str] = None
+    llm_final_response: str
+    used_online_search: bool
+    created_at: str

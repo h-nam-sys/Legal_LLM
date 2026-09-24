@@ -7,9 +7,11 @@ from dotenv import load_dotenv
 from routers import chat
 from database import init_db
 from schemas import LoginRequest
+from rate_limiter import limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 
 load_dotenv()
-init_db()
 
 LLM_SERVICE_URL = os.getenv("LLM_SERVICE_URL", "http://localhost:8001")
 RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "http://localhost:8002")
@@ -20,6 +22,14 @@ app = FastAPI(
     version="1.0",
     description="Vietnamese legal consulting system with RAG and LLM integration"
 )
+
+# 0. Initialize the async database when the server starts
+@app.on_event("startup")
+async def startup_event():
+    await init_db()
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # 1. Mount static assets
 app.mount("/static", StaticFiles(directory="static"), name="static")

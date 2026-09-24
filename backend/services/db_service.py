@@ -1,66 +1,71 @@
-from sqlalchemy.orm import Session
-from database import User, Conversation, Message
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from database import User, Conversation, Message, AuditLog
 import json
 from datetime import datetime
 
 # ============ User Operations ============
 
-def get_or_create_user(db: Session, user_id: str) -> User:
-    """Get existing user or create new one based on the deterministic UUID"""
-    user = db.query(User).filter(User.user_id == user_id).first()
+async def get_or_create_user(db: AsyncSession, user_id: str) -> User:
+    result = await db.execute(select(User).where(User.user_id == user_id))
+    user = result.scalar_one_or_none()
+
     if not user:
         user = User(user_id=user_id)
         db.add(user)
-        db.commit()
-        db.refresh(user)
+        await db.commit()
+        await db.refresh(user)
     return user
 
 # ============ Conversation Operations ============
 
-def create_conversation(db: Session, user_id: str, title: str = "Legal Consultation") -> Conversation:
-    """Create a new conversation for a user"""
-    user = get_or_create_user(db, user_id)
+async def create_conversation(db: AsyncSession, user_id: str, title: str = "Legal Consultation") -> Conversation:
+    user = await get_or_create_user(db, user_id)
     conversation = Conversation(user_id=user.id, title=title)
     db.add(conversation)
-    db.commit()
-    db.refresh(conversation)
+    await db.commit()
+    await db.refresh(conversation)
     return conversation
 
-def get_conversation(db: Session, conversation_id: int) -> Conversation:
-    """Get conversation by ID"""
-    return db.query(Conversation).filter(Conversation.id == conversation_id).first()
+async def get_conversation(db: AsyncSession, conversation_id: int) -> Conversation:
+    result = await db.execute(select(Conversation).where(Conversation.id == conversation_id))
+    return result.scalar_one_or_none()
 
-def get_user_conversations(db: Session, user_id: str) -> list[Conversation]:
-    """Get all conversations for a user"""
-    user = db.query(User).filter(User.user_id == user_id).first()
+async def get_user_conversations(db: AsyncSession, user_id: str) -> list[Conversation]:
+    result = await db.execute(select(User).where(User.user_id == user_id))
+    user = result.scalar_one_or_none()
+
     if not user:
         return []
-    return db.query(Conversation).filter(Conversation.user_id == user.id).order_by(Conversation.created_at.desc()).all()
 
-def update_conversation_title(db: Session, conversation_id: int, new_title: str):
-    """Update the title of an existing conversation"""
-    conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    result = await db.execute(
+        select(Conversation)
+        .where(Conversation.user_id == user.id)
+        .order_by(Conversation.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+async def update_conversation_title(db: AsyncSession, conversation_id: int, new_title: str):
+    conv = await get_conversation(db, conversation_id)
     if conv:
         conv.title = new_title
-        db.commit()
+        await db.commit()
 
-def update_active_procedure(db: Session, conversation_id: int, procedure_name: str):
-    """Update the active legal procedure (Requires 'active_procedure' column in database.py)"""
-    conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
-    if conv and hasattr(conv, 'active_procedure'):
-        conv.active_procedure = procedure_name
-        db.commit()
+async def update_search_permission(db: AsyncSession, conversation_id: int, permission: bool):
+    conv = await get_conversation(db, conversation_id)
+    if conv:
+        conv.needs_search_permission = permission
+        await db.commit()
+
+async def update_form_offer_flag(db: AsyncSession, conversation_id: int, state: bool):
+    conv = await get_conversation(db, conversation_id)
+    if conv:
+        conv.offered_form_download = state
+        await db.commit()
 
 # ============ Message Operations ============
 
-def add_message(
-    db: Session,
-    conversation_id: int,
-    role: str,
-    content: str,
-    sources: list[str] = None
-) -> Message:
-    """Add a message to a conversation"""
+async def add_message(db: AsyncSession, conversation_id: int, role: str, content: str, sources: list[str] = None) -> Message:
     message = Message(
         conversation_id=conversation_id,
         role=role,
@@ -68,38 +73,68 @@ def add_message(
         sources=json.dumps(sources or [])
     )
     db.add(message)
-    db.commit()
-    db.refresh(message)
+    await db.commit()
+    await db.refresh(message)
     return message
 
-def get_conversation_history(db: Session, conversation_id: int) -> list[Message]:
-    """Get all messages in a conversation"""
-    return db.query(Message).filter(Message.conversation_id == conversation_id).order_by(Message.created_at.asc()).all()
+async def get_conversation_history(db: AsyncSession, conversation_id: int) -> list[Message]:
+    result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.asc())
+    )
+    return list(result.scalars().all())
 
-def get_last_n_messages(db: Session, conversation_id: int, n: int = 10) -> list[Message]:
-    """Get last N messages from a conversation (for context)"""
-    return db.query(Message).filter(
-        Message.conversation_id == conversation_id
-    ).order_by(Message.created_at.desc()).limit(n).all()[::-1]
+async def get_last_n_messages(db: AsyncSession, conversation_id: int, n: int = 10) -> list[Message]:
+    result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.desc())
+        .limit(n)
+    )
+    messages = list(result.scalars().all())
+    return messages[::-1]
 
-def update_message_rating(db: Session, message_id: int, rating: int):
-    """Update message rating in SQLite (0=Không hài lòng, 1=Hài lòng) and append to fine-tuning datasets."""
-    msg = db.query(Message).filter(Message.id == message_id).first()
+# ============ Audit Log Operations ============
+
+async def log_interaction(db: AsyncSession, conversation_id: int, user_query: str, llm_response: str, local_context: str = None, used_online_search: bool = False):
+    audit_entry = AuditLog(
+        conversation_id=conversation_id,
+        user_query=user_query,
+        retrieved_local_context=local_context,
+        llm_final_response=llm_response,
+        used_online_search=used_online_search
+    )
+    db.add(audit_entry)
+    await db.commit()
+
+# ============ Feedback Operations ============
+
+async def update_message_rating(db: AsyncSession, message_id: int, rating: int):
+    result = await db.execute(select(Message).where(Message.id == message_id))
+    msg = result.scalar_one_or_none()
+
     if not msg or not hasattr(msg, 'rating'):
         return
 
     msg.rating = rating
-    db.commit()
+    await db.commit()
 
     if msg.role == "assistant":
-        user_msg = db.query(Message).filter(
-            Message.conversation_id == msg.conversation_id,
-            Message.id < msg.id,
-            Message.role == "user"
-        ).order_by(Message.id.desc()).first()
+        # Find the preceding user message
+        result = await db.execute(
+            select(Message)
+            .where(
+                Message.conversation_id == msg.conversation_id,
+                Message.id < msg.id,
+                Message.role == "user"
+            )
+            .order_by(Message.id.desc())
+            .limit(1)
+        )
+        user_msg = result.scalar_one_or_none()
 
         if user_msg:
-            # Clean RAG sources by removing the internal score marker
             raw_sources = json.loads(msg.sources) if msg.sources else []
             clean_sources = [s for s in raw_sources if not s.startswith("RAG_SCORE:")]
 
@@ -112,16 +147,12 @@ def update_message_rating(db: Session, message_id: int, rating: int):
                 "rag_context": clean_sources
             }
 
-            # Master log with all rated interactions
             with open("all_feedback_dataset.jsonl", "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
-            # Golden dataset for standard Supervised Fine-Tuning (SFT)
             if rating == 1:
                 with open("sft_positive_dataset.jsonl", "a", encoding="utf-8") as f:
                     f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-
-            # Defect dataset for error review or DPO negative pairs
             elif rating == 0:
                 with open("review_negative_dataset.jsonl", "a", encoding="utf-8") as f:
                     f.write(json.dumps(entry, ensure_ascii=False) + "\n")
