@@ -1,3 +1,0 @@
-dir /s /b > filelist.txt
-
-pipreqs . --force --encoding utf-8
