@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from pydantic import BaseModel
 from schemas import ChatRequest, ChatResponse, StartConversationRequest, ConversationSchema
 from services.llm_service import get_legal_response_stream
-from mcp_service import execute_mcp_search, should_trigger_mcp
+from services.mcp_service import execute_mcp_search, should_trigger_mcp
 from rate_limiter import limiter
 from services.db_service import (
     create_conversation,

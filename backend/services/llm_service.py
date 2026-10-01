@@ -1,257 +1,200 @@
-import asyncio
-import httpx
 import os
 import json
-import re
+import httpx
 import time
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import text
 from cachetools import TTLCache
-from schemas import LLMServiceRequest, LLMServiceResponse, RAGServiceRequest, RAGServiceResponse
 
-LLM_URLS_ENV = os.getenv("LLM_SERVICE_URLS", "http://127.0.0.1:8002")
-AVAILABLE_LLMS = [url.strip() for url in LLM_URLS_ENV.split(",")]
+# LlamaIndex Imports
+from llama_index.core import StorageContext, load_index_from_storage, Settings
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-llm_queue = asyncio.Queue()
-for url in AVAILABLE_LLMS:
-    llm_queue.put_nowait(url)
+# Cấu hình đường dẫn gốc
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+SQLITE_DB_URL = f"sqlite+aiosqlite:///{os.path.join(DATA_DIR, 'legal_llm.db')}"
+VECTOR_STORAGE_DIR = os.path.join(DATA_DIR, "vector_storage")
+SCHEMA_DICT_PATH = os.path.join(DATA_DIR, "schema_dictionary.json")
 
+LLM_URL = os.getenv("LLM_SERVICE_URLS", "http://127.0.0.1:8002").split(",")[0].strip()
+
+# Bộ nhớ đệm câu trả lời
 qa_cache = TTLCache(maxsize=100, ttl=3600)
 
-def clean_query(text: str) -> str:
-    cleaned = re.sub(r'[^\w\s]', '', text.lower())
-    return re.sub(r'\s+', ' ', cleaned).strip()
+# Khởi tạo mô hình Embedding
+Settings.embed_model = HuggingFaceEmbedding(
+    model_name="keepitreal/vietnamese-sbert",
+    device="cpu"
+)
 
-def jaccard_similarity(query1: str, query2: str) -> float:
-    set1 = set(query1.split())
-    set2 = set(query2.split())
-    if not set1 or not set2:
-        return 0.0
-    return len(set1.intersection(set2)) / len(set1.union(set2))
+# Tải Vector Store từ đĩa vào bộ nhớ RAM
+print("[Runtime] Đang tải Vector Index vào RAM...")
+storage_context = StorageContext.from_defaults(persist_dir=VECTOR_STORAGE_DIR)
+vector_index = load_index_from_storage(storage_context)
+retriever = vector_index.as_retriever(similarity_top_k=1)
 
-def check_smart_cache(user_query: str) -> dict | None:
-    cleaned_user_q = clean_query(user_query)
+# Tải Schema Dictionary tiếng Việt do Scout Agent tạo
+with open(SCHEMA_DICT_PATH, "r", encoding="utf-8") as f:
+    SCHEMA_DICT = json.load(f)
 
-    if cleaned_user_q in qa_cache:
-        print("[CACHE HIT] Exact match!")
-        return qa_cache[cleaned_user_q]
-
-    for cached_q in qa_cache.keys():
-        if jaccard_similarity(cleaned_user_q, cached_q) >= 1.0:
-            print(f"[CACHE HIT] 100% Jaccard word-order match with: '{cached_q}'")
-            return qa_cache[cached_q]
-
-    return None
-
-def extract_procedure_name(doc_text: str) -> str:
-    if not doc_text:
-        return ""
-    match = re.search(r"Tên thủ tục hành chính:\s*(.*?)(?:\n|$)", doc_text, re.IGNORECASE)
-    if match:
-        return match.group(1).strip()
-    lines = [line.strip() for line in doc_text.splitlines() if line.strip()]
-    return lines[0] if lines else ""
-
-RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "http://127.0.0.1:8001")
-CONFIG_PATH = os.getenv("PROMPTS_CONFIG_PATH", "prompts.json")
-VOCAB_PATH = os.getenv("INTENT_VOCAB_PATH", "data/intent_vocab.json")
-
-with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-    PROMPT_CONFIG = json.load(f)
-
-try:
-    with open(VOCAB_PATH, "r", encoding="utf-8") as f:
-        INTENT_VOCAB = json.load(f)
-except FileNotFoundError:
-    INTENT_VOCAB = {
-        "Hình thức nộp": ["hình thức", "nộp thế nào", "online hay offline", "trực tuyến"],
-        "Thành phần hồ sơ": ["hồ sơ", "giấy tờ", "cần những gì", "chuẩn bị gì"],
-        "Thời gian giải quyết": ["thời gian", "bao lâu", "mấy ngày", "khi nào xong"],
-        "Lệ phí": ["lệ phí", "bao nhiêu tiền", "chi phí", "mất tiền không"],
-        "Địa điểm tiếp nhận hồ sơ trực tiếp": ["địa điểm", "ở đâu", "nơi nộp", "cơ quan nào"]
+async def call_llm_json(prompt: str) -> str:
+    """Gọi model 1.7B để phân loại ý định ở chế độ JSON."""
+    payload = {
+        "messages": [
+            {"role": "system", "content": "Bạn là bộ phân loại ý định. Chỉ trả về kết quả định dạng JSON array hợp lệ, không giải thích gì thêm."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.0,
+        "max_tokens": 128
     }
-    print(f"[WARNING] Intent vocab file not found at {VOCAB_PATH}. Using fallback defaults.")
-
-def detect_requested_fields(query: str) -> list[str]:
-    query_lower = query.lower()
-    requested_fields = []
-
-    for field_name, keywords in INTENT_VOCAB.items():
-        if any(keyword in query_lower for keyword in keywords):
-            requested_fields.append(field_name)
-
-    return requested_fields
-
-def extract_fields_from_doc(doc_text: str, fields: list[str]) -> str:
-    extracted_text = []
-
-    proc_name = extract_procedure_name(doc_text)
-    if proc_name:
-        extracted_text.append(f"Tên thủ tục hành chính: {proc_name}")
-
-    for field in fields:
-        pattern = rf"{re.escape(field)}:\s*(.*?)(?=\n[A-ZĐ][a-zà-ỹ\s]+:|$)"
-        match = re.search(pattern, doc_text, re.IGNORECASE | re.DOTALL)
-        if match:
-            content = match.group(1).strip()
-            extracted_text.append(f"{field}: {content}")
-
-    return "\n\n".join(extracted_text)
-
-async def fetch_rag_context(query: str, top_k: int = 3) -> tuple[list[str], list[float]]:
-    print(f"\n[DIAGNOSTIC] Sending RAG request to: {RAG_SERVICE_URL}/retrieve")
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
-            rag_request = RAGServiceRequest(query=query, top_k=top_k)
-            response = await client.post(
-                f"{RAG_SERVICE_URL}/retrieve",
-                json=rag_request.dict(),
-                timeout=30.0
-            )
-            response.raise_for_status()
-            rag_result = RAGServiceResponse(**response.json())
-            return rag_result.documents, rag_result.scores
+            resp = await client.post(f"{LLM_URL}/v1/chat/completions", json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            return data["choices"][0]["message"]["content"].strip()
         except Exception as e:
-            print(f"[DIAGNOSTIC] FATAL EXCEPTION: {str(e)}")
-            return [], []
+            print(f"[LLM Intent Error] {e}")
+            return "[]"
+
+async def classify_requested_columns(user_query: str) -> list[str]:
+    """Sử dụng từ điển tiếng Việt để model 1.7B nhận diện đúng cột cần lấy."""
+    field_descriptions = "\n".join([f"- {k}: {v}" for k, v in SCHEMA_DICT.items() if k not in ["timestamp", "email", "id"]])
+    prompt = f"""Dưới đây là danh sách các trường dữ liệu hành chính:
+{field_descriptions}
+
+Câu hỏi của người dùng: "{user_query}"
+
+Hãy chọn ra các khóa (keys) tiếng Anh tương ứng với thông tin người dùng đang hỏi.
+Ví dụ: nếu hỏi về lệ phí trả về ["fee"], nếu hỏi về thời gian giải quyết trả về ["processing_time"].
+Nếu hỏi chung chung hoặc muốn biết thủ tục gồm những gì, trả về tất cả các trường chính: ["submission_method", "required_documents", "processing_time", "fee"].
+
+Chỉ trả về JSON array danh sách khóa tiếng Anh:"""
+
+    raw_json = await call_llm_json(prompt)
+    try:
+        clean_json = raw_json.replace("```json", "").replace("```", "").strip()
+        cols = json.loads(clean_json)
+        return cols if isinstance(cols, list) and cols else list(SCHEMA_DICT.keys())
+    except Exception:
+        return list(SCHEMA_DICT.keys())
+
+async def fetch_record_from_sqlite(procedure_id: int) -> dict:
+    """Truy vấn dữ liệu chính xác từ SQLite theo id thủ tục."""
+    engine = create_async_engine(SQLITE_DB_URL)
+    async with engine.begin() as conn:
+        res = await conn.execute(
+            text("SELECT * FROM procedures WHERE id = :id"),
+            {"id": procedure_id}
+        )
+        row = res.mappings().first()
+    await engine.dispose()
+    return dict(row) if row else {}
 
 async def get_legal_response_stream(prompt: str, search_query: str):
-    try:
-        t_start_cache = time.perf_counter()
-        cached_data = check_smart_cache(prompt)
-        print(f"[PROFILER] Cache Lookup Time: {(time.perf_counter() - t_start_cache):.4f}s")
-
-        if cached_data:
-            async def fake_cached_stream():
-                yield f"data: {json.dumps({'type': 'metadata', 'sources': cached_data['sources']})}\n\n"
-                yield f"data: {json.dumps({'type': 'chunk', 'text': cached_data['answer']})}\n\n"
-                yield "data: [DONE]\n\n"
-            return fake_cached_stream(), cached_data['score']
-
-        t_start_rag = time.perf_counter()
-        context_docs, scores = await fetch_rag_context(search_query, top_k=1)
-        print(f"[PROFILER] RAG Retrieval Time: {(time.perf_counter() - t_start_rag):.4f}s")
-
-        max_score = max(scores) if scores else 0.0
-
-        if not context_docs:
-            async def empty_stream():
-                yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
-                yield "data: [DONE]\n\n"
-            return empty_stream(), 0.0
-
-        primary_doc = context_docs[0]
-        detected_proc_title = extract_procedure_name(primary_doc)
-        requested_fields = detect_requested_fields(prompt)
-
-        if not requested_fields:
-            rag_context_str = primary_doc
-        else:
-            rag_context_str = extract_fields_from_doc(primary_doc, requested_fields)
-            if len(rag_context_str.splitlines()) <= 1:
-                rag_context_str = primary_doc
-
-        rag_context_str = re.sub(
-            r"(Hình thức nộp\s*:\s*)Cả hai",
-            r"\1Trực tiếp hoặc trực tuyến",
-            rag_context_str,
-            flags=re.IGNORECASE
-        )
-
-        rag_sources = [detected_proc_title] if detected_proc_title else []
-        rag_sources.append(f"RAG_CONTENT:{rag_context_str}")
-
-        cfg = PROMPT_CONFIG.get("baseline_qa")
-        if not cfg:
-            async def error_stream():
-                yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
-                yield f"data: {json.dumps({'type': 'chunk', 'text': 'Lỗi: Không tìm thấy cấu hình baseline_qa.'})}\n\n"
-                yield "data: [DONE]\n\n"
-            return error_stream(), max_score
-
-        modified_query = f"/no_think {prompt}"
-        user_prompt = cfg["user_template"].format(context=rag_context_str, query=modified_query)
-
-        # === RESTORED CHAT PAYLOAD ===
-        openai_payload = {
-            "messages": [
-                {"role": "system", "content": cfg["system_prompt"]},
-                {"role": "user", "content": user_prompt}
-            ],
-            "stream": True,
-            "max_tokens": cfg.get("max_tokens", 800),
-            "temperature": cfg.get("temperature", 0.0)
-        }
-
-        async def stream_from_engine():
-            yield f"data: {json.dumps({'type': 'metadata', 'sources': rag_sources})}\n\n"
-
-            full_answer = ""
-            t_start_queue = time.perf_counter()
-            target_llm_url = await llm_queue.get()
-            print(f"[PROFILER] LLM Queue Wait Time: {(time.perf_counter() - t_start_queue):.4f}s")
-
-            async with httpx.AsyncClient(timeout=300.0) as client:
-                try:
-                    t_start_llm = time.perf_counter()
-                    first_token_received = False
-
-                    # RESTORED ENDPOINT: /v1/chat/completions
-                    async with client.stream(
-                        "POST",
-                        f"{target_llm_url}/v1/chat/completions",
-                        json=openai_payload,
-                        timeout=300.0
-                    ) as response:
-                        response.raise_for_status()
-
-                        async for line in response.aiter_lines():
-                            if not first_token_received:
-                                print(f"[PROFILER] LLM Time to First Token (TTFT): {(time.perf_counter() - t_start_llm):.4f}s")
-                                first_token_received = True
-
-                            if line.startswith("data: "):
-                                data_str = line.replace("data: ", "").strip()
-
-                                if data_str == "[DONE]":
-                                    yield "data: [DONE]\n\n"
-                                elif data_str:
-                                    try:
-                                        parsed = json.loads(data_str)
-                                        choices = parsed.get("choices", [])
-                                        if choices:
-                                            # RESTORED DELTA PARSING
-                                            delta = choices[0].get("delta", {})
-                                            content = delta.get("content", "")
-                                            if content:
-                                                full_answer += content
-                                                yield f"data: {json.dumps({'type': 'chunk', 'text': content})}\n\n"
-                                    except Exception:
-                                        pass
-
-                    print(f"[PROFILER] LLM Total Stream Time: {(time.perf_counter() - t_start_llm):.4f}s")
-
-                except Exception as e:
-                    yield f"data: {json.dumps({'type': 'chunk', 'text': f'Lỗi kết nối LLM ({target_llm_url}): {str(e)}'})}\n\n"
-                    yield "data: [DONE]\n\n"
-                finally:
-                    llm_queue.put_nowait(target_llm_url)
-
-                    t_start_save = time.perf_counter()
-                    if full_answer:
-                        cleaned_q = clean_query(prompt)
-                        qa_cache[cleaned_q] = {
-                            "sources": rag_sources,
-                            "answer": full_answer,
-                            "score": max_score
-                        }
-                    print(f"[PROFILER] Cache Save Time: {(time.perf_counter() - t_start_save):.4f}s")
-
-        return stream_from_engine(), max_score
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        async def fatal_error_stream():
-            yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
-            yield f"data: {json.dumps({'type': 'chunk', 'text': f'Lỗi xử lý hệ thống: {str(e)}'})}\n\n"
+    """Router chính: Semantic search -> Trích xuất cột -> Truy vấn SQLite -> Streaming câu trả lời."""
+    # 1. Kiểm tra cache
+    if prompt in qa_cache:
+        cached = qa_cache[prompt]
+        async def fake_stream():
+            yield f"data: {json.dumps({'type': 'metadata', 'sources': cached['sources']})}\n\n"
+            yield f"data: {json.dumps({'type': 'chunk', 'text': cached['text']})}\n\n"
             yield "data: [DONE]\n\n"
-        return fatal_error_stream(), 0.0
+        return fake_stream(), cached["score"]
+
+    # 2. Tìm kiếm thủ tục qua LlamaIndex Vector Retriever
+    nodes = retriever.retrieve(search_query)
+    if not nodes:
+        async def empty_stream():
+            yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
+            yield "data: [DONE]\n\n"
+        return empty_stream(), 0.0
+
+    matched_node = nodes[0]
+    similarity_score = float(matched_node.score) if matched_node.score is not None else 1.0
+    procedure_id = matched_node.node.metadata.get("id")
+    procedure_name = matched_node.node.metadata.get("procedure_name", "")
+
+    # Ngưỡng kích hoạt công cụ bên ngoài nếu không khớp dữ liệu
+    if similarity_score < 0.45 or procedure_id is None:
+        async def low_conf_stream():
+            yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
+            yield "data: [DONE]\n\n"
+        return low_conf_stream(), 0.0
+
+    # 3. Lấy dữ liệu thực tế từ SQLite
+    full_row = await fetch_record_from_sqlite(int(procedure_id))
+
+    # 4. Model 1.7B phân loại các cột cần lấy
+    requested_cols = await classify_requested_columns(prompt)
+
+    # Đảm bảo luôn giữ lại tên thủ tục
+    filtered_data = {"procedure_name": full_row.get("procedure_name", procedure_name)}
+    for col in requested_cols:
+        if col in full_row and full_row[col] and full_row[col] != "nan":
+            vietnamese_label = SCHEMA_DICT.get(col, col)
+            filtered_data[vietnamese_label] = full_row[col]
+
+    # Chuẩn bị ngữ cảnh chính xác truyền cho model 1.7B tổng hợp
+    context_str = json.dumps(filtered_data, ensure_ascii=False, indent=2)
+    sources = [procedure_name, f"RAG_CONTENT:{context_str}"]
+
+    system_prompt = (
+        "Bạn là trợ lý pháp lý hỗ trợ thủ tục hành chính công. "
+        "Dựa vào thông tin chính xác được cung cấp dưới đây, hãy trả lời câu hỏi của người dùng một cách rõ ràng, mạch lạc bằng tiếng Việt. "
+        "Tuyệt đối không suy diễn thêm thông tin ngoài ngữ cảnh được cung cấp."
+    )
+    user_prompt = f"Thông tin căn cứ:\n{context_str}\n\nCâu hỏi: {prompt}"
+
+    openai_payload = {
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        "stream": True,
+        "max_tokens": 600,
+        "temperature": 0.1
+    }
+
+    # 5. Thực hiện stream kết quả
+    async def stream_generator():
+        yield f"data: {json.dumps({'type': 'metadata', 'sources': sources})}\n\n"
+        full_text = ""
+
+        async with httpx.AsyncClient(timeout=300.0) as client:
+            try:
+                async with client.stream(
+                    "POST",
+                    f"{LLM_URL}/v1/chat/completions",
+                    json=openai_payload,
+                    timeout=300.0
+                ) as response:
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data_str = line.replace("data: ", "").strip()
+                            if data_str == "[DONE]":
+                                yield "data: [DONE]\n\n"
+                            elif data_str:
+                                try:
+                                    parsed = json.loads(data_str)
+                                    delta = parsed["choices"][0].get("delta", {})
+                                    content = delta.get("content", "")
+                                    if content:
+                                        full_text += content
+                                        yield f"data: {json.dumps({'type': 'chunk', 'text': content})}\n\n"
+                                except Exception:
+                                    pass
+            except Exception as e:
+                yield f"data: {json.dumps({'type': 'chunk', 'text': f'Lỗi hệ thống: {str(e)}'})}\n\n"
+                yield "data: [DONE]\n\n"
+
+        if full_text:
+            qa_cache[prompt] = {
+                "sources": sources,
+                "text": full_text,
+                "score": similarity_score
+            }
+
+    return stream_generator(), similarity_score

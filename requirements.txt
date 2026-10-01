@@ -13,7 +13,6 @@ protobuf
 pydantic==2.13.5
 python-dotenv==1.2.3
 pyvi==0.1.1
-qdrant_client
 sentence_transformers==6.0.1
 SQLAlchemy==2.0.54
 torch==2.14.0
@@ -24,3 +23,8 @@ google-genai
 aiosqlite
 slowapi
 streamlit
+llama-index 
+llama-index-llms-google-genai
+llama-index-embeddings-huggingface
+pandas
+openpyxl

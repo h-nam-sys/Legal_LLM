@@ -1,12 +1,10 @@
-env\Scripts\activate
-cd backend\llm_service
-uvicorn main:app --port 8002
-
+python -m venv env
 
 env\Scripts\activate
-cd rag\src
-uvicorn rag:app --port 8001
+python -m rag.ingest_pipeline
 
+env\Scripts\activate
+python llm_service/main.py
 
 env\Scripts\activate
 cd backend
