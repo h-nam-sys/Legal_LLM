@@ -2,8 +2,6 @@ env\Scripts\activate
 cd backend\llm_service
 uvicorn main:app --port 8002
 
-uvicorn main:app --port 8003
-
 
 env\Scripts\activate
 cd rag\src
@@ -20,3 +18,5 @@ env\Scripts\activate
 cd backend
 streamlit run admin_dashboard.py
 http://localhost:8501
+
+uvicorn main:app --port 8003
