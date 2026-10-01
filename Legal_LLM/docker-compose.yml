@@ -1,0 +1,55 @@
+services:
+  # Port 8001: RAG API (rag/src/rag.py)
+  rag-service:
+    build: .
+    working_dir: /app/rag
+    command: uvicorn src.rag:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    volumes:
+      # Keep your Qdrant vector DB saved on your host machine
+      - ./rag/qdrant_storage:/app/rag/qdrant_storage
+    environment:
+      - PYTHONPATH=/app/rag/src
+    restart: unless-stopped
+
+  # Port 8002: LLM Engine (backend/llm_service/main.py)
+  llm-service:
+    build: .
+    working_dir: /app/backend
+    # FIX: Run the native CUDA-enabled server instead of your old wrapper
+    command: python -m llama_cpp.server --model /app/backend/models/qwen3-1.7b-q8_0.gguf --host 0.0.0.0 --port 8002 --n_gpu_layers -1
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./backend/llm_service/models:/app/backend/models
+    # FIX: GPU Passthrough block for your GTX 1060
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Port 8000: Chat Router (backend/main.py)
+  chat-service:
+    build: .
+    working_dir: /app/backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      # FIX: Mount a directory instead of specific files to prevent SQLite permission crashes
+      - ./backend/data:/app/backend/data
+    environment:
+      # Tell the router how to find the other two containers over Docker's internal network
+      - RAG_SERVICE_URL=http://rag-service:8001
+      - LLM_SERVICE_URLS=http://llm-service:8002
+      # Override the database URL to point inside the mapped folder
+      - DATABASE_URL=sqlite+aiosqlite:////app/backend/data/legal_llm.db
+    restart: unless-stopped
+    depends_on:
+      - rag-service
+      - llm-service
