@@ -16,7 +16,7 @@ uvicorn main:app --port 8000 --reload
 
 locust -f locustfile.py --headless -u 100 -r 10 --run-time 2m --host http://localhost:8000 --html sync_baseline_report.html
 
+env\Scripts\activate
+cd backend
 streamlit run admin_dashboard.py
 http://localhost:8501
-
-docker-compose up -d --build

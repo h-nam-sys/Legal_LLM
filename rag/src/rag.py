@@ -8,7 +8,6 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 model = None
 client = None
-# The 'procedures' global variable is removed since retrieval.py handles it internally.
 
 class RetrieveRequest(BaseModel):
     query: str
@@ -23,14 +22,12 @@ async def lifespan(app: FastAPI):
     global model, client
     print("[RAG] Loading model...", file=sys.stderr, flush=True)
 
-    # Import from your new retrieval script
-    from retrieval import load_model, connect_qdrant
+    # Đã cập nhật import từ simple_retrieval
+    from simple_retrieval import load_model, connect_qdrant
 
     model = load_model()
     print("[RAG] Connecting to Qdrant...", file=sys.stderr, flush=True)
     client = connect_qdrant()
-
-    # The load_procedure_names call has been completely removed to fix the startup crash.
 
     print("[RAG] RAG service ready", file=sys.stderr, flush=True)
     yield
@@ -55,10 +52,9 @@ def retrieve_documents(request: RetrieveRequest):
     if model is None or client is None:
         raise RuntimeError("RAG components are not initialized")
 
-    from retrieval import retrieve
+    # Đã cập nhật import từ simple_retrieval
+    from simple_retrieval import retrieve
 
-    # Removed the 'procedures=procedures' argument because the updated
-    # retrieve() function in retrieval.py no longer accepts it.
     results = retrieve(
         query=request.query,
         model=model,
@@ -67,11 +63,11 @@ def retrieve_documents(request: RetrieveRequest):
         final_top_k=request.top_k
     )
 
-    MIN_THRESHOLD = 0.4
+    MIN_THRESHOLD = 0.35
 
-    # Access object attributes (.final_score and .text) instead of dict keys
+    # Truy cập thuộc tính đối tượng (.final_score và .text) từ RetrievalResult mới
     valid_results = [res for res in results if res.final_score >= MIN_THRESHOLD]
-    limited_results = valid_results[:1]
+    limited_results = valid_results[:request.top_k]
 
     documents = [res.text for res in limited_results]
     scores = [res.final_score for res in limited_results]
@@ -80,4 +76,5 @@ def retrieve_documents(request: RetrieveRequest):
 
 if __name__ == "__main__":
     import uvicorn
+    # Lưu ý: tên file chứa code này vẫn được giả định là rag.py khi chạy qua uvicorn
     uvicorn.run("rag:app", host="0.0.0.0", port=8001, reload=False)

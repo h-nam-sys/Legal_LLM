@@ -97,13 +97,24 @@ async def get_last_n_messages(db: AsyncSession, conversation_id: int, n: int = 1
 
 # ============ Audit Log Operations ============
 
-async def log_interaction(db: AsyncSession, conversation_id: int, user_query: str, llm_response: str, local_context: str = None, used_online_search: bool = False):
+async def log_interaction(
+    db: AsyncSession,
+    conversation_id: int,
+    user_query: str,
+    llm_response: str,
+    local_context: str = None,
+    used_online_search: bool = False,
+    rag_score: float = None,
+    failure_type: str = None
+):
     audit_entry = AuditLog(
         conversation_id=conversation_id,
         user_query=user_query,
         retrieved_local_context=local_context,
         llm_final_response=llm_response,
-        used_online_search=used_online_search
+        used_online_search=used_online_search,
+        rag_score=rag_score,
+        failure_type=failure_type
     )
     db.add(audit_entry)
     await db.commit()

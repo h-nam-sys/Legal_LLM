@@ -6,8 +6,5 @@ __pycache__/
 *.pyc
 
 backend/llm_service/models/
-backend/*.db
-backend/*.db-shm
-backend/*.db-wal
 
 .git/

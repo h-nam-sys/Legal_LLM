@@ -87,6 +87,12 @@
         .sources { font-size: 0.85em; color: var(--text-light); margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 8px; }
         .rag-score { font-size: 0.85em; color: #ea580c; margin-top: 8px; font-weight: 600; }
 
+        /* Collapsible Sources (New) */
+        .sources-details { margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 8px; font-size: 0.85em; }
+        .sources-details summary { cursor: pointer; color: var(--text-light); font-weight: 500; outline: none; user-select: none; }
+        .sources-details summary:hover { color: var(--primary); }
+        .sources-content { margin-top: 8px; max-height: 220px; overflow-y: auto; color: var(--text-main); background: #f8fafc; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; line-height: 1.5; white-space: pre-wrap; font-size: 0.9em; }
+
         /* Feedback Buttons */
         .feedback-btns { display: flex; gap: 8px; margin-top: 6px; margin-bottom: 15px; align-self: flex-start; padding-left: 5px; }
         .feedback-btn { background: transparent; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; padding: 4px 12px; color: var(--text-light); font-size: 12px; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
@@ -187,7 +193,6 @@
             if (e.key === 'Enter') sendMessage();
         }
 
-        // --- NEW ACTION HANDLERS FOR FAST ENDPOINTS ---
         window.hideActions = function(msgId) {
             const btnDiv = document.getElementById(`action-btns-${msgId}`);
             if (btnDiv) btnDiv.style.display = 'none';
@@ -225,7 +230,10 @@
                 textElement.innerHTML = marked.parse(data.text);
 
                 if (data.sources && data.sources.length > 0) {
-                    metaElement.innerHTML = `<div class="sources">Nguồn: ${data.sources.join(" | ")}</div>`;
+                    const extracted = extractSourceData(data.sources);
+                    if (extracted.actualSources.length > 0 || extracted.ragContent) {
+                        metaElement.innerHTML = renderSourcesCollapsible(extracted.actualSources, extracted.ragContent);
+                    }
                 }
 
                 chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -239,19 +247,43 @@
             }
         };
 
+        function renderSourcesCollapsible(actualSources, ragContent) {
+            if ((!actualSources || actualSources.length === 0) && !ragContent) return "";
+
+            let displayHTML = "";
+            if (ragContent) {
+                displayHTML = ragContent.replace(/\n/g, '<br>');
+            } else if (actualSources && actualSources.length > 0) {
+                displayHTML = actualSources.join('<hr style="border:0;border-top:1px dashed var(--border-color);margin:8px 0;">');
+            }
+
+            return `
+                <details class="sources-details">
+                    <summary>📑 Xem dữ liệu trích xuất (Nguồn)</summary>
+                    <div class="sources-content">${displayHTML}</div>
+                </details>
+            `;
+        }
+
         function extractSourceData(sourceArray) {
             let actualSources = [];
             let ragScore = null;
+            let ragContent = null;
+
             if (sourceArray && sourceArray.length > 0) {
                 sourceArray.forEach(src => {
-                    if (src.startsWith("RAG_SCORE:")) {
-                        ragScore = parseFloat(src.split(":")[1]).toFixed(4);
-                    } else {
-                        actualSources.push(src);
+                    if (typeof src === "string") {
+                        if (src.startsWith("RAG_SCORE:")) {
+                            ragScore = parseFloat(src.split(":")[1]).toFixed(4);
+                        } else if (src.startsWith("RAG_CONTENT:")) {
+                            ragContent = src.substring(12);
+                        } else {
+                            actualSources.push(src);
+                        }
                     }
                 });
             }
-            return { actualSources, ragScore };
+            return { actualSources, ragScore, ragContent };
         }
 
         async function loadSidebar() {
@@ -316,9 +348,13 @@
                 let scoreHtml = "";
 
                 if (!isUser) {
-                    const { actualSources, ragScore } = extractSourceData(msg.sources);
-                    if (actualSources.length > 0) sourceHtml = `<div class="sources">Nguồn: ${actualSources.join(" | ")}</div>`;
-                    if (ragScore !== null) scoreHtml = `<div class="rag-score">Điểm tin cậy (RAG): ${ragScore}</div>`;
+                    const extracted = extractSourceData(msg.sources);
+                    if (extracted.actualSources.length > 0 || extracted.ragContent) {
+                        sourceHtml = renderSourcesCollapsible(extracted.actualSources, extracted.ragContent);
+                    }
+                    if (extracted.ragScore !== null) {
+                        scoreHtml = `<div class="rag-score">Điểm tin cậy (RAG): ${extracted.ragScore}</div>`;
+                    }
                 }
 
                 let feedbackHtml = (!isUser && msg.id)
@@ -412,28 +448,24 @@
                 const decoder = new TextDecoder("utf-8");
 
                 let fullText = "";
-                let displayedText = "";
                 let buffer = "";
                 let actualSources = [];
                 let isFirstToken = true;
                 let streamActive = true;
+                let needsRender = false;
 
-                function smoothRender() {
-                    if (!isFirstToken && displayedText.length < fullText.length) {
-                        let diff = fullText.length - displayedText.length;
-                        let charsToAdd = Math.ceil(diff / 3);
-
-                        displayedText += fullText.substr(displayedText.length, charsToAdd);
-                        textElement.innerHTML = marked.parse(displayedText);
+                function renderLoop() {
+                    if (needsRender) {
+                        textElement.innerHTML = marked.parse(fullText);
                         chatWindow.scrollTop = chatWindow.scrollHeight;
+                        needsRender = false;
                     }
 
-                    if (streamActive || displayedText.length < fullText.length) {
-                        requestAnimationFrame(smoothRender);
+                    if (streamActive) {
+                        requestAnimationFrame(renderLoop);
                     } else {
                         textElement.innerHTML = marked.parse(fullText);
 
-                        // --- INJECT YES/NO BUTTONS CLEANLY ---
                         if (fullText.includes("Bạn có muốn tải biểu mẫu") || fullText.includes("tìm kiếm trực tuyến")) {
                             const actionType = fullText.includes("Bạn có muốn tải biểu mẫu") ? 'form' : 'mcp';
                             textElement.innerHTML += `
@@ -443,12 +475,11 @@
                                 </div>
                             `;
                         }
-
                         chatWindow.scrollTop = chatWindow.scrollHeight;
                     }
                 }
 
-                requestAnimationFrame(smoothRender);
+                requestAnimationFrame(renderLoop);
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -472,6 +503,7 @@
                                 const parsed = JSON.parse(dataStr);
                                 if (parsed.type === "metadata") {
                                     actualSources = parsed.sources || [];
+                                    console.log("[DIAGNOSTIC FRONTEND] Received metadata:", actualSources);
                                 } else if (parsed.type === "chunk") {
                                     if (isFirstToken) {
                                         clearTimeout(loadingTimer);
@@ -480,6 +512,7 @@
                                         isFirstToken = false;
                                     }
                                     fullText += parsed.text;
+                                    needsRender = true;
                                 }
                             } catch (e) {
                                 console.warn("Stream parse error on chunk:", dataStr);
@@ -490,8 +523,11 @@
                 }
 
                 if (actualSources.length > 0) {
-                    metaElement.innerHTML = `<div class="sources">Nguồn: ${actualSources.join(" | ")}</div>`;
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    const extractedStream = extractSourceData(actualSources);
+                    if (extractedStream.actualSources.length > 0 || extractedStream.ragContent) {
+                        metaElement.innerHTML = renderSourcesCollapsible(extractedStream.actualSources, extractedStream.ragContent);
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    }
                 }
 
                 loadSidebar();
@@ -503,7 +539,6 @@
             }
         }
 
-        // --- VOICE TO TEXT LOGIC ---
         document.addEventListener("DOMContentLoaded", () => {
             const micBtn = document.getElementById("mic-btn");
             const chatInput = document.getElementById("prompt");

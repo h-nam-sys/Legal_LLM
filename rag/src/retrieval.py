@@ -1533,20 +1533,6 @@ def filter_final_results(
             results = exact_procedure
 
     # ============================================================
-    # STEP 2: FILTER BY EXACT CHUNK TYPE
-    # ============================================================
-    if detected_intent != "general_information":
-
-        exact_intent = [
-            r
-            for r in results
-            if r.chunk_score >= 1.0
-        ]
-
-        if exact_intent:
-            results = exact_intent
-
-    # ============================================================
     # STEP 3: REMOVE VERY WEAK VECTOR RESULTS
     # ============================================================
     strong = [

@@ -17,12 +17,20 @@ services:
   llm-service:
     build: .
     working_dir: /app/backend
-    command: uvicorn llm_service.main:app --host 0.0.0.0 --port 8002
+    # FIX: Run the native CUDA-enabled server instead of your old wrapper
+    command: python -m llama_cpp.server --model /app/backend/models/qwen3-1.7b-q8_0.gguf --host 0.0.0.0 --port 8002 --n_gpu_layers -1
     ports:
       - "8002:8002"
     volumes:
-      # Keep your heavy .gguf model on the host so Docker doesn't duplicate it
-      - ./backend/llm_service/models:/app/backend/llm_service/models
+      - ./backend/llm_service/models:/app/backend/models
+    # FIX: GPU Passthrough block for your GTX 1060
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     restart: unless-stopped
 
   # Port 8000: Chat Router (backend/main.py)
@@ -33,14 +41,14 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Map the SQLite database files so chat history persists
-      - ./backend/legal_llm.db:/app/backend/legal_llm.db
-      - ./backend/legal_llm.db-shm:/app/backend/legal_llm.db-shm
-      - ./backend/legal_llm.db-wal:/app/backend/legal_llm.db-wal
+      # FIX: Mount a directory instead of specific files to prevent SQLite permission crashes
+      - ./backend/data:/app/backend/data
     environment:
       # Tell the router how to find the other two containers over Docker's internal network
       - RAG_SERVICE_URL=http://rag-service:8001
       - LLM_SERVICE_URLS=http://llm-service:8002
+      # Override the database URL to point inside the mapped folder
+      - DATABASE_URL=sqlite+aiosqlite:////app/backend/data/legal_llm.db
     restart: unless-stopped
     depends_on:
       - rag-service

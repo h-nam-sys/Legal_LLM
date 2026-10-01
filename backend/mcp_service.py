@@ -1,5 +1,5 @@
 import os
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 import unicodedata
 import re
@@ -9,8 +9,7 @@ load_dotenv()
 
 # Configure Gemini API using your environment variable
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 # The isolated vocabulary database for MCP triggers
 MCP_TRIGGER_VOCAB = [
@@ -61,7 +60,7 @@ async def execute_mcp_search(user_query: str, location: str = "Tăng Nhơn Phú"
     """Executes the external search using Gemini API and returns the final answer."""
     print(f"[MCP SERVICE] Triggering Gemini API for: '{user_query}' at '{location}'")
 
-    if not GEMINI_API_KEY:
+    if not GEMINI_API_KEY or not client:
         return "Lỗi hệ thống: Quản trị viên chưa cấu hình khóa Gemini API.", ["Lỗi hệ thống"]
 
     try:
@@ -74,9 +73,6 @@ async def execute_mcp_search(user_query: str, location: str = "Tăng Nhơn Phú"
         # 3. Combine into the strict final query
         strict_query = f"{user_query} {geo_context} {domain_restriction}"
 
-        # gemini-1.5-flash or 2.5-flash are extremely fast for these lookups
-        model = genai.GenerativeModel('gemini-2.5-flash')
-
         mcp_prompt = f"""Bạn là cán bộ hướng dẫn thủ tục hành chính tại {location}.
 Người dân đang hỏi thủ tục nằm ngoài cơ sở dữ liệu nội bộ của hệ thống.
 
@@ -88,8 +84,11 @@ YÊU CẦU BẮT BUỘC:
 3. CHỈ liệt kê các giấy tờ cần chuẩn bị bằng dạng gạch đầu dòng (Checklist) siêu ngắn gọn.
 4. CHỈ lấy thông tin từ dichvucong.gov.vn. KHÔNG giải thích dông dài."""
 
-        # Use async generation so it doesn't block your FastAPI server
-        response = await model.generate_content_async(mcp_prompt)
+        # Use async generation so it doesn't block your FastAPI server (Updated for google-genai)
+        response = await client.aio.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=mcp_prompt
+        )
 
         return response.text, [f"Trợ lý Gemini ({domain_restriction})"]
 

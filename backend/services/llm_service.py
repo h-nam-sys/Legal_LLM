@@ -52,9 +52,49 @@ def extract_procedure_name(doc_text: str) -> str:
 
 RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "http://127.0.0.1:8001")
 CONFIG_PATH = os.getenv("PROMPTS_CONFIG_PATH", "prompts.json")
+VOCAB_PATH = os.getenv("INTENT_VOCAB_PATH", "data/intent_vocab.json")
 
 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
     PROMPT_CONFIG = json.load(f)
+
+try:
+    with open(VOCAB_PATH, "r", encoding="utf-8") as f:
+        INTENT_VOCAB = json.load(f)
+except FileNotFoundError:
+    INTENT_VOCAB = {
+        "Hình thức nộp": ["hình thức", "nộp thế nào", "online hay offline", "trực tuyến"],
+        "Thành phần hồ sơ": ["hồ sơ", "giấy tờ", "cần những gì", "chuẩn bị gì"],
+        "Thời gian giải quyết": ["thời gian", "bao lâu", "mấy ngày", "khi nào xong"],
+        "Lệ phí": ["lệ phí", "bao nhiêu tiền", "chi phí", "mất tiền không"],
+        "Địa điểm tiếp nhận hồ sơ trực tiếp": ["địa điểm", "ở đâu", "nơi nộp", "cơ quan nào"]
+    }
+    print(f"[WARNING] Intent vocab file not found at {VOCAB_PATH}. Using fallback defaults.")
+
+def detect_requested_fields(query: str) -> list[str]:
+    query_lower = query.lower()
+    requested_fields = []
+
+    for field_name, keywords in INTENT_VOCAB.items():
+        if any(keyword in query_lower for keyword in keywords):
+            requested_fields.append(field_name)
+
+    return requested_fields
+
+def extract_fields_from_doc(doc_text: str, fields: list[str]) -> str:
+    extracted_text = []
+
+    proc_name = extract_procedure_name(doc_text)
+    if proc_name:
+        extracted_text.append(f"Tên thủ tục hành chính: {proc_name}")
+
+    for field in fields:
+        pattern = rf"{re.escape(field)}:\s*(.*?)(?=\n[A-ZĐ][a-zà-ỹ\s]+:|$)"
+        match = re.search(pattern, doc_text, re.IGNORECASE | re.DOTALL)
+        if match:
+            content = match.group(1).strip()
+            extracted_text.append(f"{field}: {content}")
+
+    return "\n\n".join(extracted_text)
 
 async def fetch_rag_context(query: str, top_k: int = 3) -> tuple[list[str], list[float]]:
     print(f"\n[DIAGNOSTIC] Sending RAG request to: {RAG_SERVICE_URL}/retrieve")
@@ -75,7 +115,6 @@ async def fetch_rag_context(query: str, top_k: int = 3) -> tuple[list[str], list
 
 async def get_legal_response_stream(prompt: str, search_query: str):
     try:
-        # For pure stateless queries, prompt and search_query are identical
         t_start_cache = time.perf_counter()
         cached_data = check_smart_cache(prompt)
         print(f"[PROFILER] Cache Lookup Time: {(time.perf_counter() - t_start_cache):.4f}s")
@@ -88,7 +127,7 @@ async def get_legal_response_stream(prompt: str, search_query: str):
             return fake_cached_stream(), cached_data['score']
 
         t_start_rag = time.perf_counter()
-        context_docs, scores = await fetch_rag_context(search_query, top_k=3)
+        context_docs, scores = await fetch_rag_context(search_query, top_k=1)
         print(f"[PROFILER] RAG Retrieval Time: {(time.perf_counter() - t_start_rag):.4f}s")
 
         max_score = max(scores) if scores else 0.0
@@ -99,10 +138,26 @@ async def get_legal_response_stream(prompt: str, search_query: str):
                 yield "data: [DONE]\n\n"
             return empty_stream(), 0.0
 
-        detected_proc_title = extract_procedure_name(context_docs[0])
-        rag_sources = [detected_proc_title] if detected_proc_title else []
+        primary_doc = context_docs[0]
+        detected_proc_title = extract_procedure_name(primary_doc)
+        requested_fields = detect_requested_fields(prompt)
 
-        rag_context_str = "\n".join(context_docs)
+        if not requested_fields:
+            rag_context_str = primary_doc
+        else:
+            rag_context_str = extract_fields_from_doc(primary_doc, requested_fields)
+            if len(rag_context_str.splitlines()) <= 1:
+                rag_context_str = primary_doc
+
+        rag_context_str = re.sub(
+            r"(Hình thức nộp\s*:\s*)Cả hai",
+            r"\1Trực tiếp hoặc trực tuyến",
+            rag_context_str,
+            flags=re.IGNORECASE
+        )
+
+        rag_sources = [detected_proc_title] if detected_proc_title else []
+        rag_sources.append(f"RAG_CONTENT:{rag_context_str}")
 
         cfg = PROMPT_CONFIG.get("baseline_qa")
         if not cfg:
@@ -112,18 +167,19 @@ async def get_legal_response_stream(prompt: str, search_query: str):
                 yield "data: [DONE]\n\n"
             return error_stream(), max_score
 
-        # Treat every prompt as an entirely self-contained query
         modified_query = f"/no_think {prompt}"
         user_prompt = cfg["user_template"].format(context=rag_context_str, query=modified_query)
 
-        llm_request = LLMServiceRequest(
-            system_prompt=cfg["system_prompt"],
-            user_prompt=user_prompt,
-            prompt=None,
-            context=context_docs,
-            max_tokens=cfg.get("max_tokens", 800),
-            temperature=cfg.get("temperature", 0.0)
-        )
+        # === RESTORED CHAT PAYLOAD ===
+        openai_payload = {
+            "messages": [
+                {"role": "system", "content": cfg["system_prompt"]},
+                {"role": "user", "content": user_prompt}
+            ],
+            "stream": True,
+            "max_tokens": cfg.get("max_tokens", 800),
+            "temperature": cfg.get("temperature", 0.0)
+        }
 
         async def stream_from_engine():
             yield f"data: {json.dumps({'type': 'metadata', 'sources': rag_sources})}\n\n"
@@ -138,27 +194,36 @@ async def get_legal_response_stream(prompt: str, search_query: str):
                     t_start_llm = time.perf_counter()
                     first_token_received = False
 
+                    # RESTORED ENDPOINT: /v1/chat/completions
                     async with client.stream(
                         "POST",
-                        f"{target_llm_url}/generate_stream",
-                        json=llm_request.dict(),
+                        f"{target_llm_url}/v1/chat/completions",
+                        json=openai_payload,
                         timeout=300.0
                     ) as response:
                         response.raise_for_status()
+
                         async for line in response.aiter_lines():
                             if not first_token_received:
                                 print(f"[PROFILER] LLM Time to First Token (TTFT): {(time.perf_counter() - t_start_llm):.4f}s")
                                 first_token_received = True
 
-                            yield line + "\n"
-
                             if line.startswith("data: "):
                                 data_str = line.replace("data: ", "").strip()
-                                if data_str and data_str != "[DONE]":
+
+                                if data_str == "[DONE]":
+                                    yield "data: [DONE]\n\n"
+                                elif data_str:
                                     try:
                                         parsed = json.loads(data_str)
-                                        if parsed.get("type") == "chunk":
-                                            full_answer += parsed.get("text", "")
+                                        choices = parsed.get("choices", [])
+                                        if choices:
+                                            # RESTORED DELTA PARSING
+                                            delta = choices[0].get("delta", {})
+                                            content = delta.get("content", "")
+                                            if content:
+                                                full_answer += content
+                                                yield f"data: {json.dumps({'type': 'chunk', 'text': content})}\n\n"
                                     except Exception:
                                         pass
 

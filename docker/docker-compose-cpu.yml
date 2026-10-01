@@ -1,0 +1,49 @@
+services:
+  # Port 8001: RAG API
+  rag-service:
+    image: namnhedu/legal_llm-rag-service:latest
+    working_dir: /app/rag
+    command: uvicorn src.rag:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    volumes:
+      # FIX: Changed to a Named Volume so it extracts the baked-in Qdrant DB for the client
+      - qdrant-data:/app/rag/qdrant_storage
+    environment:
+      - PYTHONPATH=/app/rag/src
+    restart: unless-stopped
+
+  # Port 8002: LLM Engine
+  llm-service:
+    image: namnhedu/legal_llm-llm-service:latest
+    working_dir: /app/backend
+    # FIX: Run the server natively. Without the GPU deploy block, this runs strictly on CPU RAM.
+    command: python -m llama_cpp.server --model /app/backend/models/qwen3-1.7b-q8_0.gguf --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./backend/llm_service/models:/app/backend/models
+    restart: unless-stopped
+
+  # Port 8000: Chat Router
+  chat-service:
+    image: namnhedu/legal_llm-chat-service:latest
+    working_dir: /app/backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - chat-db-data:/app/backend/data
+    environment:
+      - RAG_SERVICE_URL=http://rag-service:8001
+      - LLM_SERVICE_URLS=http://llm-service:8002
+      - DATABASE_URL=sqlite+aiosqlite:////app/backend/data/legal_llm.db
+    restart: unless-stopped
+    depends_on:
+      - rag-service
+      - llm-service
+
+# Declare both Named Volumes at the very bottom
+volumes:
+  chat-db-data:
+  qdrant-data:

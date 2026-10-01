@@ -1,11 +1,15 @@
+import os
 from datetime import datetime
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean, JSON, event
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean, JSON, event, Float
 
 # Switched to the aiosqlite driver
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./legal_llm.db"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite+aiosqlite:///./legal_llm.db"
+)
 
 # 1. Create Async Engine
 engine = create_async_engine(
@@ -75,6 +79,8 @@ class AuditLog(Base):
     retrieved_local_context = Column(Text, nullable=True)
     llm_final_response = Column(Text)
     used_online_search = Column(Boolean, default=False)
+    rag_score = Column(Float, nullable=True)          # NEW
+    failure_type = Column(String, nullable=True)      # NEW
     created_at = Column(DateTime, default=datetime.utcnow)
 
 # ============ Database Lifecycle ============

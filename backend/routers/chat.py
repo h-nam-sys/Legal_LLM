@@ -19,7 +19,7 @@ from services.db_service import (
     log_interaction,
     Conversation
 )
-from database import get_db
+from database import get_db, AuditLog
 import json
 import random
 import traceback
@@ -49,7 +49,6 @@ def parse_sources(sources_data):
     if isinstance(sources_data, str):
         try:
             parsed = json.loads(sources_data)
-            # Fix for historical double-encoded strings from previous bug
             if isinstance(parsed, str):
                 parsed = json.loads(parsed)
             return parsed if isinstance(parsed, list) else []
@@ -146,36 +145,35 @@ async def handle_chat(
         for msg in reversed(context_messages[:-1]):
             if msg.role == "assistant" and msg.sources:
                 sources_list = parse_sources(msg.sources)
-                actual_sources = [s for s in sources_list if isinstance(s, str) and not s.startswith("RAG_SCORE")]
+                actual_sources = [
+                    s for s in sources_list
+                    if isinstance(s, str)
+                    and not s.startswith("RAG_SCORE:")
+                    and not s.startswith("RAG_CONTENT:")
+                ]
                 if actual_sources:
                     last_proc_title = actual_sources[0]
                     break
 
-    # =========================================================================
-    # INTENT CHECK & STATELESS ROUTING
-    # =========================================================================
     TOPIC_SWITCH_PATTERN = r"(đăng ký|dang ky|làm mới|lam moi|thủ tục|thu tuc|xin cấp|xin cap|cấp lại|cap lai|kết hôn|ket hon|khai sinh|khai tử|khai tu|hộ tịch|ho tich|đổi|doi|chuyển|chuyen)"
-
     user_prompt_clean = payload.user_prompt.strip().lower()
     is_new_topic = bool(re.search(TOPIC_SWITCH_PATTERN, user_prompt_clean, re.IGNORECASE))
 
     if is_new_topic or not last_proc_title:
         rag_search_query = payload.user_prompt.strip()
     else:
-        # EXACT concatenation just like your manual stateless test
         rag_search_query = f"{last_proc_title} {payload.user_prompt}".strip()
 
-    # Pass the concatenated query to both Qdrant and LLM for true statelessness
     stream_gen, max_score = await get_legal_response_stream(rag_search_query, rag_search_query)
 
     async def stream_and_save_to_db():
-        SCORE_THRESHOLD = 0.55
-
-        if max_score < SCORE_THRESHOLD:
+        # FIX: The router no longer cares about the score value, only if a document exists at all.
+        # If RAG found no documents above its internal MIN_THRESHOLD, max_score will be 0.0.
+        if max_score == 0.0:
             if should_trigger_mcp(payload.user_prompt):
                 ask_msg = "Tôi không tìm thấy thông tin trong dữ liệu địa phương. Bạn có muốn tôi tìm kiếm trực tuyến trên Cổng Dịch vụ công Quốc gia không?"
-                # FIX: Pass empty list, not json.dumps
                 await add_message(db, conversation_id, "assistant", ask_msg, [])
+                await log_interaction(db, conversation_id, payload.user_prompt, ask_msg, None, False, max_score, "MCP_PROMPT")
 
                 yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
                 yield f"data: {json.dumps({'type': 'chunk', 'text': ask_msg})}\n\n"
@@ -186,8 +184,8 @@ async def handle_chat(
                     "Xin chào! Tôi là trợ lý hướng dẫn thủ tục hành chính. Vui lòng cho tôi biết bạn cần làm thủ tục gì nhé.",
                     "Chào bạn! Tôi ở đây để hỗ trợ giải đáp các thủ tục hành chính công. Bạn đang cần thực hiện thủ tục nào?"
                 ])
-                # FIX: Pass empty list, not json.dumps
                 await add_message(db, conversation_id, "assistant", nudge_msg, [])
+                await log_interaction(db, conversation_id, payload.user_prompt, nudge_msg, None, False, max_score, "LOW_CONFIDENCE")
 
                 yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
                 yield f"data: {json.dumps({'type': 'chunk', 'text': nudge_msg})}\n\n"
@@ -206,6 +204,8 @@ async def handle_chat(
                         parsed = json.loads(data_str)
                         if parsed.get("type") == "metadata":
                             final_sources = parsed.get("sources", [])
+                            print(f"\n[DIAGNOSTIC BACKEND] Received {len(final_sources)} sources.")
+                            print(f"[DIAGNOSTIC BACKEND] Sources: {final_sources}\n")
                         elif parsed.get("type") == "chunk":
                             full_ai_answer += parsed.get("text", "")
                     except json.JSONDecodeError:
@@ -219,11 +219,18 @@ async def handle_chat(
             full_ai_answer += offer_text
             yield f"data: {json.dumps({'type': 'chunk', 'text': offer_text})}\n\n"
 
-        # FIX: Pass db_sources directly. DO NOT json.dumps it!
         await add_message(db, conversation_id, "assistant", full_ai_answer, db_sources)
-        await log_interaction(db, conversation_id, payload.user_prompt, full_ai_answer, str(final_sources), False)
+        await log_interaction(db, conversation_id, payload.user_prompt, full_ai_answer, str(final_sources), False, max_score, "SUCCESS")
 
-    return StreamingResponse(stream_and_save_to_db(), media_type="text/event-stream")
+    return StreamingResponse(
+        stream_and_save_to_db(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 
 @router.post("/chat/{conversation_id}/action/mcp")
@@ -245,16 +252,20 @@ async def action_mcp(
             last_user_msg = msg.content
         if msg.role == "assistant" and msg.sources and not last_proc_title:
             sources_list = parse_sources(msg.sources)
-            actual_sources = [s for s in sources_list if isinstance(s, str) and not s.startswith("RAG_SCORE")]
+            actual_sources = [
+                s for s in sources_list
+                if isinstance(s, str)
+                and not s.startswith("RAG_SCORE:")
+                and not s.startswith("RAG_CONTENT:")
+            ]
             if actual_sources:
                 last_proc_title = actual_sources[0]
 
     query = f"{last_proc_title} {last_user_msg}".strip() if last_proc_title else last_user_msg
 
     mcp_answer, mcp_sources = await execute_mcp_search(query, conversation.location)
-    # FIX: Pass mcp_sources directly
     await add_message(db, conversation_id, "assistant", mcp_answer, mcp_sources)
-    await log_interaction(db, conversation_id, query, mcp_answer, str(mcp_sources), True)
+    await log_interaction(db, conversation_id, query, mcp_answer, str(mcp_sources), True, None, "ONLINE_SEARCH_EXECUTED")
 
     return {"text": mcp_answer, "sources": mcp_sources}
 
@@ -279,7 +290,12 @@ async def action_form(
             last_user_msg = msg.content
         if msg.role == "assistant" and msg.sources and not last_proc_title:
             sources_list = parse_sources(msg.sources)
-            actual_sources = [s for s in sources_list if isinstance(s, str) and not s.startswith("RAG_SCORE")]
+            actual_sources = [
+                s for s in sources_list
+                if isinstance(s, str)
+                and not s.startswith("RAG_SCORE:")
+                and not s.startswith("RAG_CONTENT:")
+            ]
             if actual_sources:
                 last_proc_title = actual_sources[0]
                 break
@@ -298,7 +314,6 @@ async def action_form(
     except ImportError:
         link_msg = "Xin lỗi, module biểu mẫu chưa được cấu hình."
 
-    # FIX: Pass empty list, not json.dumps
     await add_message(db, conversation_id, "assistant", link_msg, [])
 
     return {"text": link_msg, "sources": []}
@@ -376,3 +391,28 @@ async def submit_feedback(
         return {"status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/admin/failed-logs")
+async def get_failed_queries(
+    limit: int = 50,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(AuditLog)
+        .where(AuditLog.failure_type.in_(["LOW_CONFIDENCE", "MCP_PROMPT", "ONLINE_SEARCH_EXECUTED"]))
+        .order_by(AuditLog.created_at.desc())
+        .limit(limit)
+    )
+    logs = result.scalars().all()
+
+    return [
+        {
+            "id": log.id,
+            "conversation_id": log.conversation_id,
+            "user_query": log.user_query,
+            "rag_score": log.rag_score,
+            "failure_type": log.failure_type,
+            "llm_response": log.llm_final_response,
+            "created_at": log.created_at.isoformat() if log.created_at else None
+        } for log in logs
+    ]

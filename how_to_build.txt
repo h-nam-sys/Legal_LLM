@@ -1,0 +1,11 @@
+docker-compose up -d --build
+
+#tag
+docker tag legal_llm-chat-service:latest namnhedu/legal_llm-chat-service:latest
+docker tag legal_llm-llm-service:latest namnhedu/legal_llm-llm-service:latest
+docker tag legal_llm-rag-service:latest namnhedu/legal_llm-rag-service:latest
+
+#upload
+docker push namnhedu/legal_llm-chat-service:latest
+docker push namnhedu/legal_llm-llm-service:latest
+docker push namnhedu/legal_llm-rag-service:latest
