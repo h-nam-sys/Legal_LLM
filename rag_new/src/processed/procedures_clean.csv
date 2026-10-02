@@ -1,0 +1,936 @@
+﻿proc_id,name,domain,executing_agency,requirements,checklist_text,submission_text,fee_text,legal_codes,receiving_address,attachments_text,has_mcq,rag_text
+PROC_001,Thủ tục xác nhận tình trạng hôn nhân,Hộ tịch,,,"- Xuất trình giấy tờ chứng minh thông tin cư trú ( bản photo hộ khẩu bản chính nếu có, hoặc giấy xác nhận thông tin cư trú CT07 có mốc thời gian do Công an phường cấp)
+ - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu):
+ 01 bản photo của người yêu cầu.
+ Trường hợp chưa đăng ký kết hôn với ai và có hộ khẩu thường trú tại nhiều nơi: người yêu cầu phải về những nơi thường trú trước đây để xác nhận tình trạng hôn nhân giai đoạn nữ từ đủ 18 tuổi, nam từ đủ 20 tuổi. Nếu người yêu cầu không thể chứng minh tình trạng hôn nhân của mình thì UBND phường, xã nơi thường trú sẽ hỗ trợ xác minh. Sau thời hạn 20 ngày kể từ ngày gửi văn bản yêu cầu xác minh mà không nhận được văn bản trả lời, thì UBND phường, xã nơi thường trú cho phép người yêu cầu có văn bản cam đoan về tình trạng hôn nhân của mình và tiếp tục giải quyết hồ sơ theo quy định.
+ Trường hợp đã ly hôn thì kèm Quyết định ly hôn.
+ Trường hợp vợ hoặc chồng đã chết thì kèm trích lục khai tử","Thời gian giải quyết: Trong 03 ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào ngày hôm sau)
+Hình thức nộp: Trực tuyến",Không thu phí,Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP,,,False,"Tên thủ tục hành chính: Thủ tục xác nhận tình trạng hôn nhân
+Số hiệu văn bản: Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP
+Lĩnh vực: Hộ tịch
+
+Thành phần hồ sơ:
+- Xuất trình giấy tờ chứng minh thông tin cư trú ( bản photo hộ khẩu bản chính nếu có, hoặc giấy xác nhận thông tin cư trú CT07 có mốc thời gian do Công an phường cấp)
+ - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu):
+ 01 bản photo của người yêu cầu.
+ Trường hợp chưa đăng ký kết hôn với ai và có hộ khẩu thường trú tại nhiều nơi: người yêu cầu phải về những nơi thường trú trước đây để xác nhận tình trạng hôn nhân giai đoạn nữ từ đủ 18 tuổi, nam từ đủ 20 tuổi. Nếu người yêu cầu không thể chứng minh tình trạng hôn nhân của mình thì UBND phường, xã nơi thường trú sẽ hỗ trợ xác minh. Sau thời hạn 20 ngày kể từ ngày gửi văn bản yêu cầu xác minh mà không nhận được văn bản trả lời, thì UBND phường, xã nơi thường trú cho phép người yêu cầu có văn bản cam đoan về tình trạng hôn nhân của mình và tiếp tục giải quyết hồ sơ theo quy định.
+ Trường hợp đã ly hôn thì kèm Quyết định ly hôn.
+ Trường hợp vợ hoặc chồng đã chết thì kèm trích lục khai tử
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Trong 03 ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào ngày hôm sau)
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+Không thu phí"
+PROC_002,Thủ tục đăng ký khai sinh,Hộ tịch,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"- Giấy chứng sinh (Bản chính)
+ - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu) của 
+ 2 vợ chồng (01 bản photo)
+ - Giấy chứng nhận kết hôn (01 bản photo)
+ (xuất trình bản chính để đối chiếu)","Thời gian giải quyết: 1 ngày
+Hình thức nộp: Cả hai",Bản chính: Không thu phí Bản sao: 8.000đ/bản,Luật 60/2014/QH13 (Luật Hộ tịch); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Thủ tục đăng ký khai sinh
+Số hiệu văn bản: Luật 60/2014/QH13 (Luật Hộ tịch); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP
+Lĩnh vực: Hộ tịch
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+- Giấy chứng sinh (Bản chính)
+ - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu) của 
+ 2 vợ chồng (01 bản photo)
+ - Giấy chứng nhận kết hôn (01 bản photo)
+ (xuất trình bản chính để đối chiếu)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 1 ngày
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Bản chính: Không thu phí Bản sao: 8.000đ/bản"
+PROC_003,Thủ tục đăng ký khai tử,Hộ tịch,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"- Chứng minh nhân dân hoặc căn cước công dân, hộ chiếu của người chết và người yêu cầu: 01 bản photo (có mối quan hệ nhân thân với người đã chết).
+ - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu) 01 bản photo của hai người làm chứng (Lưu ý: vợ; chồng; con không được làm chứng trong đơn)
+ Trường hợp: người đã chết có hộ khẩu thường trú tại địa phương nhưng đã chết và được tổ chức tang lễ ở nơi khác thì phải đăng ký giấy báo tử tại UBND phường, xã nơi tổ chức tang lễ. Nộp giấy báo tử (bản chính) để đăng ký khai tử tại UBND phường, xã nơi thường trú.","Thời gian giải quyết: trong ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào hôm sau)
+Hình thức nộp: Cả hai",Bản chính: Không thu phí Bản sao: 8.000đ/bản,Luật 60/2014/QH13 (Luật Hộ tịch); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Thủ tục đăng ký khai tử
+Số hiệu văn bản: Luật 60/2014/QH13 (Luật Hộ tịch); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP
+Lĩnh vực: Hộ tịch
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+- Chứng minh nhân dân hoặc căn cước công dân, hộ chiếu của người chết và người yêu cầu: 01 bản photo (có mối quan hệ nhân thân với người đã chết).
+ - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu) 01 bản photo của hai người làm chứng (Lưu ý: vợ; chồng; con không được làm chứng trong đơn)
+ Trường hợp: người đã chết có hộ khẩu thường trú tại địa phương nhưng đã chết và được tổ chức tang lễ ở nơi khác thì phải đăng ký giấy báo tử tại UBND phường, xã nơi tổ chức tang lễ. Nộp giấy báo tử (bản chính) để đăng ký khai tử tại UBND phường, xã nơi thường trú.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: trong ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào hôm sau)
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Bản chính: Không thu phí Bản sao: 8.000đ/bản"
+PROC_004,Thủ tục đăng ký kết hôn,Hộ tịch,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu) của bên nam và bên nữ 01 bản photo (Xuất trình bản chính).
+ Trường hợp bên nam hoặc bên nữ thường trú tại địa phương (nếu đã ly hôn thì kèm bản photo của quyết định ly hôn, nếu có chồng/vợ đã chết thì cung cấp đăng ký khai tử của chồng/vợ) không cần xác nhận tình trạng hôn nhân để đăng ký kết hôn.
+ Giấy tờ chứng minh thông tin cư trú: thông báo đăng ký tạm trú (do công an phường cấp).","Thời gian giải quyết: Trong ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào ngày hôm sau).
+Hình thức nộp: Cả hai",Bản chính: Không thu phí Bản sao: 8.000đ/bản,Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Thủ tục đăng ký kết hôn
+Số hiệu văn bản: Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP
+Lĩnh vực: Hộ tịch
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu) của bên nam và bên nữ 01 bản photo (Xuất trình bản chính).
+ Trường hợp bên nam hoặc bên nữ thường trú tại địa phương (nếu đã ly hôn thì kèm bản photo của quyết định ly hôn, nếu có chồng/vợ đã chết thì cung cấp đăng ký khai tử của chồng/vợ) không cần xác nhận tình trạng hôn nhân để đăng ký kết hôn.
+ Giấy tờ chứng minh thông tin cư trú: thông báo đăng ký tạm trú (do công an phường cấp).
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Trong ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào ngày hôm sau).
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Bản chính: Không thu phí Bản sao: 8.000đ/bản"
+PROC_005,Thủ tục nhận cha mẹ con,Hộ tịch,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"- Giấy xác nhận thông tin cư trú của Công an cấp (thay thế Hộ khẩu): 01 Bản photo (Xuất trình bản chính)
+ - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu): 01 bản photo của người yêu cầu.
+ - Tờ khai nhận cha, mẹ con (phải ghi ý kiến của người hiện đang là mẹ hoặc cha); “Tôi đồng ý cho Ông/Bà………..nhận bé………..là con.” Ký ghi rõ họ và tên.
+ - Văn bản của cơ quan y tế, cơ quan giám định xác nhận quan hệ, cha, mẹ, con (bản chính) nếu có.
+ - Cam kết con chung có ít nhất 02 người làm chứng về mối quan hệ cha, mẹ, con khi không có chứng cứ chứng minh quan hệ cha, mẹ, con theo quy định.","Thời gian giải quyết: Trong 07 ngày làm việc.
+Hình thức nộp: Cả hai",Bản chính: Không thu phí Bản sao: 8.000đ/bản,Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Thủ tục nhận cha mẹ con
+Số hiệu văn bản: Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP
+Lĩnh vực: Hộ tịch
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+- Giấy xác nhận thông tin cư trú của Công an cấp (thay thế Hộ khẩu): 01 Bản photo (Xuất trình bản chính)
+ - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu): 01 bản photo của người yêu cầu.
+ - Tờ khai nhận cha, mẹ con (phải ghi ý kiến của người hiện đang là mẹ hoặc cha); “Tôi đồng ý cho Ông/Bà………..nhận bé………..là con.” Ký ghi rõ họ và tên.
+ - Văn bản của cơ quan y tế, cơ quan giám định xác nhận quan hệ, cha, mẹ, con (bản chính) nếu có.
+ - Cam kết con chung có ít nhất 02 người làm chứng về mối quan hệ cha, mẹ, con khi không có chứng cứ chứng minh quan hệ cha, mẹ, con theo quy định.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Trong 07 ngày làm việc.
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Bản chính: Không thu phí Bản sao: 8.000đ/bản"
+PROC_006,Đăng ký kết hôn có yếu tố nước ngoài,Hộ tịch,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"1. Tờ khai theo quy định (có mẫu sẵn)
+ 2. Giấy tờ tùy thân (CMND, CCCD, Hộ chiếu, thẻ ID ....). Phải dịch thuật sang tiếng Việt Nam nếu các giấy tờ trên do cơ quan nước ngoài cấp.
+ 3. Giấy tờ chứng minh nơi cư trú của người đăng ký kết hôn (Hộ khẩu, sổ tạm trú, Đơn xin xác nhận tạm trú, thẻ ID, bằng lái xe chứng minh nơi cư trú bên nước ngoài...) tại phường Tăng Nhơn Phú.
+ Phải dịch thuật sang tiếng Việt Nam nếu các giấy tờ trên do cơ quan nước ngoài cấp.
+ 4. Giấy xác nhận của tổ chức y tế có thẩm quyền xác nhận các bên không mắc bệnh tâm thần (Khám ở Bệnh viện Tâm thần. Địa chỉ: 766 Võ Văn Kiệt, (Phường 1, Quận 5) nay là phường Chợ Quán, TP.HCM)
+ 5. Giấy tờ xác nhận tình trạng hôn nhân của vợ và chồng
+ + Nếu có ly hôn phải nộp thêm bản quyết định ly hôn của Tòa án cấp
+ + Tuyên thệ độc thân hoặc văn bản chứng minh độc thân của vợ hoặc chồng bên nước ngoài cấp. Khi về sử dụng tại Việt Nam phải được hợp pháp hóa lãnh sự văn bản đó và dịch thuật sang tiếng Việt Nam và được công chứng.
+ 6. Bản sao trích lục hộ tịch về việc đã ghi vào sổ ly hôn hoặc hủy việc kết hôn (nếu có)
+ - Nếu là công dân nước ngoài (đã bỏ quốc tịch Việt Nam) thì không cẩn làm thủ tục ghi chú ly hôn
+ - Nếu là công dân Việt Nam khi ly hôn ở nước ngoài thì phải làm thủ tục ghi chú ly hôn tại nơi đăng ký ly hôn hoặc nơi trước khi xuất cảnh
+ 7. Văn bản của cơ quan đơn vị quản lý xác nhận công chức viên chức đang phục vụ trong lực lượng vũ trang kết hôn","Thời gian giải quyết: 5 ngày làm việc
+Hình thức nộp: Cả hai",Bản chính: Không thu phí Bản sao: 8.000đ/bản sao,Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Đăng ký kết hôn có yếu tố nước ngoài
+Số hiệu văn bản: Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP
+Lĩnh vực: Hộ tịch
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+1. Tờ khai theo quy định (có mẫu sẵn)
+ 2. Giấy tờ tùy thân (CMND, CCCD, Hộ chiếu, thẻ ID ....). Phải dịch thuật sang tiếng Việt Nam nếu các giấy tờ trên do cơ quan nước ngoài cấp.
+ 3. Giấy tờ chứng minh nơi cư trú của người đăng ký kết hôn (Hộ khẩu, sổ tạm trú, Đơn xin xác nhận tạm trú, thẻ ID, bằng lái xe chứng minh nơi cư trú bên nước ngoài...) tại phường Tăng Nhơn Phú.
+ Phải dịch thuật sang tiếng Việt Nam nếu các giấy tờ trên do cơ quan nước ngoài cấp.
+ 4. Giấy xác nhận của tổ chức y tế có thẩm quyền xác nhận các bên không mắc bệnh tâm thần (Khám ở Bệnh viện Tâm thần. Địa chỉ: 766 Võ Văn Kiệt, (Phường 1, Quận 5) nay là phường Chợ Quán, TP.HCM)
+ 5. Giấy tờ xác nhận tình trạng hôn nhân của vợ và chồng
+ + Nếu có ly hôn phải nộp thêm bản quyết định ly hôn của Tòa án cấp
+ + Tuyên thệ độc thân hoặc văn bản chứng minh độc thân của vợ hoặc chồng bên nước ngoài cấp. Khi về sử dụng tại Việt Nam phải được hợp pháp hóa lãnh sự văn bản đó và dịch thuật sang tiếng Việt Nam và được công chứng.
+ 6. Bản sao trích lục hộ tịch về việc đã ghi vào sổ ly hôn hoặc hủy việc kết hôn (nếu có)
+ - Nếu là công dân nước ngoài (đã bỏ quốc tịch Việt Nam) thì không cẩn làm thủ tục ghi chú ly hôn
+ - Nếu là công dân Việt Nam khi ly hôn ở nước ngoài thì phải làm thủ tục ghi chú ly hôn tại nơi đăng ký ly hôn hoặc nơi trước khi xuất cảnh
+ 7. Văn bản của cơ quan đơn vị quản lý xác nhận công chức viên chức đang phục vụ trong lực lượng vũ trang kết hôn
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 5 ngày làm việc
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Bản chính: Không thu phí Bản sao: 8.000đ/bản sao"
+PROC_007,Nội quy lao động,Lao động - Tiền lương,,,Công văn đăng ký; Biên bản họp thông qua nội quy lao động; Nội quy lao động,"Thời gian giải quyết: 7 ngày làm việc
+Hình thức nộp: Trực tuyến",Không,Bộ luật 45/2019/QH14 (Bộ luật Lao động); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 145/2020/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP,,,False,"Tên thủ tục hành chính: Nội quy lao động
+Số hiệu văn bản: Bộ luật 45/2019/QH14 (Bộ luật Lao động); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 145/2020/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP
+Lĩnh vực: Lao động - Tiền lương
+
+Thành phần hồ sơ:
+Công văn đăng ký; Biên bản họp thông qua nội quy lao động; Nội quy lao động
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 7 ngày làm việc
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+Không"
+PROC_008,"Thực hiện, điều chỉnh, thôi hưởng trợ cấp hưu trí xã hội",Văn hóa - Xã hội,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"(Mẫu 01) Văn bản đề nghị hưởng trợ cấp hưu trí xã hội, căn cước công dân","Thời gian giải quyết: 10 ngày làm việc
+Hình thức nộp: Cả hai",không,Luật 41/2024/QH15 (Luật Bảo hiểm xã hội); Nghị định số 42/2025/NĐ-CP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Thực hiện, điều chỉnh, thôi hưởng trợ cấp hưu trí xã hội
+Số hiệu văn bản: Luật 41/2024/QH15 (Luật Bảo hiểm xã hội); Nghị định số 42/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+(Mẫu 01) Văn bản đề nghị hưởng trợ cấp hưu trí xã hội, căn cước công dân
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 10 ngày làm việc
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không"
+PROC_009,"Xác định, xác định lại mức độ khuyết tật và cấp Giấy xác nhận khuyết tật",Văn hóa - Xã hội,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"(Mẫu 01) Đơn đề nghị xác định, xác định lại mức độ khuyết tật và cấp, cấp đổi, cấp lại giấy xác nhận khuyết tật, Bản sao các giấy tờ liên quan đến khuyết tật (nếu có) như: bệnh án, giấy tờ khám, điều trị, phẫu thuật hoặc các giấy tờ liên quan khác. Căn cước công dân.","Thời gian giải quyết: 25 ngày làm việc
+Hình thức nộp: Cả hai",không,Luật 51/2010/QH12 (Luật Người khuyết tật); Nghị định số 28/2012/NĐ-CP; Nghị định số 42/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Thông tư số 01/2019/TT-BLĐTBXH; Thông tư số 08/2023/TT-BLĐTBXH,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Xác định, xác định lại mức độ khuyết tật và cấp Giấy xác nhận khuyết tật
+Số hiệu văn bản: Luật 51/2010/QH12 (Luật Người khuyết tật); Nghị định số 28/2012/NĐ-CP; Nghị định số 42/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Thông tư số 01/2019/TT-BLĐTBXH; Thông tư số 08/2023/TT-BLĐTBXH
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+(Mẫu 01) Đơn đề nghị xác định, xác định lại mức độ khuyết tật và cấp, cấp đổi, cấp lại giấy xác nhận khuyết tật, Bản sao các giấy tờ liên quan đến khuyết tật (nếu có) như: bệnh án, giấy tờ khám, điều trị, phẫu thuật hoặc các giấy tờ liên quan khác. Căn cước công dân.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 25 ngày làm việc
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không"
+PROC_010,Thủ tục hỗ trợ chi phí khuyến khích hoả táng đối với người dân có hộ khẩu Thành phố Hồ Chí Minh,Văn hóa - Xã hội,Trung tâm Phục vụ hành chính công phường Tăng Nhơn phú,,"Tờ khai thông tin hộ gia đình, cá nhân, tổ chức nhận chi phí hỗ trợ khuyến khích hỏa táng, hóa đơn VAT của đơn vị cung cấp dịch vụ hỏa táng (bản chính). Căn cước công dân của người đứng đơn.","Thời gian giải quyết: 12 ngày làm việc
+Hình thức nộp: Trực tiếp",không,Quyết định số 14/2015/QĐ-UBND,Trung tâm Phục vụ hành chính công phường Tăng Nhơn phú,,False,"Tên thủ tục hành chính: Thủ tục hỗ trợ chi phí khuyến khích hoả táng đối với người dân có hộ khẩu Thành phố Hồ Chí Minh
+Số hiệu văn bản: Quyết định số 14/2015/QĐ-UBND
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn phú
+
+Thành phần hồ sơ:
+Tờ khai thông tin hộ gia đình, cá nhân, tổ chức nhận chi phí hỗ trợ khuyến khích hỏa táng, hóa đơn VAT của đơn vị cung cấp dịch vụ hỏa táng (bản chính). Căn cước công dân của người đứng đơn.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 12 ngày làm việc
+Hình thức nộp: Trực tiếp
+
+Lệ phí:
+không"
+PROC_011,Giải quyết chế độ trợ cấp thờ cúng liệt sĩ.,Văn hóa - Xã hội,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"Cá nhân làm đơn đề nghị theo Mẫu số 18 Phụ lục I Nghị định số 131/2021/NĐ-CP, văn bản ủy quyền của những người cùng hàng thừa kế (xác nhận chữ ký của cơ quan có thẩm quyền) và bản sao được chứng thực Bằng “Tổ quốc ghi công”. Tường trình thân nhân của liệt sĩ.","Thời gian giải quyết: 17 ngày làm việc
+Hình thức nộp: Cả hai",không,Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Giải quyết chế độ trợ cấp thờ cúng liệt sĩ.
+Số hiệu văn bản: Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+Cá nhân làm đơn đề nghị theo Mẫu số 18 Phụ lục I Nghị định số 131/2021/NĐ-CP, văn bản ủy quyền của những người cùng hàng thừa kế (xác nhận chữ ký của cơ quan có thẩm quyền) và bản sao được chứng thực Bằng “Tổ quốc ghi công”. Tường trình thân nhân của liệt sĩ.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 17 ngày làm việc
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không"
+PROC_012,Cấp đổi Bằng “Tổ quốc ghi công”,Văn hóa - Xã hội,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,"Đơn đề nghị theo Mẫu số 16 Phụ lục I Nghị định số 131/2021/NĐ-CP; Bản gốc Bằng “Tổ quốc ghi công”; Một trong các giấy tờ chứng minh thân nhân đã được giải quyết chế độ ưu đãi: Quyết định hưởng trợ cấp; sổ nhận trợ cấp ưu đãi; danh sách chi trả trợ cấp hằng tháng hoặc trợ cấp một lần khi báo tử có ký nhận của người hưởng trợ cấp; giấy tờ khác do cơ quan có thẩm quyền ban hành, xác nhận được lập từ ngày 31 tháng 12 năm 1994 trở về trước.","Thời gian giải quyết: 129 ngày làm việc
+Hình thức nộp: Trực tiếp",không,Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Cấp đổi Bằng “Tổ quốc ghi công”
+Số hiệu văn bản: Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+Đơn đề nghị theo Mẫu số 16 Phụ lục I Nghị định số 131/2021/NĐ-CP; Bản gốc Bằng “Tổ quốc ghi công”; Một trong các giấy tờ chứng minh thân nhân đã được giải quyết chế độ ưu đãi: Quyết định hưởng trợ cấp; sổ nhận trợ cấp ưu đãi; danh sách chi trả trợ cấp hằng tháng hoặc trợ cấp một lần khi báo tử có ký nhận của người hưởng trợ cấp; giấy tờ khác do cơ quan có thẩm quyền ban hành, xác nhận được lập từ ngày 31 tháng 12 năm 1994 trở về trước.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 129 ngày làm việc
+Hình thức nộp: Trực tiếp
+
+Lệ phí:
+không"
+PROC_013,Cấp giấy xác nhận thân nhân của người có công,Văn hóa - Xã hội,Trung tâm Phục vụ hành ch1inh công,,"Đơn đề nghị cấp giấy xác nhận thân nhân của người có công. Bản sao được chứng thực từ một trong các giấy tờ sau: 
++ Giấy chứng nhận người có công hoặc Kỷ niệm chương người hoạt động cách mạng, kháng chiến, bảo vệ Tổ quốc, làm nghĩa vụ quốc tế bị địch bắt tù, đày; Huân chương, Huy chương kháng chiến; Huân chương, Huy chương chiến thắng; kỷ niệm chương “Tổ quốc ghi công”; bằng “Có công với nước”. 
++ Giấy tờ do cơ quan có thẩm quyền ban hành, xác nhận mối quan hệ với người có công gồm: căn cước công dân.","Thời gian giải quyết: 05 ngày làm việc
+Hình thức nộp: Cả hai",không,Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP,Trung tâm Phục vụ hành ch1inh công,,False,"Tên thủ tục hành chính: Cấp giấy xác nhận thân nhân của người có công
+Số hiệu văn bản: Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành ch1inh công
+
+Thành phần hồ sơ:
+Đơn đề nghị cấp giấy xác nhận thân nhân của người có công. Bản sao được chứng thực từ một trong các giấy tờ sau: 
++ Giấy chứng nhận người có công hoặc Kỷ niệm chương người hoạt động cách mạng, kháng chiến, bảo vệ Tổ quốc, làm nghĩa vụ quốc tế bị địch bắt tù, đày; Huân chương, Huy chương kháng chiến; Huân chương, Huy chương chiến thắng; kỷ niệm chương “Tổ quốc ghi công”; bằng “Có công với nước”. 
++ Giấy tờ do cơ quan có thẩm quyền ban hành, xác nhận mối quan hệ với người có công gồm: căn cước công dân.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 05 ngày làm việc
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không"
+PROC_014,Hưởng trợ cấp khi người có công đang hưởng trợ cấp ưu đãi từ trần,Văn hóa - Xã hội,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,đã có,Bản khai theo Mẫu số 12 Phụ lục I Nghị định số 131/2021/NĐ-CP. Bản sao được chứng thực từ giấy báo tử hoặc trích lục khai tử. Văn bản Ủy quyền làm hồ sơ mai táng phí và nhận tiền trợ cấp 1 lần (nếu có nhiều người cùng hàng thừa kế); Tường trình quan hệ thân nhân Căn cước công dân của người đứng đơn,"Thời gian giải quyết: 24 ngày làm việc
+Hình thức nộp: Cả hai",không,Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP,Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Hưởng trợ cấp khi người có công đang hưởng trợ cấp ưu đãi từ trần
+Số hiệu văn bản: Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+Bản khai theo Mẫu số 12 Phụ lục I Nghị định số 131/2021/NĐ-CP. Bản sao được chứng thực từ giấy báo tử hoặc trích lục khai tử. Văn bản Ủy quyền làm hồ sơ mai táng phí và nhận tiền trợ cấp 1 lần (nếu có nhiều người cùng hàng thừa kế); Tường trình quan hệ thân nhân Căn cước công dân của người đứng đơn
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 24 ngày làm việc
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không"
+PROC_015,Giải quyết chế độ trợ cấp thờ cúng liệt sĩ,Văn hóa - Xã hội,Tổ Nội vụ - Phòng Văn hóa - Xã hội phường Tăng Nhơn Phú,,"Đơn đề nghị Mẫu số 18 Phụ lục I Nghị định số 131/2021/NĐ-CP (Bản chính)
+Bằng Tổ quốc ghi công (bản sao được chứng thực)
+Văn bản ủy quyền (Bản chính)","Thời gian giải quyết: 05 ngày làm việc
+Hình thức nộp: Cả hai",không đồng,Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP,Tổ Nội vụ - Phòng Văn hóa - Xã hội phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Giải quyết chế độ trợ cấp thờ cúng liệt sĩ
+Số hiệu văn bản: Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Tổ Nội vụ - Phòng Văn hóa - Xã hội phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+Đơn đề nghị Mẫu số 18 Phụ lục I Nghị định số 131/2021/NĐ-CP (Bản chính)
+Bằng Tổ quốc ghi công (bản sao được chứng thực)
+Văn bản ủy quyền (Bản chính)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 05 ngày làm việc
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không đồng"
+PROC_016,Hỗ trợ chi phí khuyến khích hỏa táng,Văn hóa - Xã hội,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,"1/ Bản chính tờ khai thông tin gia đình, cá nhân, tổ chức nhận chi phí hỗ trợ khuyến khích hỏa táng; 2/ Bản photo (kèm bản chính để đố chiếu) hoặc bản sao giấy chứng từ của người được hỏa táng; 3/Bản chính hóa đơn đã được thanh toán của cơ sở hỏa táng theo quy định của Bộ Tài chính; 4/ Đối với cá nhân thực hiện thủ tục thông qua ủy quyền hoặc đại diện tổ chức, đoàn thể thực hiện thủ tục: xuất trình văn bản ủy quyền hoặc giấy giới thiệu theo quy định.","Thời gian giải quyết: 12 (muời hai) ngày làm việc, kể từ ngày nhận được hồ sơ
+Hình thức nộp: Cả hai",không,Quyết định số 14/2015/QĐ-UBND,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,False,"Tên thủ tục hành chính: Hỗ trợ chi phí khuyến khích hỏa táng
+Số hiệu văn bản: Quyết định số 14/2015/QĐ-UBND
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM
+
+Thành phần hồ sơ:
+1/ Bản chính tờ khai thông tin gia đình, cá nhân, tổ chức nhận chi phí hỗ trợ khuyến khích hỏa táng; 2/ Bản photo (kèm bản chính để đố chiếu) hoặc bản sao giấy chứng từ của người được hỏa táng; 3/Bản chính hóa đơn đã được thanh toán của cơ sở hỏa táng theo quy định của Bộ Tài chính; 4/ Đối với cá nhân thực hiện thủ tục thông qua ủy quyền hoặc đại diện tổ chức, đoàn thể thực hiện thủ tục: xuất trình văn bản ủy quyền hoặc giấy giới thiệu theo quy định.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 12 (muời hai) ngày làm việc, kể từ ngày nhận được hồ sơ
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không"
+PROC_017,Hỗ trợ chi phí mai táng cho đối tượng bảo trợ xã hội,Văn hóa - Xã hội,"Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,1/ Bản chínhTờ khai đề nghị hỗ trợ chi phí mai táng (theo mẫu số 04 ban hành kèm theo Phụ lục tại Nghị định số 20/2021/NĐ-CP ngày 15/3/2021); 2/ Bản sao Giấy chứng tử của đối tượng; 3/ Bản sao Quyết định đối với trường hợp người từ đủ 80 tuổi đang hưởng trợ cấp tuất bảo hiểm xã hội hàng tháng.,"Thời gian giải quyết: Ba (03) ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ
+Hình thức nộp: Cả hai",Không,Nghị định số 20/2021/NĐ-CP,"Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,False,"Tên thủ tục hành chính: Hỗ trợ chi phí mai táng cho đối tượng bảo trợ xã hội
+Số hiệu văn bản: Nghị định số 20/2021/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM
+
+Thành phần hồ sơ:
+1/ Bản chínhTờ khai đề nghị hỗ trợ chi phí mai táng (theo mẫu số 04 ban hành kèm theo Phụ lục tại Nghị định số 20/2021/NĐ-CP ngày 15/3/2021); 2/ Bản sao Giấy chứng tử của đối tượng; 3/ Bản sao Quyết định đối với trường hợp người từ đủ 80 tuổi đang hưởng trợ cấp tuất bảo hiểm xã hội hàng tháng.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Ba (03) ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Không"
+PROC_018,"Thực hiện, điều chỉnh, thôi hưởng trợ cấp xã hội hàng tháng, hỗ trợ kinh phí chăm sóc, nuôi dưỡng hàng tháng",Văn hóa - Xã hội,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,"I. Trường hợp đề nghị trợ cấp xã hội hàng tháng: 
+Bản chính Tờ khai của đối tượng (theo Mẫu số 1a, 1b, 1c, 1d, 1đ ban hành kèm theo Nghị định số 20/2021/NĐ-CP).
+II. Trường hợp đề nghị hỗ trợ kinh phí chăm sóc, nuôi dưỡng hàng tháng:
+1/ Bản chính Tờ khai nhận chăm sóc, nuôi dưỡng đối tượng bảo trợ xã hội (theo Mẫu số 2b ban hành kèm theo Nghị định số 20/2021/NĐ-CP)
+2/ Bản chính Tờ khai của đối tượng được nhận chăm sóc, nuôi dưỡng trong trường hợp đối tượng không hưởng trợ cấp xã hội hàng tháng (theo Mẫu số 03 ban hành kèm theo Nghị định số 20/2021/NĐ-CP)
+3/ Bản chính Tờ khai nhận chăm sóc, nuôi dưỡng đối tượng bảo trợ xã hội (theo Mẫu số 2b ban hành kèm theo Nghị định số 20/2021/NĐ-CP)
+III. Các giấy tờ khác kèm theo (đối với trường hợp nộp trực tiếp):
+1/ Giấy xác nhận thông tin về cư trú hoặc Giấy thông báo số định danh cá nhân và thông tin trong Cơ sở dữ liệu quốc gia về dân cư; chứng minh thư nhân dân hoặc thẻ căn cước công dân (Dùng để đối chiếu thông tin trên Tờ khai)
+2/ Giấy khai sinh của trẻ em đối với trường hợp xét trợ cấp xã hội đối với trẻ em, người đơn thân nghèo đang nuôi con, người khuyết tật đang nuôi con;
+3/ Giấy tờ xác nhận bị nhiễm HIV của cơ quan y tế có thẩm quyền đối với trường hợp bị nhiễm HIV;
+4/ Giấy tờ xác nhận đang mang thai của cơ quan y tế có thẩm quyền đối với trường hợp người khuyết tật đang mang thai;
+5/ Giấy xác nhận khuyết tật đối với trường hợp người khuyết tật.","Thời gian giải quyết: Mười (10) ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ
+Hình thức nộp: Cả hai",Không,Nghị định số 20/2021/NĐ-CP; Nghị định số 104/2022/NĐ-CP,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,False,"Tên thủ tục hành chính: Thực hiện, điều chỉnh, thôi hưởng trợ cấp xã hội hàng tháng, hỗ trợ kinh phí chăm sóc, nuôi dưỡng hàng tháng
+Số hiệu văn bản: Nghị định số 20/2021/NĐ-CP; Nghị định số 104/2022/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, số 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM
+
+Thành phần hồ sơ:
+I. Trường hợp đề nghị trợ cấp xã hội hàng tháng: 
+Bản chính Tờ khai của đối tượng (theo Mẫu số 1a, 1b, 1c, 1d, 1đ ban hành kèm theo Nghị định số 20/2021/NĐ-CP).
+II. Trường hợp đề nghị hỗ trợ kinh phí chăm sóc, nuôi dưỡng hàng tháng:
+1/ Bản chính Tờ khai nhận chăm sóc, nuôi dưỡng đối tượng bảo trợ xã hội (theo Mẫu số 2b ban hành kèm theo Nghị định số 20/2021/NĐ-CP)
+2/ Bản chính Tờ khai của đối tượng được nhận chăm sóc, nuôi dưỡng trong trường hợp đối tượng không hưởng trợ cấp xã hội hàng tháng (theo Mẫu số 03 ban hành kèm theo Nghị định số 20/2021/NĐ-CP)
+3/ Bản chính Tờ khai nhận chăm sóc, nuôi dưỡng đối tượng bảo trợ xã hội (theo Mẫu số 2b ban hành kèm theo Nghị định số 20/2021/NĐ-CP)
+III. Các giấy tờ khác kèm theo (đối với trường hợp nộp trực tiếp):
+1/ Giấy xác nhận thông tin về cư trú hoặc Giấy thông báo số định danh cá nhân và thông tin trong Cơ sở dữ liệu quốc gia về dân cư; chứng minh thư nhân dân hoặc thẻ căn cước công dân (Dùng để đối chiếu thông tin trên Tờ khai)
+2/ Giấy khai sinh của trẻ em đối với trường hợp xét trợ cấp xã hội đối với trẻ em, người đơn thân nghèo đang nuôi con, người khuyết tật đang nuôi con;
+3/ Giấy tờ xác nhận bị nhiễm HIV của cơ quan y tế có thẩm quyền đối với trường hợp bị nhiễm HIV;
+4/ Giấy tờ xác nhận đang mang thai của cơ quan y tế có thẩm quyền đối với trường hợp người khuyết tật đang mang thai;
+5/ Giấy xác nhận khuyết tật đối với trường hợp người khuyết tật.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Mười (10) ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Không"
+PROC_019,Hưởng trợ cấp khi người có công đang hưởng trợ cấp ưu đãi từ trần,Văn hóa - Xã hội,Tổ Nội vụ - Phòng Văn hóa - xã hội,,"1. Đối với trợ cấp một lần và trợ cấp mai táng:
+Bản khai theo Mẫu số 12 Phụ lục I Nghị định số 131/2021/NĐ-CP (01bản chính)
+Giấy báo tử hoặc trích lục khai tử ( 01 bản sao)
+Giấy ủy quyền ( 01 bản sao)
+2. Đối với trợ cấp tuất hàng tháng, trợ cấp tuất nuôi dưỡng hàng tháng
+Bản khai theo Mẫu số 12 Phụ lục I Nghị định số 131/2021/NĐ-CP (01bản chính)
+Giấy báo tử hoặc trích lục khai tử ( 01 bản sao)
+Giấy khai sinh hoặc trích lục khai sinh đối với trường hợp thân nhân là con chưa đủ 18 tuổi (01 bản sao)
+Giấy xác nhận của cơ sở giáo dục nơi đang theo học đối với trường hợp thân nhân là con từ đủ 18 tuổi trở lên đang đi học; nếu đnà theo học tại cơ sở giáo dục nghề nghiệp hoặc giáo dục đại học thì phải có thêm bản sao được chứng thực từ Bằng tốt nghiệp trung học phổ thông hoặc giấy xác nhân của cơ sở giáo dục trung học phổ thông về thời điểm kết thúc học (01 bản chính)
+Giấy ủy quyền (nếu có) ( 01 bản sao)","Thời gian giải quyết: Đ/v trợ cấp 1 lần và trợ cấp mai táng: 16 ngày, Đ/v trợ cấp tuất hàng tháng: 12 ngày
+Hình thức nộp: Cả hai",không đồng,Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP,Tổ Nội vụ - Phòng Văn hóa - xã hội,,False,"Tên thủ tục hành chính: Hưởng trợ cấp khi người có công đang hưởng trợ cấp ưu đãi từ trần
+Số hiệu văn bản: Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Tổ Nội vụ - Phòng Văn hóa - xã hội
+
+Thành phần hồ sơ:
+1. Đối với trợ cấp một lần và trợ cấp mai táng:
+Bản khai theo Mẫu số 12 Phụ lục I Nghị định số 131/2021/NĐ-CP (01bản chính)
+Giấy báo tử hoặc trích lục khai tử ( 01 bản sao)
+Giấy ủy quyền ( 01 bản sao)
+2. Đối với trợ cấp tuất hàng tháng, trợ cấp tuất nuôi dưỡng hàng tháng
+Bản khai theo Mẫu số 12 Phụ lục I Nghị định số 131/2021/NĐ-CP (01bản chính)
+Giấy báo tử hoặc trích lục khai tử ( 01 bản sao)
+Giấy khai sinh hoặc trích lục khai sinh đối với trường hợp thân nhân là con chưa đủ 18 tuổi (01 bản sao)
+Giấy xác nhận của cơ sở giáo dục nơi đang theo học đối với trường hợp thân nhân là con từ đủ 18 tuổi trở lên đang đi học; nếu đnà theo học tại cơ sở giáo dục nghề nghiệp hoặc giáo dục đại học thì phải có thêm bản sao được chứng thực từ Bằng tốt nghiệp trung học phổ thông hoặc giấy xác nhân của cơ sở giáo dục trung học phổ thông về thời điểm kết thúc học (01 bản chính)
+Giấy ủy quyền (nếu có) ( 01 bản sao)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Đ/v trợ cấp 1 lần và trợ cấp mai táng: 16 ngày, Đ/v trợ cấp tuất hàng tháng: 12 ngày
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không đồng"
+PROC_020,"Thực hiện, điều chỉnh, thôi hưởng trợ cấp hưu trí xã hội",Văn hóa - Xã hội,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,Bản chính Văn bản đề nghị hưởng trợ cấp hưu trí xã hội (theo Mẫu số 01 ban hành kèm theo Nghị định số 176/2025/NĐ-CP),"Thời gian giải quyết: Mười (10) ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ
+Hình thức nộp: Cả hai",Không,Nghị định số 176/2025/NĐ-CP; Luật 41/2024/QH15 (Luật Bảo hiểm xã hội),"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,False,"Tên thủ tục hành chính: Thực hiện, điều chỉnh, thôi hưởng trợ cấp hưu trí xã hội
+Số hiệu văn bản: Nghị định số 176/2025/NĐ-CP; Luật 41/2024/QH15 (Luật Bảo hiểm xã hội)
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM
+
+Thành phần hồ sơ:
+Bản chính Văn bản đề nghị hưởng trợ cấp hưu trí xã hội (theo Mẫu số 01 ban hành kèm theo Nghị định số 176/2025/NĐ-CP)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Mười (10) ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Không"
+PROC_021,Hỗ trợ chi phí mai táng đối với đối tượng hưởng trợ cấp hưu trí xã hội,Văn hóa - Xã hội,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,Bản chính Tờ khai đề nghị hỗ trợ chi phí mai táng (theo Mẫu số 02 ban hành kèm theo Nghị định số 176/2025/NĐ-CP),"Thời gian giải quyết: Ba (3) ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ
+Hình thức nộp: Cả hai",Không,Luật 41/2024/QH15 (Luật Bảo hiểm xã hội); Nghị định số 176/2025/NĐ-CP,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,False,"Tên thủ tục hành chính: Hỗ trợ chi phí mai táng đối với đối tượng hưởng trợ cấp hưu trí xã hội
+Số hiệu văn bản: Luật 41/2024/QH15 (Luật Bảo hiểm xã hội); Nghị định số 176/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM
+
+Thành phần hồ sơ:
+Bản chính Tờ khai đề nghị hỗ trợ chi phí mai táng (theo Mẫu số 02 ban hành kèm theo Nghị định số 176/2025/NĐ-CP)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Ba (3) ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Không"
+PROC_022,Giải quyết chế độ hỗ trợ để theo học đến trình độ đại học tại các cơ sở giáo dục thuộc hệ thống giáo dục quốc dân,Văn hóa - Xã hội,Tổ nội vụ - Phòng Văn hóa - Xã hội,,"Đơn đề nghị theo Mẫu số 20 Phụ lục I Nghị định số 131/2021/NĐ-CP ( 01 bản chính)
+Giấy xác nhậ theo Mẫu số 41 Nghị định số 131/2021/NĐ-CP","Thời gian giải quyết: 5 ngày
+Hình thức nộp: Cả hai",không đồng,Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP,Tổ nội vụ - Phòng Văn hóa - Xã hội,,False,"Tên thủ tục hành chính: Giải quyết chế độ hỗ trợ để theo học đến trình độ đại học tại các cơ sở giáo dục thuộc hệ thống giáo dục quốc dân
+Số hiệu văn bản: Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Tổ nội vụ - Phòng Văn hóa - Xã hội
+
+Thành phần hồ sơ:
+Đơn đề nghị theo Mẫu số 20 Phụ lục I Nghị định số 131/2021/NĐ-CP ( 01 bản chính)
+Giấy xác nhậ theo Mẫu số 41 Nghị định số 131/2021/NĐ-CP
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 5 ngày
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không đồng"
+PROC_023,"Xác định, xác định lại mức độ khuyết tật và cấp giấy xác nhận khuyết tật",Văn hóa - Xã hội,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,"I. Đơn đề nghị xác định, xác định lại mức độ khuyết tật và cấp, cấp đổi, cấp lại giáy xác nhận khuyết tật (theo mẫu số 01 ban hành kèm theo Thông tư 01/2019/TT-BLĐTBXH)
+II. Đối với trường hợp xác định mức độ khuyết tật:
+1/ Các giấy tờ y tế chứng minh về khuyết tật: bệnh án, giấy tờ khám, điều trị, phẫu thuật hoặc các giấy tờ liên quan khác (nếu có).
+2/ Kết luận của Hội đồng Giám định y khoa về khả năng tự phục vụ, mức độ suy giảm khả năng lao động đối với trường hợp người khuyết tật đã có kết luận của Hội đồng giám định y khoa trước ngày 01/6/2012.
+III. Đối với trường hợp xác định lại khuyết tật: Các giấy tờ y tế chứng minh về khuyết tật: bệnh án, giấy tờ khám, điều trị, phẫu thuật, Giáy xác nhận khuyết tật cũ hoặc các giấy tờ liên quan khác (nếu có).
+IV. Các giấy tờ khác kèm theo (đối với trường hợp nộp trực tiếp) dùng đẻ đối chiếu các thông tin trên Tờ khai
+1/ Giấy xác nhận thông tin về cư trú hoặc Giấy thông báo số định danh cá nhân và thông tin trong Cơ sở dữ liệu quốc gia về dân cư; chứng minh thư nhân dân hoặc thẻ căn cước công dân của đối tượng, người đại diện hợp pháp.
+2/ Bản chính, bản sao hoặc bản chụp Giấy khai sinh đối với trẻ em.","Thời gian giải quyết: 25 ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ;
+Hình thức nộp: Cả hai",Không,Luật 51/2010/QH12 (Luật Người khuyết tật); Nghị định số 28/2012/NĐ-CP; Nghị định số 42/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Thông tư số 01/2019/TT-BLĐTBXH; Thông tư số 08/2023/TT-BLĐTBXH,"Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM",,False,"Tên thủ tục hành chính: Xác định, xác định lại mức độ khuyết tật và cấp giấy xác nhận khuyết tật
+Số hiệu văn bản: Luật 51/2010/QH12 (Luật Người khuyết tật); Nghị định số 28/2012/NĐ-CP; Nghị định số 42/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Thông tư số 01/2019/TT-BLĐTBXH; Thông tư số 08/2023/TT-BLĐTBXH
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú, 29 Lê Văn Việt, phường Tăng Nhơn Phú, TP.HCM
+
+Thành phần hồ sơ:
+I. Đơn đề nghị xác định, xác định lại mức độ khuyết tật và cấp, cấp đổi, cấp lại giáy xác nhận khuyết tật (theo mẫu số 01 ban hành kèm theo Thông tư 01/2019/TT-BLĐTBXH)
+II. Đối với trường hợp xác định mức độ khuyết tật:
+1/ Các giấy tờ y tế chứng minh về khuyết tật: bệnh án, giấy tờ khám, điều trị, phẫu thuật hoặc các giấy tờ liên quan khác (nếu có).
+2/ Kết luận của Hội đồng Giám định y khoa về khả năng tự phục vụ, mức độ suy giảm khả năng lao động đối với trường hợp người khuyết tật đã có kết luận của Hội đồng giám định y khoa trước ngày 01/6/2012.
+III. Đối với trường hợp xác định lại khuyết tật: Các giấy tờ y tế chứng minh về khuyết tật: bệnh án, giấy tờ khám, điều trị, phẫu thuật, Giáy xác nhận khuyết tật cũ hoặc các giấy tờ liên quan khác (nếu có).
+IV. Các giấy tờ khác kèm theo (đối với trường hợp nộp trực tiếp) dùng đẻ đối chiếu các thông tin trên Tờ khai
+1/ Giấy xác nhận thông tin về cư trú hoặc Giấy thông báo số định danh cá nhân và thông tin trong Cơ sở dữ liệu quốc gia về dân cư; chứng minh thư nhân dân hoặc thẻ căn cước công dân của đối tượng, người đại diện hợp pháp.
+2/ Bản chính, bản sao hoặc bản chụp Giấy khai sinh đối với trẻ em.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 25 ngày làm việc, kể từ ngày nhận đủ hồ sơ và hợp lệ;
+Hình thức nộp: Cả hai
+
+Lệ phí:
+Không"
+PROC_024,"Giải quyết chế độ người hoạt động kháng chiến giải phóng dân tộc, bảo vệ tổ quốc và làm nghĩa vụ quốc tế",Văn hóa - Xã hội,Tổ Nội vụ - Phòng Văn hóa - xã hội,,"Bản khai theo mẫu số 11 Phục lục I Nghi định số 131/2021/NĐ-CP (01 bản chính)
+Giấy báo tử hoặc trích lục khai tử ( đối với trường hợp chết mà chưa được hưởng chế độ ưu đãi) (01 bản chính)
+Huân chương Kháng chiến, Huân chương Chiến thắng, Huy chương kháng chiến, Huy chương Chiến thắng hoặc giấy chứng nhận đeo huân chương, huy chương.( 01 bản sao được chứng thực)
+Quyết định tặng thưởng Huân chương Kháng chiến, Huân chương chiến thắng, Huy chương kháng chiến, Huy chương chiến thắng ( 01 bản sao được chứng thực)
+Giấy xác nhận về khen thưởng tổng kết thành tích kháng chiến và thời gian hoạt động kháng chiến thực tế của cơ quan Thi đua - Khen thưởng cấp tỉnh trở lên ( 01 bản sao được chứng thực)","Thời gian giải quyết: 5 ngày
+Hình thức nộp: Cả hai",không,Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP,Tổ Nội vụ - Phòng Văn hóa - xã hội,,False,"Tên thủ tục hành chính: Giải quyết chế độ người hoạt động kháng chiến giải phóng dân tộc, bảo vệ tổ quốc và làm nghĩa vụ quốc tế
+Số hiệu văn bản: Pháp lệnh số 02/2020/UBTVQH14 (Ưu đãi người có công với cách mạng); Nghị quyết số 190/2025/NQ-QH15; Nghị định số 131/2021/NĐ-CP; Nghị định số 25/2025/NĐ-CP; Nghị định số 45/2025/NĐ-CP; Nghị định số 129/2025/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+Cơ quan / Địa điểm thực hiện: Tổ Nội vụ - Phòng Văn hóa - xã hội
+
+Thành phần hồ sơ:
+Bản khai theo mẫu số 11 Phục lục I Nghi định số 131/2021/NĐ-CP (01 bản chính)
+Giấy báo tử hoặc trích lục khai tử ( đối với trường hợp chết mà chưa được hưởng chế độ ưu đãi) (01 bản chính)
+Huân chương Kháng chiến, Huân chương Chiến thắng, Huy chương kháng chiến, Huy chương Chiến thắng hoặc giấy chứng nhận đeo huân chương, huy chương.( 01 bản sao được chứng thực)
+Quyết định tặng thưởng Huân chương Kháng chiến, Huân chương chiến thắng, Huy chương kháng chiến, Huy chương chiến thắng ( 01 bản sao được chứng thực)
+Giấy xác nhận về khen thưởng tổng kết thành tích kháng chiến và thời gian hoạt động kháng chiến thực tế của cơ quan Thi đua - Khen thưởng cấp tỉnh trở lên ( 01 bản sao được chứng thực)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 5 ngày
+Hình thức nộp: Cả hai
+
+Lệ phí:
+không"
+PROC_025,HỒ SƠ CẤP GIẤY PHÉP XÂY DỰNG,Kinh tế - Hạ tầng và đô thị,,,"THÀNH PHẦN HỒ SƠ CẤP GIẤY PHÉP XÂY DỰNG: 
+NỘP TRỰC TUYẾN QUA CỔNG DỊCH VỤ CÔNG QUỐC GIA","Thời gian giải quyết: 20
+Hình thức nộp: Trực tuyến",0,"Luật 50/2014/QH13 (Luật Xây dựng); Luật 62/2020/QH14 (Luật sửa đổi, bổ sung một số điều của Luật Xây dựng); Nghị định số 15/2021/NĐ-CP; Nghị định số 35/2023/NĐ-CP",,,False,"Tên thủ tục hành chính: HỒ SƠ CẤP GIẤY PHÉP XÂY DỰNG
+Số hiệu văn bản: Luật 50/2014/QH13 (Luật Xây dựng); Luật 62/2020/QH14 (Luật sửa đổi, bổ sung một số điều của Luật Xây dựng); Nghị định số 15/2021/NĐ-CP; Nghị định số 35/2023/NĐ-CP
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+
+Thành phần hồ sơ:
+THÀNH PHẦN HỒ SƠ CẤP GIẤY PHÉP XÂY DỰNG: 
+NỘP TRỰC TUYẾN QUA CỔNG DỊCH VỤ CÔNG QUỐC GIA
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 20
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_026,THÔNG TIN QUY HOẠCH,Kinh tế - Hạ tầng và đô thị,TTPVHCC,,"1. Đơn đề nghị cung cấp thông tin quy hoạch;
+2. Giấy chứng nhận quyền sử dụng đất, quyền sở hữu nhà ở & tài sản gắn liền với đất hoặc giấy tờ pháp lý liên quan đến nhà đất;
+3. Trường hợp nộp thay (yêu cầu có giấy ủy quyền)","Thời gian giải quyết: 10 ngày làm việc
+Hình thức nộp: Trực tuyến",0,"Luật 47/2024/QH15 (Luật Quy hoạch đô thị và nông thôn); Luật 144/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Quy hoạch đô thị và nông thôn); Nghị định số 178/2025/NĐ-CP; Nghị định số 34/2026/NĐ-CP; Thông tư số 16/2025/TT-BXD; Thông tư số 43/2025/TT-BXD",TTPVHCC,,False,"Tên thủ tục hành chính: THÔNG TIN QUY HOẠCH
+Số hiệu văn bản: Luật 47/2024/QH15 (Luật Quy hoạch đô thị và nông thôn); Luật 144/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Quy hoạch đô thị và nông thôn); Nghị định số 178/2025/NĐ-CP; Nghị định số 34/2026/NĐ-CP; Thông tư số 16/2025/TT-BXD; Thông tư số 43/2025/TT-BXD
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+Cơ quan / Địa điểm thực hiện: TTPVHCC
+
+Thành phần hồ sơ:
+1. Đơn đề nghị cung cấp thông tin quy hoạch;
+2. Giấy chứng nhận quyền sử dụng đất, quyền sở hữu nhà ở & tài sản gắn liền với đất hoặc giấy tờ pháp lý liên quan đến nhà đất;
+3. Trường hợp nộp thay (yêu cầu có giấy ủy quyền)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 10 ngày làm việc
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_027,CẤP GIẤY PHÉP XÂY DỰNG,Kinh tế - Hạ tầng và đô thị,TTPVHCC,,"1. Thành phần hồ sơ cấp giấy phép xây dựng, giấp phép sửa chữa cải tạo nhà ở riêng lẻ (tất cả hồ sơ đều phải sao y điện tử trừ bản vẽ thiết kế xây dựng và đơn đề nghị cấp phép xây dựng) – Thời gian giải quyết 20 ngày đối với công trình và 15 ngày đối với nhà ở riêng lẻ.
+- Đơn đề nghị cấp giấy phép xây dựng, sửa chữa, cải tạo công trình theo Mẫu số 1 Phụ lục số II Nghị định số 175/2024/NĐ-CP ngày 30/12/2024 của Chính phủ.
+- Một trong những giấy tờ hợp pháp về đất đai chứng minh sự phù hợp mục đích sử dụng đất và sở hữu công trình để cấp phép xây dựng theo quy định tại Điều 53 của Nghị định số 175/2024/NĐ-CP. Trường hợp giấy chứng nhận cũ không có tọa độ theo tài liệu 02/CT-UB phải có bản vẽ hiện trạng có duyệt kiểm định kèm theo.
+- Bản vẽ thiết kế xây dựng.
+- Cam kết đảm bảo an toàn cho các công trình liền kề (có chứng thực chữ ký).
+- Cam kết tháo dỡ toàn bộ nhà cũ trước khi xây dựng công trình theo giấy phép xây dựng (có chứng thực chữ ký) – áp dụng đối với thửa đất có nhà hiện hữu.
+- Hồ sơ năng lực của đơn vị tư vấn thiết kế.","Thời gian giải quyết: 15
+Hình thức nộp: Trực tuyến",0,"Luật 50/2014/QH13 (Luật Xây dựng); Luật 62/2020/QH14 (Luật sửa đổi, bổ sung một số điều của Luật Xây dựng); Nghị định số 15/2021/NĐ-CP; Nghị định số 35/2023/NĐ-CP",TTPVHCC,,False,"Tên thủ tục hành chính: CẤP GIẤY PHÉP XÂY DỰNG
+Số hiệu văn bản: Luật 50/2014/QH13 (Luật Xây dựng); Luật 62/2020/QH14 (Luật sửa đổi, bổ sung một số điều của Luật Xây dựng); Nghị định số 15/2021/NĐ-CP; Nghị định số 35/2023/NĐ-CP
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+Cơ quan / Địa điểm thực hiện: TTPVHCC
+
+Thành phần hồ sơ:
+1. Thành phần hồ sơ cấp giấy phép xây dựng, giấp phép sửa chữa cải tạo nhà ở riêng lẻ (tất cả hồ sơ đều phải sao y điện tử trừ bản vẽ thiết kế xây dựng và đơn đề nghị cấp phép xây dựng) – Thời gian giải quyết 20 ngày đối với công trình và 15 ngày đối với nhà ở riêng lẻ.
+- Đơn đề nghị cấp giấy phép xây dựng, sửa chữa, cải tạo công trình theo Mẫu số 1 Phụ lục số II Nghị định số 175/2024/NĐ-CP ngày 30/12/2024 của Chính phủ.
+- Một trong những giấy tờ hợp pháp về đất đai chứng minh sự phù hợp mục đích sử dụng đất và sở hữu công trình để cấp phép xây dựng theo quy định tại Điều 53 của Nghị định số 175/2024/NĐ-CP. Trường hợp giấy chứng nhận cũ không có tọa độ theo tài liệu 02/CT-UB phải có bản vẽ hiện trạng có duyệt kiểm định kèm theo.
+- Bản vẽ thiết kế xây dựng.
+- Cam kết đảm bảo an toàn cho các công trình liền kề (có chứng thực chữ ký).
+- Cam kết tháo dỡ toàn bộ nhà cũ trước khi xây dựng công trình theo giấy phép xây dựng (có chứng thực chữ ký) – áp dụng đối với thửa đất có nhà hiện hữu.
+- Hồ sơ năng lực của đơn vị tư vấn thiết kế.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 15
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_028,"Vay vốn hỗ trợ tạo việc làm, duy trì và mở rộng việc làm từ Quỹ quốc gia về việc làm đối với người lao động",Văn hóa - Xã hội,,,"Danh sách đề nghị vay vốn
+Giấy đề nghị vay vốn
+CCCD
+Biên bản họp","Thời gian giải quyết: 5 ngày
+Hình thức nộp: Trực tiếp",không,Luật 38/2013/QH13 (Luật Việc làm); Nghị định số 61/2015/NĐ-CP; Nghị định số 74/2019/NĐ-CP; Nghị định số 104/2022/NĐ-CP,,,False,"Tên thủ tục hành chính: Vay vốn hỗ trợ tạo việc làm, duy trì và mở rộng việc làm từ Quỹ quốc gia về việc làm đối với người lao động
+Số hiệu văn bản: Luật 38/2013/QH13 (Luật Việc làm); Nghị định số 61/2015/NĐ-CP; Nghị định số 74/2019/NĐ-CP; Nghị định số 104/2022/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+
+Thành phần hồ sơ:
+Danh sách đề nghị vay vốn
+Giấy đề nghị vay vốn
+CCCD
+Biên bản họp
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 5 ngày
+Hình thức nộp: Trực tiếp
+
+Lệ phí:
+không"
+PROC_029,Chuyển trường đối với học sinh THCS,giáo dục và đào tạo,"Trung tâm Phục vụ hành chính công Phường Tăng Nhơn Phú, Địa chỉ: 29 Lê Văn Việt, Phường Tăng Nhơn Phú, Thành phố Hồ Chí Minh",,"1. Thành phần hồ sơ chuyển trường ĐẾN:
+- Đơn xin chuyển trường (có xác nhận của trường đi)
+- Giấy giới thiệu của phường đi
+- Giấy giới thiệu của trường đi 
+- Giấy xác nhận nơi cư trú hoặc giấy xác nhận mã định danh (bản photo)
+- Bản sao khai sinh.
+- Học bạ (bản photo); khi đến nhận giấy giới thiệu thì mang bản chính.
+- Các giấy tờ khác liên quan (nếu có)
+
+2. Thành phần hồ sơ chuyển trường ĐI:
+- Đơn xin chuyển trường (có xác nhận của trường đến)
+- Giấy giới thiệu của trường đi 
+- Giấy xác nhận nơi cư trú hoặc giấy xác nhận mã định danh (bản photo)
+- Bản sao khai sinh.
+- Học bạ (bản photo); khi đến nhận giấy giới thiệu thì mang bản chính
+- Các giấy tờ khác liên quan (nếu có)","Thời gian giải quyết: 3–5 ngày làm việc kể từ khi nhận đủ hồ sơ hợp lệ.
+Hình thức nộp: Trực tiếp",không có,Nghị định số 104/2022/NĐ-CP; Quyết định số 51/2002/QĐ-BGDĐT; Thông tư số 32/2020/TT-BGDĐT; Thông tư số 50/2021/TT-BGDĐT,"Trung tâm Phục vụ hành chính công Phường Tăng Nhơn Phú, Địa chỉ: 29 Lê Văn Việt, Phường Tăng Nhơn Phú, Thành phố Hồ Chí Minh",,False,"Tên thủ tục hành chính: Chuyển trường đối với học sinh THCS
+Số hiệu văn bản: Nghị định số 104/2022/NĐ-CP; Quyết định số 51/2002/QĐ-BGDĐT; Thông tư số 32/2020/TT-BGDĐT; Thông tư số 50/2021/TT-BGDĐT
+Lĩnh vực: giáo dục và đào tạo
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ hành chính công Phường Tăng Nhơn Phú, Địa chỉ: 29 Lê Văn Việt, Phường Tăng Nhơn Phú, Thành phố Hồ Chí Minh
+
+Thành phần hồ sơ:
+1. Thành phần hồ sơ chuyển trường ĐẾN:
+- Đơn xin chuyển trường (có xác nhận của trường đi)
+- Giấy giới thiệu của phường đi
+- Giấy giới thiệu của trường đi 
+- Giấy xác nhận nơi cư trú hoặc giấy xác nhận mã định danh (bản photo)
+- Bản sao khai sinh.
+- Học bạ (bản photo); khi đến nhận giấy giới thiệu thì mang bản chính.
+- Các giấy tờ khác liên quan (nếu có)
+
+2. Thành phần hồ sơ chuyển trường ĐI:
+- Đơn xin chuyển trường (có xác nhận của trường đến)
+- Giấy giới thiệu của trường đi 
+- Giấy xác nhận nơi cư trú hoặc giấy xác nhận mã định danh (bản photo)
+- Bản sao khai sinh.
+- Học bạ (bản photo); khi đến nhận giấy giới thiệu thì mang bản chính
+- Các giấy tờ khác liên quan (nếu có)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 3–5 ngày làm việc kể từ khi nhận đủ hồ sơ hợp lệ.
+Hình thức nộp: Trực tiếp
+
+Lệ phí:
+không có"
+PROC_030,THÔNG BÁO KHỞI CÔNG,Kinh tế - Hạ tầng và đô thị,,,"1. Thông báo khởi công xây dựng nhà ở riêng lẻ (bản chính)
+2. Giấy phép xây dựng (kèm bản vẽ thiết kế) bản sao);
+3. Biên bản cắm mốc ranh (bản chính);
+4. Giấy chứng nhận quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất (bản sao);
+5. Hợp đồng thi công công trình hoặc đơn vị thi công (bảo sao);
+6. CCCD (bản sao)","Thời gian giải quyết: 1
+Hình thức nộp: Trực tuyến",0,"Luật 50/2014/QH13 (Luật Xây dựng); Luật 62/2020/QH14 (Luật sửa đổi, bổ sung một số điều của Luật Xây dựng); Nghị định số 06/2021/NĐ-CP",,,False,"Tên thủ tục hành chính: THÔNG BÁO KHỞI CÔNG
+Số hiệu văn bản: Luật 50/2014/QH13 (Luật Xây dựng); Luật 62/2020/QH14 (Luật sửa đổi, bổ sung một số điều của Luật Xây dựng); Nghị định số 06/2021/NĐ-CP
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+
+Thành phần hồ sơ:
+1. Thông báo khởi công xây dựng nhà ở riêng lẻ (bản chính)
+2. Giấy phép xây dựng (kèm bản vẽ thiết kế) bản sao);
+3. Biên bản cắm mốc ranh (bản chính);
+4. Giấy chứng nhận quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất (bản sao);
+5. Hợp đồng thi công công trình hoặc đơn vị thi công (bảo sao);
+6. CCCD (bản sao)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 1
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_031,"ĐĂNG KÝ ĐẤT ĐAI, TÀI SẢN GẮN LIỀN VỚI ĐẤT LẦN ĐẦU",Kinh tế - Hạ tầng và đô thị,,,"1. Đối với người đang sử dụng đất, chủ sở hữu tài sản gắn liền với đất là tổ chức trong nước, tổ chức tôn giáo, tổ chức tôn giáo trực thuộc, tổ chức nước ngoài có chức năng ngoại giao, tổ chức kinh tế có vốn đầu tư nước ngoài (sau đây gọi chung là tổ chức), người gốc Việt Nam định cư ở nước ngoài nhận thừa kế quyền sử dụng đất theo quy định tại điểm h khoản 1 Điều 28 Luật Đất đai thì hồ sơ nộp gồm:
+a) Đơn đăng ký đất đai, tài sản gắn liền với đất theo Mẫu số 15 ban hành kèm theo Nghị định này;
+b) Một trong các loại giấy tờ quy định tại Điều 137, khoản 4, khoản 5 Điều 148, khoản 4, khoản 5 Điều 149 Luật Đất đai (nếu có);
+c) Giấy tờ về việc nhận thừa kế quyền sử dụng đất theo quy định của pháp luật về dân sự đối với người gốc Việt Nam định cư ở nước ngoài;
+d) Sơ đồ hoặc bản trích lục bản đồ địa chính hoặc mảnh trích đo bản đồ địa chính thửa đất (nếu có); mảnh trích đo bản đồ địa chính thửa đất (nếu có) đối với người gốc Việt Nam định cư ở nước ngoài;
+d) Báo cáo kết quả rà soát hiện trạng sử dụng đất theo Mẫu số 15đ ban hành kèm theo Nghị định này đối với trường hợp tổ chức trong nước, tổ chức tôn giáo, tổ chức tôn giáo trực thuộc đang sử dụng đất;
+e) Quyết định vị trí đóng quân hoặc văn bản giao cơ sở nhà đất hoặc địa điểm công trình quốc phòng, an ninh được cấp có thẩm quyền phê duyệt cho đơn vị quân đội, đơn vị công an, đơn vị sự nghiệp công lập thuộc Quân đội nhân dân, Công an nhân dân; doanh nghiệp nhà nước do Bộ Quốc phòng, Bộ Công an được giao quản lý, sử dụng đất, công trình gắn liền với đất;
+g) Hồ sơ thiết kế xây dựng công trình đã được cơ quan chuyên môn về xây dựng thẩm định hoặc đã có văn bản chấp thuận kết quả nghiệm thu hoàn thành hạng mục công trình, công trình xây dựng theo quy định của pháp luật về xây dựng đối với trường hợp chứng nhận quyền sở hữu công trình xây dựng trên đất nông nghiệp mà chủ sở hữu công trình không có một trong các loại giấy tờ quy định tại Điều 149 Luật Đất đai hoặc công trình được miễn giấy phép xây dựng theo quy định của pháp luật về xây dựng;
+h) Chứng từ thực hiện nghĩa vụ tài chính, giấy tờ liên quan đến việc miễn, giảm nghĩa vụ tài chính về đất đai, tài sản gắn liền với đất (nếu có).","Thời gian giải quyết: THEO QUY ĐỊNH
+Hình thức nộp: Trực tuyến",THEO QUY ĐỊNH,Luật 16/2017/QH14 (Luật Lâm nghiệp); Luật 31/2024/QH15 (Luật Đất đai); Nghị quyết số 254/2025/QH15; Nghị định số 156/2018/NĐ-CP; Nghị định số 101/2024/NĐ-CP; Nghị định số 49/2026/NĐ-CP; Quyết định số 28/2026/QĐ-UBND,,,False,"Tên thủ tục hành chính: ĐĂNG KÝ ĐẤT ĐAI, TÀI SẢN GẮN LIỀN VỚI ĐẤT LẦN ĐẦU
+Số hiệu văn bản: Luật 16/2017/QH14 (Luật Lâm nghiệp); Luật 31/2024/QH15 (Luật Đất đai); Nghị quyết số 254/2025/QH15; Nghị định số 156/2018/NĐ-CP; Nghị định số 101/2024/NĐ-CP; Nghị định số 49/2026/NĐ-CP; Quyết định số 28/2026/QĐ-UBND
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+
+Thành phần hồ sơ:
+1. Đối với người đang sử dụng đất, chủ sở hữu tài sản gắn liền với đất là tổ chức trong nước, tổ chức tôn giáo, tổ chức tôn giáo trực thuộc, tổ chức nước ngoài có chức năng ngoại giao, tổ chức kinh tế có vốn đầu tư nước ngoài (sau đây gọi chung là tổ chức), người gốc Việt Nam định cư ở nước ngoài nhận thừa kế quyền sử dụng đất theo quy định tại điểm h khoản 1 Điều 28 Luật Đất đai thì hồ sơ nộp gồm:
+a) Đơn đăng ký đất đai, tài sản gắn liền với đất theo Mẫu số 15 ban hành kèm theo Nghị định này;
+b) Một trong các loại giấy tờ quy định tại Điều 137, khoản 4, khoản 5 Điều 148, khoản 4, khoản 5 Điều 149 Luật Đất đai (nếu có);
+c) Giấy tờ về việc nhận thừa kế quyền sử dụng đất theo quy định của pháp luật về dân sự đối với người gốc Việt Nam định cư ở nước ngoài;
+d) Sơ đồ hoặc bản trích lục bản đồ địa chính hoặc mảnh trích đo bản đồ địa chính thửa đất (nếu có); mảnh trích đo bản đồ địa chính thửa đất (nếu có) đối với người gốc Việt Nam định cư ở nước ngoài;
+d) Báo cáo kết quả rà soát hiện trạng sử dụng đất theo Mẫu số 15đ ban hành kèm theo Nghị định này đối với trường hợp tổ chức trong nước, tổ chức tôn giáo, tổ chức tôn giáo trực thuộc đang sử dụng đất;
+e) Quyết định vị trí đóng quân hoặc văn bản giao cơ sở nhà đất hoặc địa điểm công trình quốc phòng, an ninh được cấp có thẩm quyền phê duyệt cho đơn vị quân đội, đơn vị công an, đơn vị sự nghiệp công lập thuộc Quân đội nhân dân, Công an nhân dân; doanh nghiệp nhà nước do Bộ Quốc phòng, Bộ Công an được giao quản lý, sử dụng đất, công trình gắn liền với đất;
+g) Hồ sơ thiết kế xây dựng công trình đã được cơ quan chuyên môn về xây dựng thẩm định hoặc đã có văn bản chấp thuận kết quả nghiệm thu hoàn thành hạng mục công trình, công trình xây dựng theo quy định của pháp luật về xây dựng đối với trường hợp chứng nhận quyền sở hữu công trình xây dựng trên đất nông nghiệp mà chủ sở hữu công trình không có một trong các loại giấy tờ quy định tại Điều 149 Luật Đất đai hoặc công trình được miễn giấy phép xây dựng theo quy định của pháp luật về xây dựng;
+h) Chứng từ thực hiện nghĩa vụ tài chính, giấy tờ liên quan đến việc miễn, giảm nghĩa vụ tài chính về đất đai, tài sản gắn liền với đất (nếu có).
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: THEO QUY ĐỊNH
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+THEO QUY ĐỊNH"
+PROC_032,"Vay vốn hỗ trợ tạo việc làm, duy trì và mở rộng việc làm từ Quỹ quốc gia về việc làm đối với cơ sở sản xuất, kinh doanh.",Văn hóa - Xã hội,,,"Giấy đề nghị vay vốn
+Danh sách đề nghị vay vốn
+Biên bản họp","Thời gian giải quyết: 5 ngày
+Hình thức nộp: Trực tiếp",không,Luật 38/2013/QH13 (Luật Việc làm); Nghị định số 61/2015/NĐ-CP; Nghị định số 74/2019/NĐ-CP; Nghị định số 104/2022/NĐ-CP,,,False,"Tên thủ tục hành chính: Vay vốn hỗ trợ tạo việc làm, duy trì và mở rộng việc làm từ Quỹ quốc gia về việc làm đối với cơ sở sản xuất, kinh doanh.
+Số hiệu văn bản: Luật 38/2013/QH13 (Luật Việc làm); Nghị định số 61/2015/NĐ-CP; Nghị định số 74/2019/NĐ-CP; Nghị định số 104/2022/NĐ-CP
+Lĩnh vực: Văn hóa - Xã hội
+
+Thành phần hồ sơ:
+Giấy đề nghị vay vốn
+Danh sách đề nghị vay vốn
+Biên bản họp
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 5 ngày
+Hình thức nộp: Trực tiếp
+
+Lệ phí:
+không"
+PROC_033,HỒ SƠ CẤP SỐ NHÀ,Kinh tế - Hạ tầng và đô thị,,,"* Đối với nhà chưa hoàn công:
+1- Đơn xin cấp số nhà;
+2- Giấy chứng nhận Quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất;
+3- Giấy phép Xây dựng (nếu có) và bản vẽ thiết kế;
+4- Biên bản lần cuối của Thanh tra xây dựng;
+5- Hình ảnh hiện trạng căn nhà;
+6- Căn cước công dân;
+7- Giấy uỷ quyền (Nếu đi nộp thay)./.
+* Đối với nhà đã hoàn công:
+1- Đơn xin cấp số nhà;
+2- Giấy chứng nhận Quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất;
+3- Hình ảnh hiện trạng căn nhà;
+4- Căn cước công dân;
+ 5- Giấy uỷ quyền (Nếu đi nộp thay)","Thời gian giải quyết: theo quy định
+Hình thức nộp: Trực tuyến",0,Quyết định số 05/2006/QĐ-BXD; Quyết định số 22/2012/QĐ-UBND,,,False,"Tên thủ tục hành chính: HỒ SƠ CẤP SỐ NHÀ
+Số hiệu văn bản: Quyết định số 05/2006/QĐ-BXD; Quyết định số 22/2012/QĐ-UBND
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+
+Thành phần hồ sơ:
+* Đối với nhà chưa hoàn công:
+1- Đơn xin cấp số nhà;
+2- Giấy chứng nhận Quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất;
+3- Giấy phép Xây dựng (nếu có) và bản vẽ thiết kế;
+4- Biên bản lần cuối của Thanh tra xây dựng;
+5- Hình ảnh hiện trạng căn nhà;
+6- Căn cước công dân;
+7- Giấy uỷ quyền (Nếu đi nộp thay)./.
+* Đối với nhà đã hoàn công:
+1- Đơn xin cấp số nhà;
+2- Giấy chứng nhận Quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất;
+3- Hình ảnh hiện trạng căn nhà;
+4- Căn cước công dân;
+ 5- Giấy uỷ quyền (Nếu đi nộp thay)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: theo quy định
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_034,XÁC NHẬN VỊ TRÍ NHÀ - ĐẤT,Kinh tế - Hạ tầng và đô thị,,,"* Hồ sơ xác nhận vị trí nhà - đất:
+1. Đơn xin xác nhận vị trí nhà – đất;
+2. Giấy chứng nhận quyền sử dụng đất, Sổ hộ khẩu tại địa chỉ mong muốn xác nhận (nếu có);
+3. Các căn cứ tài liệu chứng minh khác;
+4. Trường hợp người sử dụng đất, chủ sở hữu tài sản gắn liền với đất thực hiện thủ tục thông qua người đại diện theo quy định của pháp luật về dân sự thì phải có văn bản về việc ủy quyền theo quy định của pháp luật về dân sự;
+5. CCCD (bản sao)","Thời gian giải quyết: 05
+Hình thức nộp: Trực tuyến",0,Luật 31/2024/QH15 (Luật Đất đai); Nghị định số 101/2024/NĐ-CP,,,False,"Tên thủ tục hành chính: XÁC NHẬN VỊ TRÍ NHÀ - ĐẤT
+Số hiệu văn bản: Luật 31/2024/QH15 (Luật Đất đai); Nghị định số 101/2024/NĐ-CP
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+
+Thành phần hồ sơ:
+* Hồ sơ xác nhận vị trí nhà - đất:
+1. Đơn xin xác nhận vị trí nhà – đất;
+2. Giấy chứng nhận quyền sử dụng đất, Sổ hộ khẩu tại địa chỉ mong muốn xác nhận (nếu có);
+3. Các căn cứ tài liệu chứng minh khác;
+4. Trường hợp người sử dụng đất, chủ sở hữu tài sản gắn liền với đất thực hiện thủ tục thông qua người đại diện theo quy định của pháp luật về dân sự thì phải có văn bản về việc ủy quyền theo quy định của pháp luật về dân sự;
+5. CCCD (bản sao)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 05
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_035,XÁC NHẬN TÌNH TRẠNG NHÀ Ở,Kinh tế - Hạ tầng và đô thị,,,"* Trường hợp có Giấy phép xây dựng
+1. Đơn xác nhận tình trạng nhà ở;
+2. Giấy chứng nhận quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất (bản sao kèm theo Bản chính để đối chiếu);
+3. Giấy phép xây dựng và bản vẽ thiết kế (bản sao);
+4. Quyết định hoặc Thông báo cấp số nhà;
+5. CCCD (bản sao).
+6. Giấy ủy quyền (nếu đi nộp thay).
+
+* Trường hợp không có Giấy phép xây dựng
+1. Đơn xác nhận tình trạng nhà ở;
+2. Giấy chứng nhận quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất (bản sao kèm theo Bản chính để đối chiếu); nếu có.
+3. Thông báo cấp số nhà; (nếu có)
+4. Bản vẽ sơ đồ nhà đất; (bản sao)
+5. CCCD (bản sao).
+6. Giấy ủy quyền (nếu đi nộp thay)","Thời gian giải quyết: 05
+Hình thức nộp: Trực tuyến",0,Luật 68/2020/QH14 (Luật Cư trú); Nghị định số 154/2024/NĐ-CP; Luật 31/2024/QH15 (Luật Đất Đai),,,False,"Tên thủ tục hành chính: XÁC NHẬN TÌNH TRẠNG NHÀ Ở
+Số hiệu văn bản: Luật 68/2020/QH14 (Luật Cư trú); Nghị định số 154/2024/NĐ-CP; Luật 31/2024/QH15 (Luật Đất Đai)
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+
+Thành phần hồ sơ:
+* Trường hợp có Giấy phép xây dựng
+1. Đơn xác nhận tình trạng nhà ở;
+2. Giấy chứng nhận quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất (bản sao kèm theo Bản chính để đối chiếu);
+3. Giấy phép xây dựng và bản vẽ thiết kế (bản sao);
+4. Quyết định hoặc Thông báo cấp số nhà;
+5. CCCD (bản sao).
+6. Giấy ủy quyền (nếu đi nộp thay).
+
+* Trường hợp không có Giấy phép xây dựng
+1. Đơn xác nhận tình trạng nhà ở;
+2. Giấy chứng nhận quyền sử dụng đất, quyền sở hữu tài sản gắn liền với đất (bản sao kèm theo Bản chính để đối chiếu); nếu có.
+3. Thông báo cấp số nhà; (nếu có)
+4. Bản vẽ sơ đồ nhà đất; (bản sao)
+5. CCCD (bản sao).
+6. Giấy ủy quyền (nếu đi nộp thay)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 05
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_036,Thủ tục Đăng ký thành lập hộ kinh doanh,Kinh tế - Hạ tầng và đô thị,Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú,,"1. Giấy đề nghị đăng ký hộ kinh doanh
+2. Bản sao văn bản ủy quyền của thành viên hộ gia đình cho một thành viên làm chủ hộ kinh doanh đối với trường hợp hộ kinh doanh do các thành viên hộ gia đình đăng ký thành lập. Văn bản ủy quyền này phải được công chứng hoặc chứng thực theo quy định của pháp luật","Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến",0,"Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC",Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Thủ tục Đăng ký thành lập hộ kinh doanh
+Số hiệu văn bản: Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+Cơ quan / Địa điểm thực hiện: Trung tâm Phục vụ Hành chính công phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+1. Giấy đề nghị đăng ký hộ kinh doanh
+2. Bản sao văn bản ủy quyền của thành viên hộ gia đình cho một thành viên làm chủ hộ kinh doanh đối với trường hợp hộ kinh doanh do các thành viên hộ gia đình đăng ký thành lập. Văn bản ủy quyền này phải được công chứng hoặc chứng thực theo quy định của pháp luật
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_037,Đăng ký thay đổi nội dung đăng ký hộ kinh doanh,Kinh tế - Hạ tầng và đô thị,TTPVHCC phường Tăng Nhơn Phú,,"1. Giấy đề nghị đăng ký thay đổi nội dung đăng ký hộ kinh doanh;
+2. Bản sao văn bản ủy quyền của các thành viên hộ gia đình cho một thành viên làm chủ hộ kinh doanh. Văn bản ủy quyền này phải được công chứng hoặc chứng thực theo quy định của pháp luật (Trường hợp thay đổi chủ hộ kinh doanh do các thành viên hộ gia đình đăng ký hộ kinh doanh ủy quyền cho một trong các thành viên còn lại làm chủ hộ kinh doanh)
+3. Bản sao văn bản ủy quyền của thành viên mới cho chủ hộ kinh doanh trong trường hợp tiếp nhận thành viên mới. Văn bản ủy quyền này phải được công chứng hoặc chứng thực theo quy định của pháp luật (Trường hợp thay đổi thành viên hộ gia đình đăng ký hộ kinh doanh)","Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến",0,"Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC",TTPVHCC phường Tăng Nhơn Phú,,False,"Tên thủ tục hành chính: Đăng ký thay đổi nội dung đăng ký hộ kinh doanh
+Số hiệu văn bản: Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+Cơ quan / Địa điểm thực hiện: TTPVHCC phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+1. Giấy đề nghị đăng ký thay đổi nội dung đăng ký hộ kinh doanh;
+2. Bản sao văn bản ủy quyền của các thành viên hộ gia đình cho một thành viên làm chủ hộ kinh doanh. Văn bản ủy quyền này phải được công chứng hoặc chứng thực theo quy định của pháp luật (Trường hợp thay đổi chủ hộ kinh doanh do các thành viên hộ gia đình đăng ký hộ kinh doanh ủy quyền cho một trong các thành viên còn lại làm chủ hộ kinh doanh)
+3. Bản sao văn bản ủy quyền của thành viên mới cho chủ hộ kinh doanh trong trường hợp tiếp nhận thành viên mới. Văn bản ủy quyền này phải được công chứng hoặc chứng thực theo quy định của pháp luật (Trường hợp thay đổi thành viên hộ gia đình đăng ký hộ kinh doanh)
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0"
+PROC_038,Tạm ngừng kinh doanh/tiếp tục kinh doanh trước thời hạn đã thông báo của hộ kinh doanh,Kinh tế - Hạ tầng và đô thị,TTPVHCC phường Tăng Nhơn Phú,,Giấy đề nghị đăng ký tạm ngừng kinh doanh/tiếp tục kinh doanh trước thời hạn đã đăng ký,"Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến",0,"Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC",TTPVHCC phường Tăng Nhơn Phú,https://drive.google.com/open?id=1yALHed_-Kvrmk5XWZY9vOJ9mWIVgNJqM,False,"Tên thủ tục hành chính: Tạm ngừng kinh doanh/tiếp tục kinh doanh trước thời hạn đã thông báo của hộ kinh doanh
+Số hiệu văn bản: Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+Cơ quan / Địa điểm thực hiện: TTPVHCC phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+Giấy đề nghị đăng ký tạm ngừng kinh doanh/tiếp tục kinh doanh trước thời hạn đã đăng ký
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0
+
+Biểu mẫu đính kèm:
+https://drive.google.com/open?id=1yALHed_-Kvrmk5XWZY9vOJ9mWIVgNJqM"
+PROC_039,Chấm dứt hoạt động hộ kinh doanh,Kinh tế - Hạ tầng và đô thị,TTPVHCC phường Tăng Nhơn Phú,,Thông báo chấm dứt hoạt động hộ kinh doanh,"Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến",0,"Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC",TTPVHCC phường Tăng Nhơn Phú,https://drive.google.com/open?id=1D5HuFallALB74ElrQEVlLcU4s0zJYRsz,False,"Tên thủ tục hành chính: Chấm dứt hoạt động hộ kinh doanh
+Số hiệu văn bản: Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+Cơ quan / Địa điểm thực hiện: TTPVHCC phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+Thông báo chấm dứt hoạt động hộ kinh doanh
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0
+
+Biểu mẫu đính kèm:
+https://drive.google.com/open?id=1D5HuFallALB74ElrQEVlLcU4s0zJYRsz"
+PROC_040,Cấp lại Giấy chứng nhận đăng ký hộ kinh doanh,Kinh tế - Hạ tầng và đô thị,TTPVHCC phường Tăng Nhơn Phú,,Giấy đề nghị cấp lại Giấy chứng nhận đăng ký hộ kinh doanh,"Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến",0,"Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC",TTPVHCC phường Tăng Nhơn Phú,https://drive.google.com/open?id=1tbXFoH0R4TYAd5YYRNFVVIluwDQ8j0kR,False,"Tên thủ tục hành chính: Cấp lại Giấy chứng nhận đăng ký hộ kinh doanh
+Số hiệu văn bản: Luật số 59/2020/QH14 (Luật Doanh nghiệp); Luật số 76/2025/QH15 (Luật sửa đổi, bổ sung một số điều của Luật Doanh nghiệp 2020); Nghị định số 168/2025/NĐ-CP; Nghị định số 296/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 68/2025/TT-BTC
+Lĩnh vực: Kinh tế - Hạ tầng và đô thị
+Cơ quan / Địa điểm thực hiện: TTPVHCC phường Tăng Nhơn Phú
+
+Thành phần hồ sơ:
+Giấy đề nghị cấp lại Giấy chứng nhận đăng ký hộ kinh doanh
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: 03 ngày làm việc
+Hình thức nộp: Trực tuyến
+
+Lệ phí:
+0
+
+Biểu mẫu đính kèm:
+https://drive.google.com/open?id=1tbXFoH0R4TYAd5YYRNFVVIluwDQ8j0kR"
+PROC_041,"Thủ tục xét, cấp học bổng chính sách",Giáo dục và Đào tạo,"Phòng Văn hóa - Xã hội thuộc Ủy ban nhân dân phường Tăng Nhơn Phú (Địa chỉ: Số 29, đường Lê Văn Việt, phường Tăng Nhơn Phú, Thành phố Hồ Chí Minh).",Không có biểu mẫu,"- Đơn đề nghị miễn, giảm học phí dành cho học sinh, sinh viên đang học tại các cơ sở giáo dục nghề nghiệp, giáo dục đại học (theo Phụ lục IV của Nghị định 238/2025/NĐ-CP);
+- Giấy xác nhận và dự toán kinh phí của các cơ sở giáo dục nghề nghiệp, giáo dục đại học (theo Phụ lục V, VI của Nghị định 238/2025/NĐ-CP);
+- Bản sao chứng thực văn bằng tốt nghiệp hoặc xác nhận tốt nghiệp tạm thời hoặc xác nhận học bạ việc hoàn thành chương trình trung học cơ sở (quy định đối tượng tại điểm 1.1 mục 1 Thông báo này)/trung học phổ thông (quy định đối tượng tại điểm 1.3 mục 1 Thông báo này) của hiệu trưởng xác nhận;
+- Bản sao chứng thực của cơ quan quản lý trong các trường hợp thuộc nhóm đối tượng tại điểm 1.4 mục 1 Thông báo này;
+- Hóa đơn hoặc biên lai đóng tiền học phí;
+- Bản sao Căn cước công dân của sinh viên;
+- Bản sao Căn cước công dân của cha/mẹ, người có tên trong Đơn đề nghị chi trả tiền miễn, giảm học phí;
+- Thông tin chuyển khoản (ATM) của người học hoặc tài khoản của cha hoặc mẹ hoặc người giám hộ;
+- Giấy xác nhận nơi cư trú của công an hoặc bản chụp màn hình thể hiện thông tin nơi cư trú trên ứng dụng VNeID (in kèm hồ sơ).","Thời gian giải quyết: không quy định cụ thể (chi trả theo học kỳ)
+Hình thức nộp: Trực tiếp",không,Nghị định số 84/2020/NĐ-CP; Quyết định số 152/2007/QĐ-TTg; Thông tư liên tịch số 53/2008/TTLT-BGDĐT-BTC-BLĐTBXH,"Phòng Văn hóa - Xã hội thuộc Ủy ban nhân dân phường Tăng Nhơn Phú (Địa chỉ: Số 29, đường Lê Văn Việt, phường Tăng Nhơn Phú, Thành phố Hồ Chí Minh).",,False,"Tên thủ tục hành chính: Thủ tục xét, cấp học bổng chính sách
+Số hiệu văn bản: Nghị định số 84/2020/NĐ-CP; Quyết định số 152/2007/QĐ-TTg; Thông tư liên tịch số 53/2008/TTLT-BGDĐT-BTC-BLĐTBXH
+Lĩnh vực: Giáo dục và Đào tạo
+Cơ quan / Địa điểm thực hiện: Phòng Văn hóa - Xã hội thuộc Ủy ban nhân dân phường Tăng Nhơn Phú (Địa chỉ: Số 29, đường Lê Văn Việt, phường Tăng Nhơn Phú, Thành phố Hồ Chí Minh).
+
+Thành phần hồ sơ:
+- Đơn đề nghị miễn, giảm học phí dành cho học sinh, sinh viên đang học tại các cơ sở giáo dục nghề nghiệp, giáo dục đại học (theo Phụ lục IV của Nghị định 238/2025/NĐ-CP);
+- Giấy xác nhận và dự toán kinh phí của các cơ sở giáo dục nghề nghiệp, giáo dục đại học (theo Phụ lục V, VI của Nghị định 238/2025/NĐ-CP);
+- Bản sao chứng thực văn bằng tốt nghiệp hoặc xác nhận tốt nghiệp tạm thời hoặc xác nhận học bạ việc hoàn thành chương trình trung học cơ sở (quy định đối tượng tại điểm 1.1 mục 1 Thông báo này)/trung học phổ thông (quy định đối tượng tại điểm 1.3 mục 1 Thông báo này) của hiệu trưởng xác nhận;
+- Bản sao chứng thực của cơ quan quản lý trong các trường hợp thuộc nhóm đối tượng tại điểm 1.4 mục 1 Thông báo này;
+- Hóa đơn hoặc biên lai đóng tiền học phí;
+- Bản sao Căn cước công dân của sinh viên;
+- Bản sao Căn cước công dân của cha/mẹ, người có tên trong Đơn đề nghị chi trả tiền miễn, giảm học phí;
+- Thông tin chuyển khoản (ATM) của người học hoặc tài khoản của cha hoặc mẹ hoặc người giám hộ;
+- Giấy xác nhận nơi cư trú của công an hoặc bản chụp màn hình thể hiện thông tin nơi cư trú trên ứng dụng VNeID (in kèm hồ sơ).
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: không quy định cụ thể (chi trả theo học kỳ)
+Hình thức nộp: Trực tiếp
+
+Lệ phí:
+không"
+PROC_042,chứng thực chữ ký - chứng thực Hợp đồng giao dịch/Di chúc,Chứng thực - sao y,"Việc chứng thực được thực hiện tại Trung tâm Phục vụ hành chính công, trừ trường hợp người yêu cầu chứng thực thuộc diện già yếu, không thể đi lại được, đang bị tạm giữ, tạm giam, thi hành án phạt tù hoặc có lý do chính đáng khác.",,"1. Người yêu cầu chứng thực chữ ký của mình phải xuất trình các giấy tờ sau đây:
+- Người yêu cầu chứng thực xuất trình bản chính hoặc bản sao có chứng thực Giấy chứng minh nhân dân/Thẻ căn cước công dân/Thẻ căn cước/Giấy chứng nhận căn cước hoặc Hộ chiếu, giấy tờ xuất nhập cảnh/giấy tờ có giá trị đi lại quốc tế còn giá trị sử dụng hoặc xuất trình Căn cước điện tử.
+- Giấy tờ, văn bản mà mình sẽ ký.
+2. Tại thời điểm chứng thực, người yêu cầu chứng thực minh mẫn, nhận thức và làm chủ được hành vi của mình và yêu cầu người yêu cầu chứng thực ký trước mặt người tiếp nhận hồ sơ.
+3. Thủ tục chứng thực chữ ký trong giấy ủy quyền đối với trường hợp ủy quyền không có thù lao, không có nghĩa vụ bồi thường của bên được ủy quyền và không liên quan đến việc chuyển quyền sở hữu tài sản, quyền sử dụng bất động sản.","Thời gian giải quyết: Trong ngày tiếp nhận yêu cầu hoặc trong ngày làm việc tiếp theo, nếu tiếp nhận yêu cầu sau 15 giờ hoặc có thể kéo dài hơn theo thỏa thuận bằng văn bản với người yêu cầu chứng thực.
+Hình thức nộp: Cả hai",10.000 đồng/trường hợp (đối với chứng thực chữ ký) 50.000 đồng/trường hợp (đối với hợp đồng giao dịch/Di chúc),Bộ luật số 91/2015/QH13 (Bộ luật Dân sự); Luật số 33/2009/QH12; Luật số 53/2014/QH13 (Luật Công chứng); Nghị định số 23/2015/NĐ-CP; Nghị định số 29/2015/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 280/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Nghị quyết số 66.7/2025/NQ-CP; Thông tư số 01/2020/TT-BTP; Thông tư số 06/2015/TT-BTP; Thông tư số 226/2016/TT-BTC,"Việc chứng thực được thực hiện tại Trung tâm Phục vụ hành chính công, trừ trường hợp người yêu cầu chứng thực thuộc diện già yếu, không thể đi lại được, đang bị tạm giữ, tạm giam, thi hành án phạt tù hoặc có lý do chính đáng khác.",,False,"Tên thủ tục hành chính: chứng thực chữ ký - chứng thực Hợp đồng giao dịch/Di chúc
+Số hiệu văn bản: Bộ luật số 91/2015/QH13 (Bộ luật Dân sự); Luật số 33/2009/QH12; Luật số 53/2014/QH13 (Luật Công chứng); Nghị định số 23/2015/NĐ-CP; Nghị định số 29/2015/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 280/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Nghị quyết số 66.7/2025/NQ-CP; Thông tư số 01/2020/TT-BTP; Thông tư số 06/2015/TT-BTP; Thông tư số 226/2016/TT-BTC
+Lĩnh vực: Chứng thực - sao y
+Cơ quan / Địa điểm thực hiện: Việc chứng thực được thực hiện tại Trung tâm Phục vụ hành chính công, trừ trường hợp người yêu cầu chứng thực thuộc diện già yếu, không thể đi lại được, đang bị tạm giữ, tạm giam, thi hành án phạt tù hoặc có lý do chính đáng khác.
+
+Thành phần hồ sơ:
+1. Người yêu cầu chứng thực chữ ký của mình phải xuất trình các giấy tờ sau đây:
+- Người yêu cầu chứng thực xuất trình bản chính hoặc bản sao có chứng thực Giấy chứng minh nhân dân/Thẻ căn cước công dân/Thẻ căn cước/Giấy chứng nhận căn cước hoặc Hộ chiếu, giấy tờ xuất nhập cảnh/giấy tờ có giá trị đi lại quốc tế còn giá trị sử dụng hoặc xuất trình Căn cước điện tử.
+- Giấy tờ, văn bản mà mình sẽ ký.
+2. Tại thời điểm chứng thực, người yêu cầu chứng thực minh mẫn, nhận thức và làm chủ được hành vi của mình và yêu cầu người yêu cầu chứng thực ký trước mặt người tiếp nhận hồ sơ.
+3. Thủ tục chứng thực chữ ký trong giấy ủy quyền đối với trường hợp ủy quyền không có thù lao, không có nghĩa vụ bồi thường của bên được ủy quyền và không liên quan đến việc chuyển quyền sở hữu tài sản, quyền sử dụng bất động sản.
+
+Cách nộp / thời hạn:
+Thời gian giải quyết: Trong ngày tiếp nhận yêu cầu hoặc trong ngày làm việc tiếp theo, nếu tiếp nhận yêu cầu sau 15 giờ hoặc có thể kéo dài hơn theo thỏa thuận bằng văn bản với người yêu cầu chứng thực.
+Hình thức nộp: Cả hai
+
+Lệ phí:
+10.000 đồng/trường hợp (đối với chứng thực chữ ký) 50.000 đồng/trường hợp (đối với hợp đồng giao dịch/Di chúc)"
