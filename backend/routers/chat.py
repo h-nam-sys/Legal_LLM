@@ -155,16 +155,26 @@ async def handle_chat(
                     last_proc_title = actual_sources[0]
                     break
 
-    TOPIC_SWITCH_PATTERN = r"(đăng ký|dang ky|làm mới|lam moi|thủ tục|thu tuc|xin cấp|xin cap|cấp lại|cap lai|kết hôn|ket hon|khai sinh|khai tử|khai tu|hộ tịch|ho tich|đổi|doi|chuyển|chuyen)"
     user_prompt_clean = payload.user_prompt.strip().lower()
-    is_new_topic = bool(re.search(TOPIC_SWITCH_PATTERN, user_prompt_clean, re.IGNORECASE))
+
+    # 1. Smarter memory retention: catch pronouns that refer back to the current context
+    is_follow_up = bool(re.search(r"(này|đó|trên|vừa rồi|thủ tục này|hồ sơ này)", user_prompt_clean, re.IGNORECASE))
+
+    # 2. Less aggressive topic switch pattern
+    TOPIC_SWITCH_PATTERN = r"(muốn làm thủ tục khác|chuyển sang|hỏi về thủ tục|xin cấp mới|cấp lại)"
+    is_new_topic = bool(re.search(TOPIC_SWITCH_PATTERN, user_prompt_clean, re.IGNORECASE)) and not is_follow_up
 
     if is_new_topic or not last_proc_title:
-        rag_search_query = payload.user_prompt.strip()
+        search_query = payload.user_prompt.strip()
     else:
-        rag_search_query = f"{last_proc_title} {payload.user_prompt}".strip()
+        search_query = f"{last_proc_title}. {payload.user_prompt}".strip()
 
-    stream_gen, max_score = await get_legal_response_stream(rag_search_query, rag_search_query)
+    # 3. CRITICAL FIX: Pass the RAW prompt to the LLM for intent classification,
+    # but pass the CONTEXT-ENRICHED prompt to the Reranker/Vector search.
+    stream_gen, max_score = await get_legal_response_stream(
+        prompt=payload.user_prompt.strip(),
+        search_query=search_query
+    )
 
     async def stream_and_save_to_db():
         # FIX: The router no longer cares about the score value, only if a document exists at all.

@@ -1,0 +1,20 @@
+{
+    "domain_name": "administrative_procedures",
+    "primary_entity": "procedure_name",
+    "schema_mapping": {
+        "timestamp": "Dấu thời gian",
+        "email_address": "Địa chỉ email",
+        "procedure_name": "Tên thủ tục hành chính",
+        "domain_area": "Lĩnh vực",
+        "submission_method": "Hình thức nộp",
+        "required_documents": "Thành phần hồ sơ",
+        "processing_time": "Thời gian giải quyết",
+        "fee": "Lệ phí",
+        "reception_location": "Địa điểm tiếp nhận hồ sơ trực tiếp (nếu có)",
+        "notes": "Ghi chú",
+        "sample_forms": "Trong trường hợp hồ sơ bao gồm các biểu mẫu vui lòng dính kèm file mẫu",
+        "status": "trạng thái",
+        "legal_basis": "Căn cứ pháp lý"
+    },
+    "retrieval_policy": "hybrid"
+}
