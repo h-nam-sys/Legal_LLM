@@ -47,6 +47,9 @@ Settings.node_parser = SentenceSplitter(chunk_size=800, chunk_overlap=120)
 def _load_excel(path: str) -> pd.DataFrame:
     return pd.read_excel(path, sheet_name=0, dtype=str)
 
+def _load_jsonl(path: str) -> pd.DataFrame:
+    return pd.read_json(path, lines=True, dtype=str)
+
 def _load_csv(path: str) -> pd.DataFrame:
     return pd.read_csv(path, dtype=str, keep_default_na=False)
 
@@ -70,6 +73,7 @@ LOADERS: dict[str, Callable[[str], pd.DataFrame]] = {
     ".xls": _load_excel,
     ".csv": _load_csv,
     ".json": _load_json,
+    ".jsonl": _load_jsonl,
     ".pdf": _load_pdf,
     ".docx": _load_docx,
     ".doc": _load_docx,

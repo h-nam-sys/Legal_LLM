@@ -13,6 +13,8 @@ import pandas as pd
 # CONFIG
 # =============================================================================
 
+PLANNER_VERSION = "v5.1-2026-10-05 (multi-intent + variant-guard + diacritics + context flags)"
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 CANONICAL_FILE = (
@@ -36,6 +38,10 @@ DOMAIN_PROFILE_FILE = (
 
 INTENTS = {
     "required_documents": [
+        "mang theo gì",
+        "cần mang gì",
+        "mang những gì",
+        "mang theo những gì",
         "hồ sơ",
         "giấy tờ",
         "giấy tờ cần",
@@ -51,6 +57,13 @@ INTENTS = {
     ],
 
     "fee": [
+        "mất tiền",
+        "tốn tiền",
+        "có mất phí",
+        "miễn phí",
+        "có thu phí",
+        "phải trả bao nhiêu",
+        "nộp bao nhiêu tiền",
         "phí",
         "lệ phí",
         "bao nhiêu tiền",
@@ -63,6 +76,11 @@ INTENTS = {
     ],
 
     "location": [
+        "cơ quan nào",
+        "nơi nào",
+        "chỗ nào",
+        "đi đâu",
+        "nộp ở cơ quan nào",
         "ở đâu",
         "nộp ở đâu",
         "nộp hồ sơ ở đâu",
@@ -75,6 +93,13 @@ INTENTS = {
     ],
 
     "processing_time": [
+        "mấy ngày",
+        "bao nhiêu ngày",
+        "mất bao nhiêu ngày",
+        "bao lâu thì xong",
+        "khi nào xong",
+        "bao giờ xong",
+        "nhanh không",
         "bao lâu",
         "mất bao lâu",
         "thời gian",
@@ -85,6 +110,9 @@ INTENTS = {
     ],
 
     "legal_basis": [
+        "luật nào",
+        "nghị định nào",
+        "thông tư nào",
         "căn cứ pháp lý",
         "căn cứ",
         "theo luật nào",
@@ -534,7 +562,7 @@ def detect_intent(
                     score,
                     min(
                         1.0,
-                        0.70 + token_count * 0.10,
+                        0.60 + token_count * 0.10,
                     ),
                 )
 
@@ -816,6 +844,684 @@ def detect_procedure(
     return None
 
 # =============================================================================
+# DIACRITIC RESTORATION (câu gõ không dấu)
+# =============================================================================
+#
+# "dang ky khai sinh het bao nhieu tien" -> "đăng ký khai sinh hết bao nhiêu tiền"
+#
+# Chỉ áp dụng khi cả câu KHÔNG có dấu nào. Từ điển lấy từ chính dữ liệu:
+# tên thủ tục (ưu tiên cao) rồi từ khóa intent, alias, từ chung.
+# Từ nào có nhiều cách khôi phục không rõ ràng thì giữ nguyên.
+# =============================================================================
+
+def fold_accents(text: str) -> str:
+
+    text = str(text).replace("đ", "d").replace("Đ", "D")
+
+    decomposed = unicodedata.normalize("NFD", text)
+
+    return "".join(
+        char for char in decomposed
+        if unicodedata.category(char) != "Mn"
+    )
+
+
+def is_unaccented(text: str) -> bool:
+    """Câu thuần ASCII (có chữ cái) = gõ không dấu."""
+
+    text = str(text or "")
+
+    return (
+        any(char.isalpha() for char in text)
+        and all(ord(char) < 128 for char in text)
+    )
+
+
+# Từ chức năng hay gặp nhưng không nằm trong tên thủ tục/từ khóa
+EXTRA_WORDS = [
+    "và", "còn", "với", "cần", "gì", "giấy", "tờ", "nào", "bao", "lâu",
+    "đâu", "ở", "cho", "không", "có", "được", "phải", "hết", "mất", "mấy",
+    "ngày", "tiền", "phí", "lệ", "hồ", "sơ", "nộp", "thủ", "tục", "làm",
+    "xin", "của", "là", "những", "các", "một", "đồng", "thời", "cũng", "như",
+]
+
+# Từ đơn mơ hồ: chọn nghĩa phổ biến nhất khi đứng riêng
+PREFERRED_WORDS = {
+    "can": "cần", "va": "và", "gi": "gì", "o": "ở", "la": "là",
+    "co": "có", "khong": "không", "giay": "giấy", "to": "tờ",
+}
+
+
+def _build_accent_vocabulary(
+    procedures_df: pd.DataFrame,
+) -> tuple[dict[str, set[str]], dict[str, set[str]], dict[str, str]]:
+    """
+    Trả về (từ trong tên thủ tục, từ khác, cụm từ đã biết).
+    Cụm từ: khóa là dạng bỏ dấu, giá trị là dạng có dấu.
+    """
+
+    primary: dict[str, set[str]] = {}
+    secondary: dict[str, set[str]] = {}
+    phrases: dict[str, str] = {}
+
+    def words_of(text: str) -> list[str]:
+        return re.findall(
+            r"\w+",
+            unicodedata.normalize("NFC", str(text).lower()),
+        )
+
+    def add_words(target: dict[str, set[str]], text: str) -> None:
+        for word in words_of(text):
+            target.setdefault(fold_accents(word), set()).add(word)
+
+    def add_phrase(text: str) -> None:
+        words = words_of(text)
+        if len(words) >= 2:
+            key = " ".join(fold_accents(w) for w in words)
+            phrases.setdefault(key, " ".join(words))
+
+    for name in procedures_df["procedure_name"]:
+        name = str(name)
+        add_words(primary, name)
+        add_phrase(name)
+        lowered = name.lower()
+        if lowered.startswith("thủ tục "):
+            add_phrase(lowered[len("thủ tục "):])
+
+    # Cụm 2-4 từ cắt từ tên thủ tục: cho ngữ cảnh khi người dùng chỉ gõ một
+    # phần tên ("yeu to nuoc ngoai" -> "yếu tố nước ngoài")
+    ngrams: dict[str, set[str]] = {}
+
+    for name in procedures_df["procedure_name"]:
+
+        words = words_of(str(name))
+
+        for size in (2, 3, 4):
+            for start in range(len(words) - size + 1):
+                segment = words[start:start + size]
+                key = " ".join(fold_accents(w) for w in segment)
+                ngrams.setdefault(key, set()).add(" ".join(segment))
+
+    for key, originals in ngrams.items():
+        if len(originals) == 1:
+            phrases.setdefault(key, next(iter(originals)))
+
+    sources: list[str] = []
+
+    for keywords in INTENTS.values():
+        sources.extend(keywords)
+
+    for canonical, aliases in PROCEDURE_ALIASES.items():
+        sources.append(canonical)
+        sources.extend(aliases)
+
+    sources.extend(GENERIC_WORDS)
+    sources.extend(FILLER_WORDS)
+    sources.extend(QUALIFIER_PHRASES)
+    sources.extend(ABBREVIATIONS.values())
+    sources.extend(EXTRA_WORDS)
+
+    for text in sources:
+        add_words(secondary, text)
+        add_phrase(text)
+
+    return primary, secondary, phrases
+
+
+def restore_diacritics(
+    query: str,
+    procedures_df: pd.DataFrame,
+) -> str:
+    """
+    Khôi phục dấu cho câu gõ không dấu. Dấu câu được giữ nguyên.
+    1) khớp cụm từ đã biết (dài trước), 2) khớp từng từ không mơ hồ.
+    """
+
+    if not is_unaccented(query):
+        return query
+
+    primary, secondary, phrases = _build_accent_vocabulary(procedures_df)
+
+    parts = re.findall(r"\w+|\W+", str(query).lower())
+
+    word_positions = [
+        index for index, part in enumerate(parts)
+        if re.match(r"\w", part)
+    ]
+
+    max_phrase_len = max(
+        (len(key.split()) for key in phrases),
+        default=2,
+    )
+
+    cursor = 0
+
+    while cursor < len(word_positions):
+
+        restored = False
+
+        longest = min(max_phrase_len, len(word_positions) - cursor)
+
+        for length in range(longest, 1, -1):
+
+            positions = word_positions[cursor:cursor + length]
+
+            # Chỉ ghép các từ cách nhau bằng khoảng trắng (không qua dấu phẩy)
+            if any(
+                parts[positions[k] + 1].strip()
+                for k in range(length - 1)
+            ):
+                continue
+
+            key = " ".join(
+                fold_accents(parts[position]) for position in positions
+            )
+
+            replacement = phrases.get(key)
+
+            if replacement:
+
+                for position, word in zip(positions, replacement.split()):
+                    parts[position] = word
+
+                cursor += length
+                restored = True
+                break
+
+        if restored:
+            continue
+
+        position = word_positions[cursor]
+        key = parts[position]
+
+        in_names = primary.get(key)
+
+        if in_names and len(in_names) == 1:
+            parts[position] = next(iter(in_names))
+
+        elif key in PREFERRED_WORDS:
+            parts[position] = PREFERRED_WORDS[key]
+
+        elif not in_names:
+            others = secondary.get(key)
+
+            if others and len(others) == 1:
+                parts[position] = next(iter(others))
+
+        cursor += 1
+
+    return "".join(parts)
+
+
+# =============================================================================
+# MULTI-INTENT: CLAUSE SPLITTING
+# =============================================================================
+#
+# "Đăng ký khai sinh cần giấy tờ gì và kết hôn có mất lệ phí không?"
+#   -> clause 1: "đăng ký khai sinh cần giấy tờ gì"
+#   -> clause 2: "kết hôn có mất lệ phí không"
+#
+# Mỗi clause tự nhận diện thủ tục + intent. Clause thiếu thủ tục hoặc thiếu
+# intent sẽ mượn từ clause gần nhất.
+# =============================================================================
+
+CLAUSE_PUNCTUATION = re.compile(r"[,;?!\n]+")
+CONJUNCTIONS = re.compile(r"\b(?:và|còn|với lại|đồng thời|cũng như)\b")
+
+
+def split_clauses(
+    query: str,
+    procedures_df: pd.DataFrame,
+) -> list[str]:
+    """
+    Tách câu hỏi thành các mệnh đề.
+    Tên thủ tục có dấu phẩy hoặc chữ "và" bên trong được giữ nguyên.
+    """
+
+    text = unicodedata.normalize("NFC", str(query or "")).lower()
+
+    # Bảo vệ tên thủ tục chứa dấu phân tách
+    placeholders: dict[str, str] = {}
+
+    for index, name in enumerate(procedures_df["procedure_name"]):
+
+        core = unicodedata.normalize("NFC", str(name)).lower().strip()
+
+        if core.startswith("thủ tục "):
+            core = core[len("thủ tục "):]
+
+        if not re.search(r"[,;]| và ", core):
+            continue
+
+        if core in text:
+            key = f"zzprot{index}zz"
+            placeholders[key] = core
+            text = text.replace(core, key)
+
+    pieces: list[str] = []
+
+    for part in CLAUSE_PUNCTUATION.split(text):
+        pieces.extend(CONJUNCTIONS.split(part))
+
+    clauses = []
+
+    for piece in pieces:
+
+        for key, core in placeholders.items():
+            piece = piece.replace(key, core)
+
+        piece = piece.strip()
+
+        if len(normalize_text(piece)) >= 2:
+            clauses.append(piece)
+
+    return clauses
+
+
+# =============================================================================
+# MULTI-INTENT: DETECT ALL INTENTS IN ONE CLAUSE
+# =============================================================================
+
+# "hồ sơ" sau các động từ này là HÀNH ĐỘNG ("nộp hồ sơ ở đâu"),
+# không phải câu hỏi về thành phần hồ sơ.
+WEAK_DOCUMENT_KEYWORDS = {"hồ sơ"}
+ACTION_VERBS_BEFORE_DOCUMENT = {"nộp", "nhận", "tiếp", "gửi", "trả"}
+
+
+def detect_intents(clause_normalized: str) -> list[tuple[str, float]]:
+    return _detect_intents_full(clause_normalized)[0]
+
+
+def _detect_intents_full(
+    clause_normalized: str,
+) -> tuple[list[tuple[str, float]], set[str]]:
+    """
+    Trả về MỌI intent xuất hiện trong clause (không gồm general_information),
+    theo thứ tự xuất hiện.
+
+    Cụm dài thắng cụm ngắn khi chồng lấn, ví dụ:
+        "nộp hồ sơ ở đâu"  -> location (không tính thêm required_documents)
+        "mất bao nhiêu ngày" -> processing_time (không tính thêm fee)
+    """
+
+    padded = f" {clause_normalized} "
+
+    matches = []
+
+    for intent, keywords in INTENTS.items():
+
+        if intent == "general_information":
+            continue
+
+        for keyword in keywords:
+
+            kw = normalize_text(keyword)
+
+            if not kw:
+                continue
+
+            needle = f" {kw} "
+            position = padded.find(needle)
+
+            while position != -1:
+
+                start = position + 1
+                end = start + len(kw)
+
+                if (
+                    intent == "required_documents"
+                    and kw in WEAK_DOCUMENT_KEYWORDS
+                ):
+
+                    previous = padded[:start].split()[-1:]
+
+                    if previous and previous[0] in ACTION_VERBS_BEFORE_DOCUMENT:
+                        position = padded.find(needle, position + 1)
+                        continue
+
+                matches.append(
+                    (
+                        intent,
+                        start,
+                        end,
+                        len(kw.split()),
+                    )
+                )
+
+                position = padded.find(needle, position + 1)
+
+    # Cụm nhiều token trước, rồi cụm dài ký tự trước
+    matches.sort(
+        key=lambda m: (m[3], m[2] - m[1]),
+        reverse=True,
+    )
+
+    accepted: list[tuple[str, int, int, int]] = []
+
+    for intent, start, end, tokens in matches:
+
+        overlaps_other_intent = any(
+            other_intent != intent
+            and not (end <= other_start or start >= other_end)
+            for other_intent, other_start, other_end, _ in accepted
+        )
+
+        if overlaps_other_intent:
+            continue
+
+        accepted.append((intent, start, end, tokens))
+
+    scores: dict[str, float] = {}
+    first_position: dict[str, int] = {}
+
+    for intent, start, _, tokens in accepted:
+
+        scores[intent] = max(
+            scores.get(intent, 0.0),
+            min(1.0, 0.60 + 0.10 * tokens),
+        )
+
+        first_position[intent] = min(
+            first_position.get(intent, start),
+            start,
+        )
+
+    ordered = sorted(
+        scores,
+        key=lambda i: first_position[i],
+    )
+
+    consumed: set[str] = set()
+
+    for _, start, end, _ in accepted:
+        consumed.update(padded[start:end].split())
+
+    return (
+        [(intent, scores[intent]) for intent in ordered],
+        consumed,
+    )
+
+
+# =============================================================================
+# MULTI-INTENT: BUILD TASKS
+# =============================================================================
+
+# Từ đệm/xã giao, không phải chủ đề của câu hỏi
+FILLER_WORDS = {
+    "nhé", "nha", "ạ", "dạ", "vâng", "ơi", "bạn", "em", "anh", "chị",
+    "giúp", "nhờ", "với", "thì", "vậy", "là", "cảm", "ơn", "ok",
+    "nhiêu", "mấy", "lắm", "chưa", "rồi",
+    # từ chỉ đồng tham chiếu / dẫn dắt ("thủ tục này", "còn ... thì sao")
+    "này", "đó", "ấy", "nó", "kia", "nãy", "trên", "vừa", "sao", "nhỉ",
+}
+
+
+def subject_tokens(normalized: str, consumed: set[str]) -> set[str]:
+    """
+    Token mang nội dung riêng của clause (không phải từ khóa intent,
+    không phải từ chung hay xã giao). Clause có token này là đang nói về
+    một chủ đề cụ thể, nên không được mượn thủ tục của clause bên cạnh.
+    """
+    return {
+        token
+        for token in meaningful_tokens(normalized)
+        if token not in consumed and token not in FILLER_WORDS
+    }
+
+
+def _nearest_index(
+    infos: list[dict],
+    index: int,
+    predicate,
+    prefer_next: bool,
+) -> int | None:
+
+    best_index = None
+    best_key = None
+
+    for other, info in enumerate(infos):
+
+        if other == index or not predicate(info):
+            continue
+
+        is_next = other > index
+
+        key = (
+            abs(other - index),
+            0 if is_next == prefer_next else 1,
+        )
+
+        if best_key is None or key < best_key:
+            best_key = key
+            best_index = other
+
+    return best_index
+
+
+# Từ chỉ BIẾN THỂ của thủ tục. Câu hỏi có từ này mà tên thủ tục không có
+# nghĩa là dataset không có đúng thủ tục người dùng hỏi
+# (vd hỏi "cấp lại giấy khai sinh" nhưng chỉ có "đăng ký khai sinh").
+QUALIFIER_PHRASES = [
+    "cấp lại",
+    "làm lại",
+    "đăng ký lại",
+    "cải chính",
+    "đính chính",
+    "thay đổi",
+    "bổ sung",
+    "điều chỉnh",
+    "trích lục",
+    "gia hạn",
+    "thu hồi",
+]
+
+
+def find_qualifier_mismatch(
+    clause_text: str,
+    procedure_name: str | None,
+) -> list[str]:
+
+    if not procedure_name:
+        return []
+
+    clause = f" {normalize_text(clause_text)} "
+    name = f" {normalize_text(procedure_name)} "
+
+    return [
+        phrase
+        for phrase in QUALIFIER_PHRASES
+        if f" {normalize_text(phrase)} " in clause
+        and f" {normalize_text(phrase)} " not in name
+    ]
+
+
+def _make_task(
+    clause_text: str,
+    intent: str,
+    intent_score: float,
+    procedure: dict | None,
+    intent_explicit: bool = True,
+    has_subject: bool = True,
+) -> dict:
+
+    name = procedure["procedure_name"] if procedure else None
+
+    # Clause mượn thủ tục thì ghép tên vào để tìm ngữ nghĩa có ngữ cảnh
+    core_name = normalize_text(name).removeprefix("thủ tục ") if name else ""
+
+    query_text = (
+        f"{name}. {clause_text}"
+        if name and core_name not in normalize_text(clause_text)
+        else clause_text
+    )
+
+    mismatch = find_qualifier_mismatch(clause_text, name)
+
+    if procedure is None:
+        status = "procedure_not_detected"
+    elif procedure.get("ambiguous"):
+        status = "ambiguous_procedure"
+    elif mismatch:
+        status = "variant_mismatch"
+    else:
+        status = "ready"
+
+    return {
+        "query": query_text,
+        "clause": clause_text,
+        "normalized_query": normalize_text(query_text),
+        "intent": intent,
+        "intent_score": round(intent_score, 4),
+        "procedure": name,
+        "procedure_id": procedure["procedure_id"] if procedure else None,
+        "procedure_score": (
+            round(procedure["score"], 4) if procedure else 0.0
+        ),
+        "domain": procedure["domain"] if procedure else None,
+        "candidates": (
+            procedure.get("top_candidates", []) if procedure else []
+        ),
+        "ambiguous": (
+            bool(procedure.get("ambiguous")) if procedure else False
+        ),
+        "qualifier_mismatch": mismatch,
+        "intent_explicit": intent_explicit,
+        "has_subject": has_subject,
+        "should_retrieve": procedure is not None,
+        "status": status,
+    }
+
+
+def build_tasks(
+    query: str,
+    procedures_df: pd.DataFrame,
+) -> list[dict]:
+
+    query = restore_diacritics(query, procedures_df)
+
+    clauses = split_clauses(query, procedures_df)
+
+    if not clauses:
+        clauses = [str(query or "")]
+
+    infos = []
+
+    for clause in clauses:
+
+        normalized = normalize_text(clause)
+
+        intents, consumed = _detect_intents_full(normalized)
+
+        # Không có cụm khớp chính xác: dùng bộ nhận diện mờ như cũ
+        if not intents:
+
+            fuzzy_intent, fuzzy_score = detect_intent(normalized)
+
+            if fuzzy_intent != "general_information":
+                intents = [(fuzzy_intent, fuzzy_score)]
+
+        infos.append(
+            {
+                "text": clause,
+                "normalized": normalized,
+                "intents": intents,
+                "procedure": detect_procedure(normalized, procedures_df),
+                "general_score": detect_intent(normalized)[1],
+                "has_subject": bool(subject_tokens(normalized, consumed)),
+            }
+        )
+
+    # Bỏ clause chẳng có thủ tục lẫn intent ("cho mình hỏi", "nhé"...)
+    if len(infos) > 1:
+
+        kept = [
+            info for info in infos
+            if info["intents"] or info["procedure"] or info["has_subject"]
+        ]
+
+        infos = kept or infos[:1]
+
+    # Không clause nào nhận ra thủ tục: thử lại trên cả câu
+    if all(info["procedure"] is None for info in infos):
+
+        whole = detect_procedure(
+            normalize_text(query),
+            procedures_df,
+        )
+
+        if whole is not None:
+            for info in infos:
+                if not info["has_subject"] or len(infos) == 1:
+                    info["procedure"] = whole
+
+    tasks: list[dict] = []
+    seen: set[tuple] = set()
+
+    for index, info in enumerate(infos):
+
+        # ---- intent ----
+        intents = info["intents"]
+        explicit = True
+
+        if not intents:
+
+            donor = _nearest_index(
+                infos,
+                index,
+                lambda x: bool(x["intents"]),
+                prefer_next=True,
+            )
+
+            if donor is not None:
+                intents = infos[donor]["intents"]
+            else:
+                intents = [
+                    ("general_information", info["general_score"])
+                ]
+                explicit = False
+
+        # ---- procedure ----
+        procedure = info["procedure"]
+
+        if procedure is None and not info["has_subject"]:
+
+            donor = _nearest_index(
+                infos,
+                index,
+                lambda x: x["procedure"] is not None,
+                prefer_next=False,
+            )
+
+            if donor is not None:
+                procedure = infos[donor]["procedure"]
+
+        for intent, score in intents:
+
+            key = (
+                procedure["procedure_id"] if procedure else None,
+                intent,
+            )
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+
+            tasks.append(
+                _make_task(
+                    info["text"],
+                    intent,
+                    score,
+                    procedure,
+                    intent_explicit=explicit,
+                    has_subject=info["has_subject"],
+                )
+            )
+
+    return tasks
+
+
+# =============================================================================
 # SEMANTIC PLAN
 # =============================================================================
 
@@ -823,81 +1529,19 @@ def build_plan(
     query: str,
     procedures_df: pd.DataFrame,
 ) -> dict:
+    """
+    Trả về plan của task đầu tiên (giữ tương thích với code cũ),
+    kèm "tasks" là danh sách đầy đủ và "is_multi".
+    """
 
-    normalized_query = normalize_text(
-        query
-    )
+    tasks = build_tasks(query, procedures_df)
 
-    intent, intent_score = detect_intent(
-        normalized_query
-    )
+    plan = dict(tasks[0])
 
-    procedure = detect_procedure(
-        normalized_query,
-        procedures_df,
-    )
-
-    plan = {
-        "query": query,
-        "normalized_query": normalized_query,
-
-        "intent": intent,
-        "intent_score": round(
-            intent_score,
-            4,
-        ),
-
-        "procedure": (
-            procedure["procedure_name"]
-            if procedure
-            else None
-        ),
-
-        "procedure_id": (
-            procedure["procedure_id"]
-            if procedure
-            else None
-        ),
-
-        "procedure_score": (
-            round(
-                procedure["score"],
-                4,
-            )
-            if procedure
-            else 0.0
-        ),
-
-        "domain": (
-            procedure["domain"]
-            if procedure
-            else None
-        ),
-
-        "candidates": (
-            procedure.get("top_candidates", [])
-            if procedure
-            else []
-        ),
-
-        "ambiguous": (
-            bool(procedure.get("ambiguous"))
-            if procedure
-            else False
-        ),
-
-        "should_retrieve": (
-            procedure is not None
-        ),
-
-        "status": (
-            "procedure_not_detected"
-            if procedure is None
-            else "ambiguous_procedure"
-            if procedure.get("ambiguous")
-            else "ready"
-        ),
-    }
+    plan["query"] = query
+    plan["normalized_query"] = normalize_text(query)
+    plan["tasks"] = tasks
+    plan["is_multi"] = len(tasks) > 1
 
     return plan
 
@@ -963,6 +1607,23 @@ def print_plan(
         f"{plan['status']}"
     )
 
+    if plan.get("is_multi"):
+
+        print(
+            f"Tasks              : "
+            f"{len(plan['tasks'])} (multi-intent)"
+        )
+
+        for number, task in enumerate(plan["tasks"], start=1):
+
+            print(
+                f"  Task {number}: "
+                f"{task['intent']:<20} "
+                f"{task['procedure']} "
+                f"({task['procedure_id']}) "
+                f"[{task['status']}]"
+            )
+
 
 # =============================================================================
 # TEST QUERIES
@@ -992,6 +1653,14 @@ TEST_QUERIES = [
     "đăng ký hộ khẩu",
     "nhập hộ khẩu",
     "làm lại giấy khai sinh",
+
+    # Multi-intent
+    "Đăng ký khai sinh cần giấy tờ gì và kết hôn có mất lệ phí không?",
+    "khai sinh cần giấy tờ gì và mất bao nhiêu tiền",
+    "lệ phí và thời gian đăng ký khai tử",
+    "khai sinh và kết hôn cần giấy tờ gì",
+    "nộp hồ sơ khai sinh ở đâu",
+    "cho mình hỏi, đăng ký khai sinh mất bao lâu",
 ]
 
 
@@ -1003,6 +1672,7 @@ def main():
 
     print("=" * 80)
     print("LEGAL RAG - SEMANTIC PLANNER / PHASE 5")
+    print(f"Version: {PLANNER_VERSION}")
     print("=" * 80)
 
     # -------------------------------------------------------------------------
