@@ -1,0 +1,21 @@
+{
+  "previous_files": [
+    "backend/admin_dashboard.py",
+    "backend/mcp_admin_ui.py",
+    "backend/routers/chat.py",
+    "backend/schemas.py",
+    "backend/services/chat_orchestrator.py",
+    "backend/services/mcp_service.py",
+    "backend/services/mcp_permission.py",
+    "backend/services/mcp_search_server.py",
+    "backend/static/index.html",
+    "rag/mcp_config.py",
+    "requirements.txt",
+    "requirements_mcp.txt",
+    "README_MCP.md",
+    "README_MULTI_DOMAIN.md",
+    "MCP_VALIDATION.txt",
+    "tests/test_mcp_increment.py"
+  ],
+  "new_files": []
+}

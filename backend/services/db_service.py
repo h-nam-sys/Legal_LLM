@@ -63,6 +63,28 @@ async def update_form_offer_flag(db: AsyncSession, conversation_id: int, state: 
         conv.offered_form_download = state
         await db.commit()
 
+async def update_conversation_state(db: AsyncSession, conversation_id: int, current_procedure: str = None, location: str = None):
+    """Updates the explicit memory state of the conversation (TC10)"""
+    conv = await get_conversation(db, conversation_id)
+    if conv:
+        if current_procedure is not None:
+            conv.current_procedure = current_procedure
+        if location is not None:
+            conv.location = location
+        await db.commit()
+
+
+async def update_domain_state(db, conversation_id, state, *, clear_procedure=False):
+    conv = await get_conversation(db, conversation_id)
+    if conv:
+        # Reassign JSON so SQLAlchemy detects the change; preserve existing checklist values.
+        checklist = dict(conv.checklist or {})
+        checklist['_domain_state'] = state
+        conv.checklist = checklist
+        if clear_procedure:
+            conv.current_procedure = None
+        await db.commit()
+
 # ============ Message Operations ============
 
 async def add_message(db: AsyncSession, conversation_id: int, role: str, content: str, sources: list[str] = None) -> Message:

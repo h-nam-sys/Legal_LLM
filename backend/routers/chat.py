@@ -4,9 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 from sqlalchemy.future import select
 from pydantic import BaseModel
-from schemas import ChatRequest, ChatResponse, StartConversationRequest, ConversationSchema
+from schemas import ChatRequest, ChatResponse, StartConversationRequest, ConversationSchema, MCPActionRequest
 from services.llm_service import get_legal_response_stream
-from services.mcp_service import execute_mcp_search, should_trigger_mcp
+from services.mcp_service import execute_mcp_search, MCPSearchError
+from rag.mcp_config import load_settings, search_enabled, MCPConfigError
+from services.mcp_permission import authorize_pending, search_locks
+from database import User
 from rate_limiter import limiter
 from services.db_service import (
     create_conversation,
@@ -15,6 +18,8 @@ from services.db_service import (
     get_user_conversations,
     add_message,
     update_conversation_title,
+    update_conversation_state,
+    update_domain_state,
     update_message_rating,
     log_interaction,
     Conversation
@@ -22,13 +27,19 @@ from services.db_service import (
 from database import get_db, AuditLog
 import json
 import random
-import traceback
 import unicodedata
 import re
 import difflib
 import ast
 
 router = APIRouter(tags=["Chat"])
+
+
+@router.get('/domains')
+async def available_domains():
+    from services.domain_router import ready_domains
+    return [{'id': c.name, 'description': c.profile.get('description', ''),
+             'default_mode': c.profile.get('default_mode', 'strict')} for c in ready_domains()]
 
 class FeedbackRequest(BaseModel):
     rating: int
@@ -38,9 +49,6 @@ def get_current_user(x_user_id: str = Header(default=None)):
         raise HTTPException(status_code=401, detail="User ID missing. Please log in.")
     return x_user_id
 
-# ==========================================
-# ROBUST PARSER (Unwraps the Double-Encode Bug)
-# ==========================================
 def parse_sources(sources_data):
     if not sources_data:
         return []
@@ -60,9 +68,6 @@ def parse_sources(sources_data):
                 return []
     return []
 
-# ==========================================
-# GLOBAL FUZZY MATCHING HELPERS
-# ==========================================
 def normalize_text(text: str) -> str:
     if not text:
         return ""
@@ -104,12 +109,20 @@ async def start_conversation(
     current_user_id: str = Depends(get_current_user)
 ):
     try:
+        if request.domain and request.domain != 'auto':
+            from services.domain_router import ready_domains
+            if request.domain not in {c.name for c in ready_domains()}:
+                raise HTTPException(400, 'Selected domain is unavailable or not ingested')
         conversation = await create_conversation(db, current_user_id, request.title)
+        if request.domain and request.domain != 'auto':
+            await update_domain_state(db, conversation.id, {'name': request.domain, 'selection': 'manual'})
         return {
             "conversation_id": conversation.id,
             "title": conversation.title,
             "created_at": conversation.created_at.isoformat()
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create conversation: {str(e)}")
 
@@ -123,161 +136,56 @@ async def handle_chat(
     db: AsyncSession = Depends(get_db),
     current_user_id: str = Depends(get_current_user)
 ):
-    if not payload.user_prompt.strip():
-        raise HTTPException(status_code=400, detail="Prompt cannot be empty")
+    from services.chat_orchestrator import orchestrate_chat
+    return await orchestrate_chat(conversation_id, payload, db)
 
-    conversation = await get_conversation(db, conversation_id)
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
-    await add_message(db, conversation_id, "user", payload.user_prompt)
-    context_messages = await get_conversation_history(db, conversation_id)
-
-    if len(context_messages) == 1:
-        raw_title = payload.user_prompt.strip()
-        new_title = raw_title.capitalize()
-        if len(new_title) > 35:
-            new_title = new_title[:35] + "..."
-        await update_conversation_title(db, conversation_id, new_title)
-
-    last_proc_title = ""
-    if len(context_messages) >= 2:
-        for msg in reversed(context_messages[:-1]):
-            if msg.role == "assistant" and msg.sources:
-                sources_list = parse_sources(msg.sources)
-                actual_sources = [
-                    s for s in sources_list
-                    if isinstance(s, str)
-                    and not s.startswith("RAG_SCORE:")
-                    and not s.startswith("RAG_CONTENT:")
-                ]
-                if actual_sources:
-                    last_proc_title = actual_sources[0]
-                    break
-
-    user_prompt_clean = payload.user_prompt.strip().lower()
-
-    # 1. Smarter memory retention: catch pronouns that refer back to the current context
-    is_follow_up = bool(re.search(r"(này|đó|trên|vừa rồi|thủ tục này|hồ sơ này)", user_prompt_clean, re.IGNORECASE))
-
-    # 2. Less aggressive topic switch pattern
-    TOPIC_SWITCH_PATTERN = r"(muốn làm thủ tục khác|chuyển sang|hỏi về thủ tục|xin cấp mới|cấp lại)"
-    is_new_topic = bool(re.search(TOPIC_SWITCH_PATTERN, user_prompt_clean, re.IGNORECASE)) and not is_follow_up
-
-    if is_new_topic or not last_proc_title:
-        search_query = payload.user_prompt.strip()
-    else:
-        search_query = f"{last_proc_title}. {payload.user_prompt}".strip()
-
-    # 3. CRITICAL FIX: Pass the RAW prompt to the LLM for intent classification,
-    # but pass the CONTEXT-ENRICHED prompt to the Reranker/Vector search.
-    stream_gen, max_score = await get_legal_response_stream(
-        prompt=payload.user_prompt.strip(),
-        search_query=search_query
-    )
-
-    async def stream_and_save_to_db():
-        # FIX: The router no longer cares about the score value, only if a document exists at all.
-        # If RAG found no documents above its internal MIN_THRESHOLD, max_score will be 0.0.
-        if max_score == 0.0:
-            if should_trigger_mcp(payload.user_prompt):
-                ask_msg = "Tôi không tìm thấy thông tin trong dữ liệu địa phương. Bạn có muốn tôi tìm kiếm trực tuyến trên Cổng Dịch vụ công Quốc gia không?"
-                await add_message(db, conversation_id, "assistant", ask_msg, [])
-                await log_interaction(db, conversation_id, payload.user_prompt, ask_msg, None, False, max_score, "MCP_PROMPT")
-
-                yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
-                yield f"data: {json.dumps({'type': 'chunk', 'text': ask_msg})}\n\n"
-                yield "data: [DONE]\n\n"
-                return
-            else:
-                nudge_msg = random.choice([
-                    "Xin chào! Tôi là trợ lý hướng dẫn thủ tục hành chính. Vui lòng cho tôi biết bạn cần làm thủ tục gì nhé.",
-                    "Chào bạn! Tôi ở đây để hỗ trợ giải đáp các thủ tục hành chính công. Bạn đang cần thực hiện thủ tục nào?"
-                ])
-                await add_message(db, conversation_id, "assistant", nudge_msg, [])
-                await log_interaction(db, conversation_id, payload.user_prompt, nudge_msg, None, False, max_score, "LOW_CONFIDENCE")
-
-                yield f"data: {json.dumps({'type': 'metadata', 'sources': []})}\n\n"
-                yield f"data: {json.dumps({'type': 'chunk', 'text': nudge_msg})}\n\n"
-                yield "data: [DONE]\n\n"
-                return
-
-        full_ai_answer = ""
-        final_sources = []
-
-        async for raw_chunk in stream_gen:
-            yield raw_chunk
-            if raw_chunk.startswith("data: "):
-                data_str = raw_chunk.replace("data: ", "").strip()
-                if data_str and data_str != "[DONE]":
-                    try:
-                        parsed = json.loads(data_str)
-                        if parsed.get("type") == "metadata":
-                            final_sources = parsed.get("sources", [])
-                            print(f"\n[DIAGNOSTIC BACKEND] Received {len(final_sources)} sources.")
-                            print(f"[DIAGNOSTIC BACKEND] Sources: {final_sources}\n")
-                        elif parsed.get("type") == "chunk":
-                            full_ai_answer += parsed.get("text", "")
-                    except json.JSONDecodeError:
-                        pass
-
-        db_sources = final_sources.copy()
-        db_sources.append(f"RAG_SCORE:{max_score}")
-
-        if is_form_trigger(payload.user_prompt):
-            offer_text = "\n\n**Bạn có muốn tải biểu mẫu (file Word) cho thủ tục này không?**"
-            full_ai_answer += offer_text
-            yield f"data: {json.dumps({'type': 'chunk', 'text': offer_text})}\n\n"
-
-        await add_message(db, conversation_id, "assistant", full_ai_answer, db_sources)
-        await log_interaction(db, conversation_id, payload.user_prompt, full_ai_answer, str(final_sources), False, max_score, "SUCCESS")
-
-    return StreamingResponse(
-        stream_and_save_to_db(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"
-        }
-    )
 
 
 @router.post("/chat/{conversation_id}/action/mcp")
 async def action_mcp(
     conversation_id: int,
+    payload: MCPActionRequest | None = None,
     db: AsyncSession = Depends(get_db),
     current_user_id: str = Depends(get_current_user)
 ):
-    conversation = await get_conversation(db, conversation_id)
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
-    context_messages = await get_conversation_history(db, conversation_id)
-
-    last_proc_title = ""
-    last_user_msg = ""
-    for msg in reversed(context_messages):
-        if msg.role == "user" and not last_user_msg:
-            last_user_msg = msg.content
-        if msg.role == "assistant" and msg.sources and not last_proc_title:
-            sources_list = parse_sources(msg.sources)
-            actual_sources = [
-                s for s in sources_list
-                if isinstance(s, str)
-                and not s.startswith("RAG_SCORE:")
-                and not s.startswith("RAG_CONTENT:")
-            ]
-            if actual_sources:
-                last_proc_title = actual_sources[0]
-
-    query = f"{last_proc_title} {last_user_msg}".strip() if last_proc_title else last_user_msg
-
-    mcp_answer, mcp_sources = await execute_mcp_search(query, conversation.location)
-    await add_message(db, conversation_id, "assistant", mcp_answer, mcp_sources)
-    await log_interaction(db, conversation_id, query, mcp_answer, str(mcp_sources), True, None, "ONLINE_SEARCH_EXECUTED")
-
-    return {"text": mcp_answer, "sources": mcp_sources}
+    if payload is None:
+        raise HTTPException(400, 'Vui lòng làm mới giao diện chat và chọn Có trên đề nghị tìm kiếm cụ thể.')
+    async with search_locks.hold(conversation_id):
+        conversation = await get_conversation(db, conversation_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        # Keep the project's existing mock-login contract; check conversation ownership here.
+        owner = (await db.execute(select(User.user_id).where(User.id == conversation.user_id))).scalar_one_or_none()
+        pending = authorize_pending(conversation, current_user_id, owner, payload.offer_message_id)
+        from rag.domain_config import load_domain_config, RAGConfigurationError
+        try:
+            config = load_domain_config(pending['domain'])
+            settings = load_settings()
+            if not search_enabled(config, settings):
+                raise HTTPException(400, 'Tìm kiếm trực tuyến đang tắt cho lĩnh vực này.')
+        except (RAGConfigurationError, MCPConfigError) as exc:
+            raise HTTPException(400, 'Cấu hình lĩnh vực hoặc MCP không khả dụng. Kiểm tra admin.') from exc
+        try:
+            answer, sources = await execute_mcp_search(pending['query'], conversation.location,
+                config=config, settings=settings)
+        except MCPSearchError as exc:
+            await log_interaction(db, conversation_id, pending['query'], str(exc), None, False, None, 'MCP_FAILED')
+            raise HTTPException(503, str(exc)) from exc
+        # Do not consume a newer offer if another chat turn arrived during the search.
+        await db.refresh(conversation)
+        if (conversation.checklist or {}).get('_mcp_pending') != pending:
+            raise HTTPException(409, 'Câu hỏi đã thay đổi. Vui lòng dùng đề nghị tìm kiếm mới nhất.')
+        saved_sources = sources + ['RAG_DOMAIN:' + config.name]
+        await add_message(db, conversation_id, 'assistant', answer, saved_sources)
+        checklist = dict(conversation.checklist or {})
+        checklist.pop('_mcp_pending', None)
+        conversation.checklist = checklist
+        conversation.needs_search_permission = False
+        await db.commit()
+        await log_interaction(db, conversation_id, pending['query'], answer,
+            json.dumps(saved_sources, ensure_ascii=False), True, None,
+            'MCP_SEARCH_EXECUTED' if sources else 'MCP_NO_RESULTS')
+        return {'text': answer, 'sources': saved_sources}
 
 
 @router.post("/chat/{conversation_id}/action/form")
@@ -289,26 +197,24 @@ async def action_form(
     conversation = await get_conversation(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    from rag.domain_config import load_domain_config, RAGConfigurationError
+    name = (conversation.checklist or {}).get('_domain_state', {}).get('name')
+    try:
+        config = load_domain_config(name)
+    except RAGConfigurationError as exc:
+        raise HTTPException(400, 'Domain is unavailable; send a new message to select another domain') from exc
+    if not config.profile.get('allow_forms', config.primary_entity == 'procedure_name'):
+        raise HTTPException(400, 'Forms are not configured for this domain')
 
     context_messages = await get_conversation_history(db, conversation_id)
 
-    last_proc_title = ""
+    last_proc_title = conversation.current_procedure or ""
     last_user_msg = ""
 
     for msg in reversed(context_messages):
         if msg.role == "user" and not last_user_msg:
             last_user_msg = msg.content
-        if msg.role == "assistant" and msg.sources and not last_proc_title:
-            sources_list = parse_sources(msg.sources)
-            actual_sources = [
-                s for s in sources_list
-                if isinstance(s, str)
-                and not s.startswith("RAG_SCORE:")
-                and not s.startswith("RAG_CONTENT:")
-            ]
-            if actual_sources:
-                last_proc_title = actual_sources[0]
-                break
+            break
 
     try:
         from services.forms_matcher import find_matching_form

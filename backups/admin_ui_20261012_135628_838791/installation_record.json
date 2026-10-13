@@ -1,0 +1,10 @@
+{
+  "previous_files": [
+    "backend\\admin_dashboard.py",
+    "backend\\domain_admin_ui.py"
+  ],
+  "new_files": [
+    "backend/admin_dashboard.py",
+    "backend/domain_admin_ui.py"
+  ]
+}

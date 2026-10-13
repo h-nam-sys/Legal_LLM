@@ -1,0 +1,7 @@
+Reading and validating uploaded file
+Writing SQL snapshot
+Building and verifying vector index
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 21782.08it/s]
+memory allocation of 340 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

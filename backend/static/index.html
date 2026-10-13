@@ -137,6 +137,17 @@
     </div>
 
     <div id="main">
+        <div style="padding:12px 30px;background:white;border-bottom:1px solid var(--border-color);display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <label for="domain-select">Lĩnh vực:</label>
+            <select id="domain-select" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;"><option value="auto">Tự động</option></select>
+            <button onclick="loadDomains()" title="Tải lại danh sách lĩnh vực, giữ lựa chọn hiện tại" style="padding:8px;cursor:pointer;">Làm mới danh sách</button>
+            <button onclick="resetDomainRouting()" title="Nhận diện lại lĩnh vực từ câu hỏi tiếp theo, bỏ ngữ cảnh chủ đề cũ" style="padding:8px;cursor:pointer;">Nhận diện lại</button>
+            <label for="mode-select">Chế độ:</label>
+            <select id="mode-select" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;">
+                <option value="">Mặc định của lĩnh vực</option><option value="strict">Strict</option><option value="friendly">Friendly</option>
+            </select>
+            <span id="active-domain" style="font-size:12px;color:#64748b;"></span>
+        </div>
         <div id="chat-window"></div>
         <div id="input-area">
             <div class="input-wrapper">
@@ -151,14 +162,47 @@
         marked.use({ gfm: true, breaks: true });
 
         let currentConvId = null;
+        let resetDomainPending = false;
         let userId = localStorage.getItem("user_id");
 
         window.onload = () => {
+            loadDomains();
             if (userId) {
                 document.getElementById("login-overlay").style.display = "none";
                 loadSidebar();
             }
         };
+
+        async function loadDomains() {
+            try {
+                const res = await fetch('/domains');
+                if (!res.ok) return;
+                const data = await res.json();
+                const select = document.getElementById('domain-select');
+                const previous = select.value;
+                select.replaceChildren(new Option('Tự động', 'auto'));
+                data.forEach(domain => {
+                    const option = new Option(domain.id, domain.id);
+                    option.title = domain.description || '';
+                    select.appendChild(option);
+                });
+                select.value = data.some(d => d.id === previous) ? previous : 'auto';
+            } catch (err) { console.warn('Could not load domains', err); }
+        }
+
+        function chatPayload(text) {
+            const payload = {user_prompt: text, domain: document.getElementById('domain-select').value};
+            if (resetDomainPending) payload.reset_domain = true;
+            const mode = document.getElementById('mode-select').value;
+            if (mode) payload.mode = mode;
+            return payload;
+        }
+
+        function resetDomainRouting() {
+            document.getElementById('domain-select').value = 'auto';
+            resetDomainPending = true;
+            document.getElementById('active-domain').textContent = 'Sẽ nhận diện lại từ câu hỏi tiếp theo';
+        }
 
         async function performLogin() {
             const username = document.getElementById("username-input").value.trim();
@@ -198,6 +242,7 @@
             if (btnDiv) btnDiv.style.display = 'none';
         };
 
+        const mcpOffers = {};
         window.triggerAction = async function(msgId, actionType) {
             hideActions(msgId);
 
@@ -217,11 +262,12 @@
             try {
                 const res = await fetch(`/chat/${currentConvId}/action/${actionType}`, {
                     method: "POST",
-                    headers: getAuthHeaders()
+                    headers: actionType === 'mcp' ? {...getAuthHeaders(), 'Content-Type': 'application/json'} : getAuthHeaders(),
+                    ...(actionType === 'mcp' ? {body: JSON.stringify({offer_message_id: mcpOffers[msgId]})} : {})
                 });
 
-                if (!res.ok) throw new Error("API call failed");
                 const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || "API call failed");
 
                 const textElement = document.getElementById(`${newMsgId}-text`);
                 const metaElement = document.getElementById(`${newMsgId}-meta`);
@@ -232,7 +278,7 @@
                 if (data.sources && data.sources.length > 0) {
                     const extracted = extractSourceData(data.sources);
                     if (extracted.actualSources.length > 0 || extracted.ragContent) {
-                        metaElement.innerHTML = renderSourcesCollapsible(extracted.actualSources, extracted.ragContent);
+                        metaElement.innerHTML = renderSourcesCollapsible(extracted.actualSources, extracted.ragContent, extracted.searchSuggestions);
                     }
                 }
 
@@ -242,12 +288,15 @@
                 const textElement = document.getElementById(`${newMsgId}-text`);
                 if (textElement) {
                     textElement.classList.remove("loading-text");
-                    textElement.innerHTML = `<span style="color:red;">Lỗi kết nối.</span>`;
+                    textElement.textContent = err.message || 'Lỗi kết nối.';
+                    if (actionType === 'mcp') {
+                        textElement.insertAdjacentHTML('afterend', `<button class="action-btn yes" onclick="window.triggerAction('${msgId}', 'mcp')">Thử lại</button>`);
+                    }
                 }
             }
         };
 
-        function renderSourcesCollapsible(actualSources, ragContent) {
+        function renderSourcesCollapsible(actualSources, ragContent, searchSuggestions = "") {
             if ((!actualSources || actualSources.length === 0) && !ragContent) return "";
 
             let displayHTML = "";
@@ -257,7 +306,9 @@
                 displayHTML = actualSources.join('<hr style="border:0;border-top:1px dashed var(--border-color);margin:8px 0;">');
             }
 
-            return `
+            const escapeAttribute = text => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const searchLinks = searchSuggestions ? `<iframe title="Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${escapeAttribute(searchSuggestions)}" style="width:100%;height:150px;border:0;"></iframe>` : '';
+            return `${searchLinks}
                 <details class="sources-details">
                     <summary>📑 Xem dữ liệu trích xuất (Nguồn)</summary>
                     <div class="sources-content">${displayHTML}</div>
@@ -269,6 +320,7 @@
             let actualSources = [];
             let ragScore = null;
             let ragContent = null;
+            let searchSuggestions = "";
 
             if (sourceArray && sourceArray.length > 0) {
                 sourceArray.forEach(src => {
@@ -277,13 +329,15 @@
                             ragScore = parseFloat(src.split(":")[1]).toFixed(4);
                         } else if (src.startsWith("RAG_CONTENT:")) {
                             ragContent = src.substring(12);
-                        } else {
+                        } else if (src.startsWith("RAG_GOOGLE_SEARCH:")) {
+                            searchSuggestions = src.substring(18);
+                        } else if (!src.startsWith("RAG_")) {
                             actualSources.push(src);
                         }
                     }
                 });
             }
-            return { actualSources, ragScore, ragContent };
+            return { actualSources, ragScore, ragContent, searchSuggestions };
         }
 
         async function loadSidebar() {
@@ -307,10 +361,12 @@
             const res = await fetch("/start-conversation", {
                 method: "POST",
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ title: "Tư vấn mới" })
+                body: JSON.stringify({ title: "Tư vấn mới", domain: document.getElementById("domain-select").value })
             });
             const data = await res.json();
             currentConvId = data.conversation_id;
+            resetDomainPending = false;
+            document.getElementById('active-domain').textContent = '';
             document.getElementById("chat-window").innerHTML = "";
             loadSidebar();
         }
@@ -342,6 +398,10 @@
             const chatWindow = document.getElementById("chat-window");
             chatWindow.innerHTML = "";
 
+            const domainState = (data.checklist || {})._domain_state || {};
+            resetDomainPending = false;
+            document.getElementById('domain-select').value = domainState.selection === 'manual' ? domainState.name : 'auto';
+            document.getElementById('active-domain').textContent = domainState.name ? 'Đang dùng: ' + domainState.name : '';
             data.messages.forEach(msg => {
                 const isUser = msg.role === "user";
                 let sourceHtml = "";
@@ -350,13 +410,17 @@
                 if (!isUser) {
                     const extracted = extractSourceData(msg.sources);
                     if (extracted.actualSources.length > 0 || extracted.ragContent) {
-                        sourceHtml = renderSourcesCollapsible(extracted.actualSources, extracted.ragContent);
+                        sourceHtml = renderSourcesCollapsible(extracted.actualSources, extracted.ragContent, extracted.searchSuggestions);
                     }
                     if (extracted.ragScore !== null) {
                         scoreHtml = `<div class="rag-score">Điểm tin cậy (RAG): ${extracted.ragScore}</div>`;
                     }
                 }
 
+                const pendingSearch = (data.checklist || {})._mcp_pending;
+                if (pendingSearch && pendingSearch.message_id === msg.id) mcpOffers['history-' + msg.id] = msg.id;
+                const searchOfferHtml = !isUser && data.needs_search_permission && pendingSearch && pendingSearch.message_id === msg.id
+                    ? `<div class="action-btns" id="action-btns-history-${msg.id}"><button class="action-btn yes" onclick="window.triggerAction('history-${msg.id}', 'mcp')">Có</button><button class="action-btn no" onclick="window.hideActions('history-${msg.id}')">Không</button></div>` : '';
                 let feedbackHtml = (!isUser && msg.id)
                     ? `<div class="feedback-btns">
                            <button class="feedback-btn ${msg.rating === 3 ? 'active-up' : ''}" onclick="submitFeedback(${msg.id}, 1, this)">👍 Phù hợp</button>
@@ -373,7 +437,7 @@
                             ${scoreHtml}
                             ${sourceHtml}
                         </div>
-                        ${feedbackHtml}
+                        ${searchOfferHtml}${feedbackHtml}
                     </div>
                 `;
             });
@@ -439,7 +503,7 @@
                 const res = await fetch(`/chat/${currentConvId}`, {
                     method: "POST",
                     headers: getAuthHeaders(),
-                    body: JSON.stringify({ user_prompt: text })
+                    body: JSON.stringify(chatPayload(text))
                 });
 
                 if (!res.ok) throw new Error("Network response was not ok");
@@ -450,6 +514,7 @@
                 let fullText = "";
                 let buffer = "";
                 let actualSources = [];
+                let searchPermissionOffered = false;
                 let isFirstToken = true;
                 let streamActive = true;
                 let needsRender = false;
@@ -466,7 +531,7 @@
                     } else {
                         textElement.innerHTML = marked.parse(fullText);
 
-                        if (fullText.includes("Bạn có muốn tải biểu mẫu") || fullText.includes("tìm kiếm trực tuyến")) {
+                        if (fullText.includes("Bạn có muốn tải biểu mẫu") || searchPermissionOffered) {
                             const actionType = fullText.includes("Bạn có muốn tải biểu mẫu") ? 'form' : 'mcp';
                             textElement.innerHTML += `
                                 <div class="action-btns" id="action-btns-${msgId}">
@@ -503,6 +568,14 @@
                                 const parsed = JSON.parse(dataStr);
                                 if (parsed.type === "metadata") {
                                     actualSources = parsed.sources || [];
+                                    searchPermissionOffered = searchPermissionOffered || parsed.needs_search_permission === true;
+                                    if (parsed.offer_message_id) mcpOffers[msgId] = parsed.offer_message_id;
+                                    if (parsed.domain) {
+                                        resetDomainPending = false;
+                                        document.getElementById('active-domain').textContent = 'Đang dùng: ' + parsed.domain + (parsed.mode ? ' • ' + parsed.mode : '');
+                                    } else if (parsed.domain_choices) {
+                                        document.getElementById('active-domain').textContent = 'Cần chọn lĩnh vực: ' + parsed.domain_choices.join(', ');
+                                    }
                                     console.log("[DIAGNOSTIC FRONTEND] Received metadata:", actualSources);
                                 } else if (parsed.type === "chunk") {
                                     if (isFirstToken) {
@@ -525,7 +598,7 @@
                 if (actualSources.length > 0) {
                     const extractedStream = extractSourceData(actualSources);
                     if (extractedStream.actualSources.length > 0 || extractedStream.ragContent) {
-                        metaElement.innerHTML = renderSourcesCollapsible(extractedStream.actualSources, extractedStream.ragContent);
+                        metaElement.innerHTML = renderSourcesCollapsible(extractedStream.actualSources, extractedStream.ragContent, extractedStream.searchSuggestions);
                         chatWindow.scrollTop = chatWindow.scrollHeight;
                     }
                 }

@@ -1,158 +1,217 @@
-import os
-import asyncio
-import pandas as pd
+"""Offline ingestion. Run from repo root: python -m rag.ingest_pipeline --help."""
+import argparse
+import hashlib
 import json
-from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy import text
+import os
+from pathlib import Path
+import sqlite3
+import unicodedata
+import uuid
 
-# LlamaIndex Imports
-from llama_index.core import Document, VectorStoreIndex, Settings
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.google_genai import GoogleGenAI
+from .domain_config import ROOT_DIR, RAGConfigurationError, load_domain_config, validate_profile
 
-# Load environment variables
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(ROOT_DIR, "data")
-RAW_DATA_PATH = os.path.join(DATA_DIR, "raw", "Tổng hợp các thủ tục hành chính (22.12) (1).xlsx")
-SQLITE_DB_URL = f"sqlite+aiosqlite:///{os.path.join(DATA_DIR, 'legal_llm.db')}"
-VECTOR_STORAGE_DIR = os.path.join(DATA_DIR, "vector_storage")
-DOMAIN_PROFILE_PATH = os.path.join(DATA_DIR, "domain_profile.json")
+def normalize_header(value):
+    return " ".join(unicodedata.normalize("NFC", str(value)).split()).casefold()
 
-# 1. Configure Universal Agent Settings
-# Heavyweight Embedding for superior multilingual contextual depth
-Settings.embed_model = HuggingFaceEmbedding(
-    model_name="BAAI/bge-m3",
-    device="cpu"
-)
-# Highly capable Scout model for schema understanding
-Settings.llm = GoogleGenAI(model="gemini-2.5-flash")
 
-async def build_domain_profile_with_gemini(columns: list) -> dict:
-    """Uses the Scout Agent (Gemini) to generate a comprehensive domain profile."""
-    prompt = f"""
-    You are a Data Profiler AI for a Universal Domain Architecture.
-    I am providing you a list of columns from a Vietnamese administrative document dataset:
-    {columns}
+def cell_text(value):
+    import pandas as pd
+    if value is None or pd.isna(value):
+        return ""
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value).strip()
 
-    Analyze these columns and output a valid JSON representing the 'Domain Profile'.
-    It MUST contain exactly these keys:
-    {{
-        "domain_name": "A short English name for this domain (e.g., 'administrative_procedures')",
-        "primary_entity": "The English key representing the main entity (e.g., 'procedure_name')",
-        "schema_mapping": {{
-            "procedure_name": "Tên thủ tục hành chính",
-            "fee": "Lệ phí",
-            "processing_time": "Thời gian giải quyết"
-            // Map the rest of the relevant columns to short English keys.
-        }},
-        "retrieval_policy": "hybrid"
-    }}
 
-    Output ONLY valid JSON. No markdown tags, no explanations.
-    """
-    response = await Settings.llm.acomplete(prompt)
-    try:
-        clean_json = str(response).replace("```json", "").replace("```", "").strip()
-        profile = json.loads(clean_json)
-        return profile
-    except Exception as e:
-        print(f"Error parsing Gemini domain profile: {e}")
-        # Fallback profile
-        return {
-            "domain_name": "administrative_procedures",
-            "primary_entity": "procedure_name",
-            "schema_mapping": {"procedure_name": columns[0], "metadata": columns[1]},
-            "retrieval_policy": "hybrid"
-        }
+def read_input(path, sheet=0):
+    import pandas as pd
+    suffix = path.suffix.lower()
+    if suffix in (".xlsx", ".xlsm"):
+        return pd.read_excel(path, sheet_name=sheet, dtype=object, keep_default_na=False)
+    if suffix in (".csv", ".tsv"):
+        # Strings preserve textual IDs such as 00123. Literal 'NA' remains data.
+        return pd.read_csv(path, sep="\t" if suffix == ".tsv" else ",", dtype=str,
+                           keep_default_na=False, encoding="utf-8-sig")
+    if suffix in ('.json', '.jsonl'):
+        with path.open(encoding='utf-8-sig') as file:
+            data = [json.loads(line) for line in file if line.strip()] if suffix == '.jsonl' else json.load(file)
+        if not isinstance(data, list) or not data or any(not isinstance(row, dict) for row in data):
+            raise ValueError('JSON must be a nonempty array of row objects; JSONL must have one object per line')
+        if any(isinstance(value, (dict, list)) for row in data for value in row.values()):
+            raise ValueError('Nested JSON must be flattened into tabular fields first')
+        return pd.DataFrame(data)
+    raise ValueError("Supported inputs: .xlsx, .xlsm, .csv, .tsv, .json, .jsonl")
 
-async def init_sqlite_and_store(df: pd.DataFrame, schema_mapping: dict):
-    """Creates the SQLite table mapping raw data to the clean schema keys."""
-    engine = create_async_engine(SQLITE_DB_URL)
 
-    columns = ["id INTEGER PRIMARY KEY"]
-    for eng_col in schema_mapping.keys():
-        columns.append(f"{eng_col} TEXT")
-    create_table_sql = f"CREATE TABLE IF NOT EXISTS procedures ({', '.join(columns)})"
-
-    async with engine.begin() as conn:
-        await conn.execute(text("DROP TABLE IF EXISTS procedures"))
-        await conn.execute(text(create_table_sql))
-
-        for idx, row in df.iterrows():
-            insert_cols = ["id"] + list(schema_mapping.keys())
-            placeholders = [":id"] + [f":{col}" for col in schema_mapping.keys()]
-
-            insert_sql = f"INSERT INTO procedures ({', '.join(insert_cols)}) VALUES ({', '.join(placeholders)})"
-
-            values = {"id": idx + 1} # 1-based indexing for cleaner IDs
-            for eng_col, vie_desc in schema_mapping.items():
-                matched_val = ""
-                for orig_col in df.columns:
-                    if str(orig_col).lower() in vie_desc.lower() or vie_desc.lower() in str(orig_col).lower():
-                        matched_val = str(row[orig_col])
-                        break
-                values[eng_col] = matched_val
-
-            await conn.execute(text(insert_sql), values)
-
-    await engine.dispose()
-    print(f"[SQLite] Stored {len(df)} structured records.")
-
-def ingest_semantic_vectors(df: pd.DataFrame, schema_mapping: dict, primary_entity_key: str):
-    """Embeds the primary entities using BGE-M3 for broad retrieval."""
-    print("[LlamaIndex] Building Documents for BGE-M3 Embedding...")
-    documents = []
-
-    primary_col_vie = schema_mapping.get(primary_entity_key, df.columns[0])
-
-    for idx, row in df.iterrows():
-        proc_name = str(row.get(primary_col_vie, '')).strip()
-        if not proc_name or proc_name.lower() == "nan":
+def prepare_records(df, profile):
+    validate_profile(profile)
+    if "_raw_json" in profile["schema_mapping"]:
+        raise RAGConfigurationError("_raw_json is reserved for original row data")
+    # Ignore only unnamed AND entirely empty columns.
+    df = df.loc[:, [not (str(column).startswith("Unnamed:") and all(not cell_text(v) for v in df[column]))
+                    for column in df.columns]]
+    header_lookup = {}
+    for column in df.columns:
+        normalized = normalize_header(column)
+        if normalized in header_lookup:
+            raise RAGConfigurationError(f"Ambiguous duplicate header: {column!r}")
+        header_lookup[normalized] = column
+    resolved = {}
+    for key, label in profile["schema_mapping"].items():
+        column = header_lookup.get(normalize_header(label))
+        if column is None:
+            raise RAGConfigurationError(f"Mapped input column is missing: {label!r} ({key})")
+        resolved[key] = column
+    records, missing_entity_rows = [], []
+    empty_rows = 0
+    duplicate_counts = {}
+    seen_ids = set()
+    for position, (_, row) in enumerate(df.iterrows(), start=2):
+        raw = {str(column): cell_text(row[column]) for column in df.columns}
+        if not any(raw.values()):
+            empty_rows += 1
             continue
+        fields = {key: cell_text(row[column]) for key, column in resolved.items()}
+        if not fields[profile["primary_entity"]]:
+            missing_entity_rows.append(position)
+            continue
+        id_field = profile.get("source_id_field")
+        if id_field:
+            record_id = fields[id_field]
+            if not record_id or record_id in seen_ids:
+                raise RAGConfigurationError(f"Missing or duplicate source ID at input row {position}")
+        else:
+            # Content-addressed fallback: stable across row reordering; changes on content edits.
+            digest = hashlib.sha256(json.dumps(raw, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+            duplicate_counts[digest] = duplicate_counts.get(digest, 0) + 1
+            record_id = f"{digest}:{duplicate_counts[digest]}"
+        seen_ids.add(record_id)
+        records.append({"id": record_id, **fields, "_raw_json": json.dumps(raw, ensure_ascii=False)})
+    if not records:
+        raise RAGConfigurationError("No rows with a primary entity; active data was not changed")
+    report = {"input_rows": len(df), "indexed_rows": len(records), "empty_rows": empty_rows,
+              "missing_primary_entity_rows": missing_entity_rows,
+              "unmapped_columns_preserved_in_raw_json": [str(c) for c in df.columns if c not in resolved.values()]}
+    return records, report
 
-        # Embed just the title for precise semantic matching before reranking
-        embed_text = f"Thủ tục: {proc_name}"
 
-        doc = Document(
-            text=embed_text,
-            metadata={"id": int(idx + 1), primary_entity_key: proc_name},
-            excluded_llm_metadata_keys=["id", primary_entity_key],
-            doc_id=str(idx + 1)
-        )
-        documents.append(doc)
+def write_database(records, schema, path):
+    columns = ["id"] + list(schema) + ["_raw_json"]
+    quoted = ", ".join(f'"{column}"' for column in columns)
+    definitions = ', '.join(f'"{column}" TEXT' for column in columns[1:])
+    with sqlite3.connect(path) as connection:
+        connection.execute(f'CREATE TABLE records (id TEXT PRIMARY KEY, {definitions})')
+        connection.executemany(f'INSERT INTO records ({quoted}) VALUES ({", ".join("?" for _ in columns)})',
+                               [[row[column] for column in columns] for row in records])
+        count = connection.execute("SELECT COUNT(*) FROM records").fetchone()[0]
+        if count != len(records):
+            raise RuntimeError("SQL row count mismatch")
 
-    print("[LlamaIndex] Indexing documents with BGE-M3 (This may take a moment on CPU)...")
-    index = VectorStoreIndex.from_documents(documents, show_progress=True)
-    index.storage_context.persist(persist_dir=VECTOR_STORAGE_DIR)
-    print(f"[LlamaIndex] Successfully indexed {len(documents)} vectors.")
 
-async def main():
-    if not os.path.exists(RAW_DATA_PATH):
-        print(f"Error: Could not find raw dataset at {RAW_DATA_PATH}")
+def build_vectors(records, profile, destination):
+    from llama_index.core import Document, VectorStoreIndex
+    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+    primary = profile["primary_entity"]
+    fields = profile.get("embedding_fields") or [primary]
+    # Retain the legacy legal title representation unless configured otherwise.
+    prefix = profile.get("embedding_prefix", "Thủ tục: " if primary == "procedure_name" else "")
+    documents = []
+    for row in records:
+        text = prefix + row[primary]
+        for key in fields:
+            if key != primary and row[key]:
+                text += f"\n{profile['schema_mapping'][key]}: {row[key]}"
+        metadata = {"id": row["id"], primary: row[primary]}
+        documents.append(Document(text=text, metadata=metadata,
+                                  excluded_llm_metadata_keys=list(metadata), doc_id=row["id"]))
+    embedding = HuggingFaceEmbedding(model_name=profile.get("embedding_model", "BAAI/bge-m3"),
+                                     device=os.getenv("RAG_EMBED_DEVICE", "cpu"))
+    index = VectorStoreIndex.from_documents(documents, embed_model=embedding, show_progress=True)
+    index.storage_context.persist(persist_dir=str(destination))
+    # Verify the persisted index is readable and retains every source ID.
+    from llama_index.core import StorageContext, load_index_from_storage
+    restored = load_index_from_storage(StorageContext.from_defaults(persist_dir=str(destination)), embed_model=embedding)
+    stored_ids = {str(node.metadata.get("id")) for node in restored.docstore.docs.values()}
+    if not {row["id"] for row in records}.issubset(stored_ids):
+        raise RuntimeError("Persisted vectors are missing source IDs")
+
+
+def publish_generation(config, records, report, *, vector_builder=build_vectors, progress=None):
+    generation = uuid.uuid4().hex
+    directory = config.pointer_path.parent / generation
+    directory.mkdir(parents=True, exist_ok=False)
+    # A failure leaves an unreferenced directory for diagnosis, never a partial active version.
+    if progress:
+        progress('Writing SQL snapshot')
+    write_database(records, config.schema, directory / "records.db")
+    if progress:
+        progress('Building and verifying vector index')
+    vector_builder(records, config.profile, directory / "vectors")
+    for filename, value in (("profile.json", config.profile), ("ingestion_report.json", report)):
+        (directory / filename).write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Check current runtime settings against any new schema before publishing.
+    from .domain_config import validate_runtime, read_json
+    runtime_path = config.pointer_path.parents[2] / 'domain_settings' / f'{config.name}.json'
+    if runtime_path.exists():
+        validate_runtime(read_json(runtime_path), config.profile)
+    if progress:
+        progress('Activating completed snapshot')
+    temporary_pointer = config.pointer_path.parent / f"{generation}.tmp"
+    with temporary_pointer.open("w", encoding="utf-8") as file:
+        json.dump({"generation": generation}, file)
+        file.flush()
+        os.fsync(file.fileno())
+    os.replace(temporary_pointer, config.pointer_path)
+    return generation
+
+
+def main():
+    from dotenv import load_dotenv
+    load_dotenv(ROOT_DIR / "backend/.env")
+    load_dotenv(ROOT_DIR / ".env")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--domain", default=None)
+    parser.add_argument("--input", '--file', type=Path, default=ROOT_DIR / "data/raw/Tổng hợp các thủ tục hành chính (22.12) (1).xlsx")
+    parser.add_argument("--sheet", default="0", help="Worksheet index or name")
+    parser.add_argument("--dry-run", action="store_true", help="Validate rows without models or writes")
+    parser.add_argument('--auto-profile', action='store_true', help='Use Gemini to propose a NEW profile; do not overwrite existing domain schemas')
+    parser.add_argument('--profile-file', type=Path, help='Reviewed JSON profile to use for this ingestion')
+    parser.add_argument('--save-draft', type=Path, help='Save the proposed profile without ingestion')
+    args = parser.parse_args()
+    sheet = int(args.sheet) if args.sheet.isdecimal() else args.sheet
+    df = read_input(args.input, sheet)
+    from .domain_onboarding import (propose_profile, config_from_profile,
+                                   validate_dataset_profile, save_profile_registry)
+    from .domain_config import list_domain_configs, read_json, atomic_json
+    from .ingestion_jobs import domain_lock
+    known = {c.name for c in list_domain_configs(include_inactive=True)}
+    if args.auto_profile and args.profile_file:
+        parser.error('Choose --auto-profile or --profile-file')
+    if args.auto_profile and (args.domain in known or (not args.domain and known)):
+        parser.error('Existing domains reuse their profile. Use a reviewed --profile-file for a deliberate schema change.')
+    if args.profile_file:
+        profile = validate_dataset_profile(read_json(args.profile_file), df, args.domain)
+        config = config_from_profile(profile)
+    elif args.auto_profile or (args.domain and args.domain not in known) or not known:
+        profile = propose_profile(df, args.domain)
+        if profile['domain_name'] in known:
+            parser.error('Generated domain ID already exists. Supply a new --domain ID.')
+        config = config_from_profile(profile)
+    else:
+        config = load_domain_config(args.domain, use_active=False, allow_inactive=True)
+    records, report = prepare_records(df, config.profile)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    if args.save_draft:
+        atomic_json(args.save_draft, config.profile)
+        print(f'Saved profile draft: {args.save_draft}')
         return
+    if not args.dry_run:
+        with domain_lock(config.name):
+            generation = publish_generation(config, records, report, progress=lambda stage: print(stage, flush=True))
+            save_profile_registry(config.profile)
+        print(f"Activated {config.name} generation {generation}")
 
-    print(f"Reading Dataset: {RAW_DATA_PATH}")
-    df = pd.read_excel(RAW_DATA_PATH, sheet_name=0)
-    df = df.fillna("Không có thông tin")
-
-    print("[Scout Agent] Building Domain Profile...")
-    domain_profile = await build_domain_profile_with_gemini(df.columns.tolist())
-
-    # Save the formal domain profile
-    with open(DOMAIN_PROFILE_PATH, "w", encoding="utf-8") as f:
-        json.dump(domain_profile, f, ensure_ascii=False, indent=4)
-    print(f"[Scout Agent] Saved domain_profile.json with schema mapping.")
-
-    print("[SQLite] Normalizing and storing factual data...")
-    await init_sqlite_and_store(df, domain_profile["schema_mapping"])
-
-    print("[VectorStore] Creating semantic index with BGE-M3...")
-    ingest_semantic_vectors(df, domain_profile["schema_mapping"], domain_profile["primary_entity"])
-
-    print("\n[Phase 1 Complete] Domain Onboarding finished. Ready for Phase 2 Runtime!")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

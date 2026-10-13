@@ -1,0 +1,8 @@
+Reading and validating uploaded file
+Writing SQL snapshot
+Building and verifying vector index
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 23061.51it/s]
+Applying transformations:   0%|          | 0/1 [00:00<?, ?it/s]Applying transformations: 100%|██████████| 1/1 [00:00<00:00, 166.50it/s]
+Generating embeddings:   0%|          | 0/5 [00:00<?, ?it/s]Generating embeddings: 100%|██████████| 5/5 [00:23<00:00,  4.72s/it]Generating embeddings: 100%|██████████| 5/5 [00:23<00:00,  4.73s/it]
+Activating completed snapshot

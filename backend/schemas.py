@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Literal
 
 # ============ User-facing API ============
 
@@ -7,6 +7,9 @@ class LoginRequest(BaseModel):
     username: str = Field(..., description="The user's username for deterministic ID generation")
 
 class ChatRequest(BaseModel):
+    reset_domain: bool = Field(default=False, description='Clear domain and active-entity context before routing this turn')
+    domain: Optional[str] = Field(default=None, description='Domain ID or auto; omitted preserves conversation selection', pattern=r'^[A-Za-z0-9_-]+$')
+    mode: Optional[Literal["strict", "friendly"]] = Field(default=None, description="Optional answer policy; omitted uses configured default")
     user_prompt: str = Field(..., description="The legal question from the user")
 
 class ChatResponse(BaseModel):
@@ -64,6 +67,7 @@ class ConversationSchema(BaseModel):
 class StartConversationRequest(BaseModel):
     """Request to start a new conversation"""
     title: str = Field(default="Legal Consultation", description="Conversation title")
+    domain: Optional[str] = Field(default=None, pattern=r'^[A-Za-z0-9_-]+$')
 
 # ============ Audit Log Schemas ============
 
@@ -76,3 +80,7 @@ class AuditLogSchema(BaseModel):
     llm_final_response: str
     used_online_search: bool
     created_at: str
+
+
+class MCPActionRequest(BaseModel):
+    offer_message_id: int = Field(..., gt=0, description="The specific search offer accepted by the user")

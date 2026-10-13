@@ -5,12 +5,22 @@ import json
 import os
 import requests
 
+# Load project modules and .env for the domain admin, regardless of launch directory.
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+load_dotenv(PROJECT_ROOT / 'backend/.env')
+load_dotenv(PROJECT_ROOT / '.env')
+
 # --- CONFIG ---
 DB_PATH = "./legal_llm.db"
 FEEDBACK_FILE = "./all_feedback_dataset.jsonl"
 API_URL = "http://localhost:8000" # Update this if your FastAPI runs on a different port/host
 
-st.set_page_config(page_title="Admin Dashboard | Tăng Nhơn Phú", layout="wide")
+st.set_page_config(page_title="Bảng quản trị", layout="wide")
 
 # --- DATA FETCHING ---
 @st.cache_data(ttl=60) # Cache for 60 seconds to prevent DB locking
@@ -38,16 +48,16 @@ def load_feedback_data():
     return pd.DataFrame(data)
 
 # --- UI LAYOUT ---
-st.title("🏛️ Bảng Điều Khiển Trợ Lý Pháp Lý")
-st.markdown("Giám sát hoạt động, chất lượng phản hồi và dữ liệu người dùng tại phường Tăng Nhơn Phú.")
+st.title("Bảng quản trị")
+st.markdown("Quản lý dữ liệu, cấu hình lĩnh vực và theo dõi hoạt động của trợ lý.")
 
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Tổng quan (Overview)", "🕵️ Nhật ký hoạt động (Audit Logs)", "⭐ Dữ liệu Đánh giá (Feedback)", "⚠️ Truy vấn Thất bại (Failed Queries)"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Tổng quan", "Nhật ký hoạt động", "Đánh giá", "Truy vấn cần xem lại", "Lĩnh vực và dữ liệu", "Tìm kiếm trực tuyến"])
 
 # ==========================================
 # TAB 1: OVERVIEW & STATS
 # ==========================================
 with tab1:
-    st.subheader("Chỉ số hệ thống (Real-time)")
+    st.subheader("Chỉ số hệ thống")
 
     # KPIs
     conv_df = load_db_data("SELECT id, created_at FROM conversations")
@@ -55,14 +65,14 @@ with tab1:
     audit_df = load_db_data("SELECT id, used_online_search FROM audit_logs")
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Tổng Phiên Tư Vấn", len(conv_df))
-    col2.metric("Tổng Tin Nhắn", len(msg_df))
+    col1.metric("Tổng cuộc trò chuyện", len(conv_df))
+    col2.metric("Tổng tin nhắn", len(msg_df))
 
     mcp_count = len(audit_df[audit_df['used_online_search'] == 1]) if not audit_df.empty else 0
-    col3.metric("Lượt gọi MCP Web Search", mcp_count)
+    col3.metric("Lượt dùng nguồn ngoài", mcp_count)
 
     user_msgs = len(msg_df[msg_df['role'] == 'user']) if not msg_df.empty else 0
-    col4.metric("Truy vấn từ người dân", user_msgs)
+    col4.metric("Câu hỏi từ người dùng", user_msgs)
 
     st.divider()
 
@@ -77,8 +87,8 @@ with tab1:
 # TAB 2: AUDIT LOGS (MONITORING)
 # ==========================================
 with tab2:
-    st.subheader("Nhật ký tra cứu & Trả lời (Audit Logs)")
-    st.markdown("Theo dõi chính xác LLM đã trả lời gì và dùng ngữ cảnh nào.")
+    st.subheader("Nhật ký tra cứu và trả lời")
+    st.markdown("Xem câu trả lời và dữ liệu được sử dụng.")
 
     # UPDATED QUERY TO INCLUDE NEW COLUMNS IF THEY EXIST
     try:
@@ -89,15 +99,15 @@ with tab2:
 
     if not logs.empty:
         # Style the dataframe
-        logs['used_online_search'] = logs['used_online_search'].apply(lambda x: "🌐 Web Search" if x == 1 else "📁 Qdrant Local")
+        logs['used_online_search'] = logs['used_online_search'].apply(lambda x: "Nguồn ngoài" if x == 1 else "Dữ liệu nội bộ")
 
         column_cfg = {
                 "created_at": "Thời gian",
-                "conversation_id": "ID Phiên",
-                "user_query": "Người dân hỏi",
-                "llm_final_response": "AI Trả lời",
-                "used_online_search": "Nguồn RAG",
-                "retrieved_local_context": "Văn bản trích xuất"
+                "conversation_id": "Mã cuộc trò chuyện",
+                "user_query": "Câu hỏi",
+                "llm_final_response": "Câu trả lời",
+                "used_online_search": "Loại nguồn",
+                "retrieved_local_context": "Dữ liệu trích xuất"
             }
 
         if 'rag_score' in logs.columns:
@@ -113,28 +123,28 @@ with tab2:
             height=500
         )
     else:
-        st.info("Chưa có nhật ký hoạt động nào trong Database.")
+        st.info("Chưa có nhật ký hoạt động.")
 
 # ==========================================
 # TAB 3: FEEDBACK (RLHF / FINE-TUNING)
 # ==========================================
 with tab3:
-    st.subheader("Dữ liệu đánh giá từ người dân (SFT / RLHF)")
-    st.markdown("Dữ liệu này được lưu trực tiếp vào JSONL để sẵn sàng Fine-tune mô hình.")
+    st.subheader("Đánh giá từ người dùng")
+    st.markdown("Xem phản hồi của người dùng về chất lượng câu trả lời.")
 
     feedback_df = load_feedback_data()
 
     if not feedback_df.empty:
         # Convert 1/0 to emoji
-        feedback_df['rating_display'] = feedback_df['rating'].apply(lambda x: "👍 Tốt" if x == 1 else "👎 Kém")
+        feedback_df['rating_display'] = feedback_df['rating'].apply(lambda x: "Phù hợp" if x == 1 else "Không phù hợp")
 
         # Stats
         good_count = len(feedback_df[feedback_df['rating'] == 1])
         bad_count = len(feedback_df[feedback_df['rating'] == 0])
 
         col1, col2 = st.columns(2)
-        col1.metric("👍 Số lượt đánh giá Tốt", good_count)
-        col2.metric("👎 Số lượt đánh giá Kém", bad_count)
+        col1.metric("Lượt đánh giá phù hợp", good_count)
+        col2.metric("Lượt đánh giá không phù hợp", bad_count)
 
         st.dataframe(
             feedback_df[['timestamp', 'rating_display', 'input', 'output', 'rag_context']],
@@ -142,8 +152,8 @@ with tab3:
                 "timestamp": "Thời gian",
                 "rating_display": "Đánh giá",
                 "input": "Câu hỏi",
-                "output": "Câu trả lời của AI",
-                "rag_context": "Ngữ cảnh cung cấp"
+                "output": "Câu trả lời",
+                "rag_context": "Dữ liệu cung cấp"
             },
             hide_index=True,
             use_container_width=True
@@ -155,10 +165,10 @@ with tab3:
 # TAB 4: FAILED QUERIES (NEW)
 # ==========================================
 with tab4:
-    st.subheader("⚠️ Truy vấn Thất bại (Teencode / Thiếu dữ liệu)")
-    st.markdown("Danh sách các câu hỏi khiến RAG trả về điểm thấp hoặc phải chuyển qua tìm kiếm MCP. Sử dụng dữ liệu này để bổ sung từ khóa hoặc cập nhật CSDL.")
+    st.subheader("Truy vấn cần xem lại")
+    st.markdown("Các câu hỏi có điểm tra cứu thấp hoặc được ghi nhận cần xử lý thêm. Dùng danh sách này để xem lại và bổ sung dữ liệu.")
 
-    if st.button("🔄 Tải lại dữ liệu"):
+    if st.button("Làm mới dữ liệu"):
         st.cache_data.clear()
 
     try:
@@ -174,16 +184,26 @@ with tab4:
                         "created_at": "Thời gian",
                         "failure_type": "Loại lỗi",
                         "rag_score": "Điểm RAG",
-                        "user_query": "Câu hỏi thô (Raw Query)",
-                        "llm_response": "AI Phản hồi"
+                        "user_query": "Câu hỏi",
+                        "llm_response": "Câu trả lời"
                     },
                     hide_index=True,
                     use_container_width=True,
                     height=500
                 )
             else:
-                st.success("Tuyệt vời! Hiện tại không ghi nhận truy vấn thất bại nào.")
+                st.success("Chưa có truy vấn cần xem lại.")
         else:
-            st.error(f"Lỗi API: {response.status_code}. Vui lòng kiểm tra xem Backend FastAPI đã chạy chưa.")
+            st.error(f"Lỗi API: {response.status_code}. Kiểm tra máy chủ backend đã chạy chưa.")
     except requests.exceptions.ConnectionError:
-        st.error("Không thể kết nối đến Backend FastAPI. Đảm bảo server đang chạy tại localhost:8000.")
+        st.error("Không thể kết nối đến máy chủ backend tại localhost:8000.")
+
+
+with tab5:
+    from domain_admin_ui import render_domain_admin
+    render_domain_admin()
+
+
+with tab6:
+    from mcp_admin_ui import render_mcp_admin
+    render_mcp_admin()

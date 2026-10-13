@@ -1,0 +1,5 @@
+# Tested MCP v1 SDK; pin avoids the incompatible v2 client API.
+# Python 3.10+, installed into the existing backend/admin environment.
+mcp==1.30.0
+httpx>=0.27.1,<1
+python-dotenv>=1.0,<2

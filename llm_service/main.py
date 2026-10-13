@@ -1,60 +1,77 @@
-import os
+"""Existing port/startup command; supports both JSON and SSE responses."""
 import json
+import os
+from pathlib import Path
+from threading import Lock
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from llama_cpp import Llama
 from transformers import AutoTokenizer
 
-app = FastAPI(title="Legal LLM Service (Local Fallback - Port 8002)")
-
-MODEL_PATH = os.getenv("MODEL_PATH", r"models/qwen3_1.7b_q8_0.gguf")
+ROOT_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT_DIR / "backend/.env")
+load_dotenv(ROOT_DIR / ".env")
+app = FastAPI(title="Legal LLM Service (Port 8002)")
+MODEL_PATH = Path(os.getenv("MODEL_PATH", "models/qwen3_1.7b_q8_0.gguf"))
+if not MODEL_PATH.is_absolute():
+    MODEL_PATH = ROOT_DIR / MODEL_PATH
+# Preserve the existing tokenizer choice; override TOKENIZER_NAME if your GGUF needs another.
 TOKENIZER_NAME = os.getenv("TOKENIZER_NAME", "Qwen/Qwen3-0.6B")
-
-print(f"[INFO] Loading Tokenizer ({TOKENIZER_NAME}) for prompt formatting...")
 tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_NAME)
+llm = Llama(model_path=str(MODEL_PATH), n_ctx=4096, n_threads=8, n_gpu_layers=-1, verbose=False)
+_model_lock = Lock()
 
-print("[INFO] Loading Llama.cpp engine (CPU fallback mode)...")
-llm = Llama(
-    model_path=MODEL_PATH,
-    n_ctx=4096,
-    n_threads=8,
-    n_gpu_layers=-1,
-    verbose=False
-)
 
 class OpenAIMessage(BaseModel):
     role: str
     content: str
 
+
 class OpenAIRequest(BaseModel):
     messages: list[OpenAIMessage]
     stream: bool = True
-    max_tokens: int = Field(default=800, description="Max tokens to generate")
-    temperature: float = Field(default=0.0, description="Sampling temperature")
+    max_tokens: int = Field(default=800, ge=1, le=4096)
+    temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    top_p: float = Field(default=0.95, gt=0, le=1)
 
-@app.post("/v1/chat/completions")
-async def chat_completions(payload: OpenAIRequest):
-    # Định dạng prompt
-    messages_list = [{"role": msg.role, "content": msg.content} for msg in payload.messages]
 
-    formatted_prompt = tokenizer.apply_chat_template(
-        messages_list, tokenize=False, add_generation_prompt=True, enable_thinking=False
+def format_prompt(payload):
+    return tokenizer.apply_chat_template(
+        [{"role": message.role, "content": message.content} for message in payload.messages],
+        tokenize=False, add_generation_prompt=True, enable_thinking=False,
     )
 
-    def stream_generator():
-        # Stream text chunks đúng chuẩn OpenAI schema
-        for chunk in llm(formatted_prompt, max_tokens=payload.max_tokens, temperature=payload.temperature, stream=True, stop=["<|im_end|>"]):
-            text = chunk["choices"][0]["text"]
-            if text:
-                response_chunk = {
-                    "choices": [{"delta": {"content": text}}]
-                }
-                yield f"data: {json.dumps(response_chunk)}\n\n"
 
+@app.post("/v1/chat/completions")
+def chat_completions(payload: OpenAIRequest):
+    # Sync endpoint/generator keeps CPU inference off FastAPI's event loop.
+    if not payload.stream:
+        with _model_lock:
+            result = llm(format_prompt(payload), max_tokens=payload.max_tokens,
+                         temperature=payload.temperature, top_p=payload.top_p, stream=False, stop=["<|im_end|>"])
+        return {"choices": [{"index": 0, "message": {"role": "assistant", "content": result["choices"][0]["text"]},
+                              "finish_reason": result["choices"][0].get("finish_reason", "stop")} ]}
+
+    def generate():
+        with _model_lock:
+            output = llm(format_prompt(payload), max_tokens=payload.max_tokens,
+                         temperature=payload.temperature, top_p=payload.top_p, stream=True, stop=["<|im_end|>"])
+            try:
+                for chunk in output:
+                    text = chunk["choices"][0]["text"]
+                    if text:
+                        yield f"data: {json.dumps({'choices': [{'delta': {'content': text}}]}, ensure_ascii=False)}\n\n"
+            finally:
+                close = getattr(output, "close", None)
+                if close:
+                    close()
         yield "data: [DONE]\n\n"
 
-    return StreamingResponse(stream_generator(), media_type="text/event-stream")
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
 
 if __name__ == "__main__":
     import uvicorn

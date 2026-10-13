@@ -1,0 +1,498 @@
+[
+  {
+    "question": "Làm giấy khai sinh cho con cần giấy tờ gì?",
+    "search_query": "Làm giấy khai sinh cho con cần giấy tờ gì?",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "làm giấy khai sinh cho con",
+      "cần giấy tờ gì"
+    ],
+    "preparation_seconds": 2.6268944000039482,
+    "before": [],
+    "after": [
+      {
+        "id": "761936ac615b05047fcb64b1dceda09b954da6d6b51ea14cc3625237357ec106:1",
+        "score": 0.9211574075244638,
+        "title": "Thủ tục đăng ký khai sinh"
+      }
+    ],
+    "prepared_top_scores": [
+      {
+        "id": "761936ac615b05047fcb64b1dceda09b954da6d6b51ea14cc3625237357ec106:1",
+        "score": 0.9211574075244638,
+        "title": "Thủ tục đăng ký khai sinh"
+      },
+      {
+        "id": "4d6e09080f965cea4f7506b026ab82877b933dcc2b6a2978711be815036d3969:1",
+        "score": 0.27300755655849523,
+        "title": "Thủ tục đăng ký khai tử"
+      },
+      {
+        "id": "a6724d13cb482b80f2a0c19746ca029ce67609835c4b5218e7e1282ef3b84e5c:1",
+        "score": 0.25043275184787817,
+        "title": "Thủ tục nhận cha mẹ con"
+      },
+      {
+        "id": "2017ead2eb48e9be941bb30a7ccf27847e5e2c3af17868c107aff62410f6e708:1",
+        "score": 0.15771913045554295,
+        "title": "HỒ SƠ CẤP GIẤY PHÉP XÂY DỰNG"
+      },
+      {
+        "id": "6d8ad5a0d4334a170dd1ca499b9508aea3dbeae8c6f03506767a268d84b3379e:1",
+        "score": 0.1277218696410127,
+        "title": "Cấp giấy xác nhận thân nhân của người có công"
+      }
+    ]
+  },
+  {
+    "question": "dang ky ket hon can giay to gi",
+    "search_query": "dang ky ket hon can giay to gi",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "dang ky ket hon",
+      "can giay to gi"
+    ],
+    "preparation_seconds": 0.8447346000029938,
+    "before": [],
+    "after": [],
+    "prepared_top_scores": [
+      {
+        "id": "7234623f60cb5d238592e4dd9b95e9036988fb38562837dd18055108d803d7f2:1",
+        "score": 0.032798875765790735,
+        "title": "ĐĂNG KÝ ĐẤT ĐAI, TÀI SẢN GẮN LIỀN VỚI ĐẤT LẦN ĐẦU"
+      },
+      {
+        "id": "ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1",
+        "score": 0.017296009853214122,
+        "title": "Thủ tục đăng ký kết hôn"
+      },
+      {
+        "id": "e19fe0df0b7ef9a8e022e6c4d175e053b36d1843b02f57a294d236f5bf2c02bd:1",
+        "score": 0.012790940587980542,
+        "title": "Đăng ký kết hôn có yếu tố nước ngoài"
+      },
+      {
+        "id": "85a2f3c89442c08ea220d909309dfe26231e357f85941264bed5cdd3c23dec9c:1",
+        "score": 0.001079669093113933,
+        "title": "Đăng ký thay đổi nội dung đăng ký hộ kinh doanh"
+      },
+      {
+        "id": "cd19754a61fc76eb5065ae42b517ca26e8cc1337d7c988503820a7fdfdbaeaf4:1",
+        "score": 0.0003325887349637164,
+        "title": "Thực hiện, điều chỉnh, thôi hưởng trợ cấp xã hội hàng tháng, hỗ trợ kinh phí chăm sóc, nuôi dưỡng hàng tháng"
+      }
+    ]
+  },
+  {
+    "question": "đăg ký khai sih cho con",
+    "search_query": "đăg ký khai sih cho con",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "đăng ký khai sinh cho con"
+    ],
+    "preparation_seconds": 0.6918436999985715,
+    "before": [
+      {
+        "id": "761936ac615b05047fcb64b1dceda09b954da6d6b51ea14cc3625237357ec106:1",
+        "score": 0.5760634780900257,
+        "title": "Thủ tục đăng ký khai sinh"
+      }
+    ],
+    "after": [
+      {
+        "id": "761936ac615b05047fcb64b1dceda09b954da6d6b51ea14cc3625237357ec106:1",
+        "score": 0.9699898783353672,
+        "title": "Thủ tục đăng ký khai sinh"
+      }
+    ],
+    "prepared_top_scores": [
+      {
+        "id": "761936ac615b05047fcb64b1dceda09b954da6d6b51ea14cc3625237357ec106:1",
+        "score": 0.9699898783353672,
+        "title": "Thủ tục đăng ký khai sinh"
+      },
+      {
+        "id": "4d6e09080f965cea4f7506b026ab82877b933dcc2b6a2978711be815036d3969:1",
+        "score": 0.4257557213698666,
+        "title": "Thủ tục đăng ký khai tử"
+      },
+      {
+        "id": "a6724d13cb482b80f2a0c19746ca029ce67609835c4b5218e7e1282ef3b84e5c:1",
+        "score": 0.18619186224464235,
+        "title": "Thủ tục nhận cha mẹ con"
+      },
+      {
+        "id": "d30e7aeec5c4cd9c9e63158b674d88563a27c351936ab3ee608beba243d1640c:1",
+        "score": 0.04518653394657083,
+        "title": "THÔNG TIN QUY HOẠCH"
+      },
+      {
+        "id": "6d8ad5a0d4334a170dd1ca499b9508aea3dbeae8c6f03506767a268d84b3379e:1",
+        "score": 0.027539751411134065,
+        "title": "Cấp giấy xác nhận thân nhân của người có công"
+      }
+    ]
+  },
+  {
+    "question": "Tôi làm mất giấy chứng nhận đăng ký hộ kinh doanh, xin cấp lại thế nào?",
+    "search_query": "Tôi làm mất giấy chứng nhận đăng ký hộ kinh doanh, xin cấp lại thế nào?",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "Tôi làm mất giấy chứng nhận đăng ký hộ kinh doanh, xin cấp lại giấy tờ gì?",
+      "Tôi làm mất giấy chứng nhận đăng ký hộ kinh doanh, xin cấp lại giấy phép gì?"
+    ],
+    "preparation_seconds": 1.3140429000050062,
+    "before": [
+      {
+        "id": "5907d659f4c07aee4cafcc8fc413eca427fb862ed5c9d2d616780563ccebe4c8:1",
+        "score": 0.9989644397326766,
+        "title": "Cấp lại Giấy chứng nhận đăng ký hộ kinh doanh"
+      }
+    ],
+    "after": [
+      {
+        "id": "5907d659f4c07aee4cafcc8fc413eca427fb862ed5c9d2d616780563ccebe4c8:1",
+        "score": 0.9944870646102962,
+        "title": "Cấp lại Giấy chứng nhận đăng ký hộ kinh doanh"
+      }
+    ],
+    "prepared_top_scores": [
+      {
+        "id": "5907d659f4c07aee4cafcc8fc413eca427fb862ed5c9d2d616780563ccebe4c8:1",
+        "score": 0.9944870646102962,
+        "title": "Cấp lại Giấy chứng nhận đăng ký hộ kinh doanh"
+      },
+      {
+        "id": "d57379ee37eecad6c566edc21e5ad9b45f7d773b28f530e40d512d29778199bf:1",
+        "score": 0.025632730552291805,
+        "title": "CẤP GIẤY PHÉP XÂY DỰNG"
+      },
+      {
+        "id": "ca3e0a9eca6a44f4a770b0e51e347aec561cd2c2017c1fb291ac695ac8bb37b2:1",
+        "score": 0.025435261917087462,
+        "title": "Thủ tục Đăng ký thành lập hộ kinh doanh"
+      },
+      {
+        "id": "2017ead2eb48e9be941bb30a7ccf27847e5e2c3af17868c107aff62410f6e708:1",
+        "score": 0.010335939172266032,
+        "title": "HỒ SƠ CẤP GIẤY PHÉP XÂY DỰNG"
+      },
+      {
+        "id": "85a2f3c89442c08ea220d909309dfe26231e357f85941264bed5cdd3c23dec9c:1",
+        "score": 0.009934716026684436,
+        "title": "Đăng ký thay đổi nội dung đăng ký hộ kinh doanh"
+      }
+    ]
+  },
+  {
+    "question": "Tôi muốn đăng ký kết hôn với người nước ngoài",
+    "search_query": "Tôi muốn đăng ký kết hôn với người nước ngoài",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "đăng ký kết hôn với người nước ngoài"
+    ],
+    "preparation_seconds": 0.7406841999909375,
+    "before": [
+      {
+        "id": "e19fe0df0b7ef9a8e022e6c4d175e053b36d1843b02f57a294d236f5bf2c02bd:1",
+        "score": 0.9959894248464786,
+        "title": "Đăng ký kết hôn có yếu tố nước ngoài"
+      },
+      {
+        "id": "ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1",
+        "score": 0.8466014288042615,
+        "title": "Thủ tục đăng ký kết hôn"
+      }
+    ],
+    "after": [
+      {
+        "id": "e19fe0df0b7ef9a8e022e6c4d175e053b36d1843b02f57a294d236f5bf2c02bd:1",
+        "score": 0.9935143272262286,
+        "title": "Đăng ký kết hôn có yếu tố nước ngoài"
+      },
+      {
+        "id": "ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1",
+        "score": 0.7699424215934626,
+        "title": "Thủ tục đăng ký kết hôn"
+      }
+    ],
+    "prepared_top_scores": [
+      {
+        "id": "e19fe0df0b7ef9a8e022e6c4d175e053b36d1843b02f57a294d236f5bf2c02bd:1",
+        "score": 0.9935143272262286,
+        "title": "Đăng ký kết hôn có yếu tố nước ngoài"
+      },
+      {
+        "id": "ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1",
+        "score": 0.7699424215934626,
+        "title": "Thủ tục đăng ký kết hôn"
+      },
+      {
+        "id": "b57452ffbc049e7921c018dbdfe806161491860efb84f829e22adf7a7946b664:1",
+        "score": 0.1382058782685874,
+        "title": "Thủ tục xác nhận tình trạng hôn nhân"
+      },
+      {
+        "id": "d30e7aeec5c4cd9c9e63158b674d88563a27c351936ab3ee608beba243d1640c:1",
+        "score": 0.07915073405446034,
+        "title": "THÔNG TIN QUY HOẠCH"
+      },
+      {
+        "id": "0279b831352a74f98e74351fe5128fccae0fa08eb9fc4db68ac147f6379ea6da:1",
+        "score": 0.053559986289603075,
+        "title": "THÔNG BÁO KHỞI CÔNG"
+      }
+    ]
+  },
+  {
+    "question": "Cho tôi biết hồ sơ đăng ký khai sinh và đăng ký kết hôn",
+    "search_query": "Cho tôi biết hồ sơ đăng ký khai sinh và đăng ký kết hôn",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "đăng ký khai sinh",
+      "đăng ký kết hôn"
+    ],
+    "preparation_seconds": 0.7622335000050953,
+    "before": [
+      {
+        "id": "ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1",
+        "score": 0.6307934248572117,
+        "title": "Thủ tục đăng ký kết hôn"
+      }
+    ],
+    "after": [
+      {
+        "id": "ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1",
+        "score": 0.9926243570807411,
+        "title": "Thủ tục đăng ký kết hôn"
+      },
+      {
+        "id": "761936ac615b05047fcb64b1dceda09b954da6d6b51ea14cc3625237357ec106:1",
+        "score": 0.9913857920123363,
+        "title": "Thủ tục đăng ký khai sinh"
+      },
+      {
+        "id": "b57452ffbc049e7921c018dbdfe806161491860efb84f829e22adf7a7946b664:1",
+        "score": 0.5262214263553114,
+        "title": "Thủ tục xác nhận tình trạng hôn nhân"
+      },
+      {
+        "id": "e19fe0df0b7ef9a8e022e6c4d175e053b36d1843b02f57a294d236f5bf2c02bd:1",
+        "score": 0.5048205932740087,
+        "title": "Đăng ký kết hôn có yếu tố nước ngoài"
+      }
+    ],
+    "prepared_top_scores": [
+      {
+        "id": "ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1",
+        "score": 0.9926243570807411,
+        "title": "Thủ tục đăng ký kết hôn"
+      },
+      {
+        "id": "761936ac615b05047fcb64b1dceda09b954da6d6b51ea14cc3625237357ec106:1",
+        "score": 0.9913857920123363,
+        "title": "Thủ tục đăng ký khai sinh"
+      },
+      {
+        "id": "b57452ffbc049e7921c018dbdfe806161491860efb84f829e22adf7a7946b664:1",
+        "score": 0.5262214263553114,
+        "title": "Thủ tục xác nhận tình trạng hôn nhân"
+      },
+      {
+        "id": "e19fe0df0b7ef9a8e022e6c4d175e053b36d1843b02f57a294d236f5bf2c02bd:1",
+        "score": 0.5048205932740087,
+        "title": "Đăng ký kết hôn có yếu tố nước ngoài"
+      },
+      {
+        "id": "4d6e09080f965cea4f7506b026ab82877b933dcc2b6a2978711be815036d3969:1",
+        "score": 0.32483592846285825,
+        "title": "Thủ tục đăng ký khai tử"
+      }
+    ]
+  },
+  {
+    "question": "Tôi muốn đăng ký đất đai và thành lập hộ kinh doanh, mỗi thủ tục cần gì?",
+    "search_query": "Tôi muốn đăng ký đất đai và thành lập hộ kinh doanh, mỗi thủ tục cần gì?",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "đăng ký đất đai",
+      "thành lập hộ kinh doanh"
+    ],
+    "preparation_seconds": 0.9004706999985501,
+    "before": [
+      {
+        "id": "ca3e0a9eca6a44f4a770b0e51e347aec561cd2c2017c1fb291ac695ac8bb37b2:1",
+        "score": 0.9739659460561129,
+        "title": "Thủ tục Đăng ký thành lập hộ kinh doanh"
+      },
+      {
+        "id": "7234623f60cb5d238592e4dd9b95e9036988fb38562837dd18055108d803d7f2:1",
+        "score": 0.5859631008612677,
+        "title": "ĐĂNG KÝ ĐẤT ĐAI, TÀI SẢN GẮN LIỀN VỚI ĐẤT LẦN ĐẦU"
+      }
+    ],
+    "after": [
+      {
+        "id": "ca3e0a9eca6a44f4a770b0e51e347aec561cd2c2017c1fb291ac695ac8bb37b2:1",
+        "score": 0.9609546594474123,
+        "title": "Thủ tục Đăng ký thành lập hộ kinh doanh"
+      },
+      {
+        "id": "7234623f60cb5d238592e4dd9b95e9036988fb38562837dd18055108d803d7f2:1",
+        "score": 0.9541307625890821,
+        "title": "ĐĂNG KÝ ĐẤT ĐAI, TÀI SẢN GẮN LIỀN VỚI ĐẤT LẦN ĐẦU"
+      }
+    ],
+    "prepared_top_scores": [
+      {
+        "id": "ca3e0a9eca6a44f4a770b0e51e347aec561cd2c2017c1fb291ac695ac8bb37b2:1",
+        "score": 0.9609546594474123,
+        "title": "Thủ tục Đăng ký thành lập hộ kinh doanh"
+      },
+      {
+        "id": "7234623f60cb5d238592e4dd9b95e9036988fb38562837dd18055108d803d7f2:1",
+        "score": 0.9541307625890821,
+        "title": "ĐĂNG KÝ ĐẤT ĐAI, TÀI SẢN GẮN LIỀN VỚI ĐẤT LẦN ĐẦU"
+      },
+      {
+        "id": "f640083767d22e6b3b784a1dfe771414033002883c1db901b7af7f1bcce47b06:1",
+        "score": 0.24625530481821067,
+        "title": "XÁC NHẬN VỊ TRÍ NHÀ - ĐẤT"
+      },
+      {
+        "id": "85a2f3c89442c08ea220d909309dfe26231e357f85941264bed5cdd3c23dec9c:1",
+        "score": 0.03621978121507112,
+        "title": "Đăng ký thay đổi nội dung đăng ký hộ kinh doanh"
+      },
+      {
+        "id": "d30e7aeec5c4cd9c9e63158b674d88563a27c351936ab3ee608beba243d1640c:1",
+        "score": 0.026579829373093684,
+        "title": "THÔNG TIN QUY HOẠCH"
+      }
+    ]
+  },
+  {
+    "question": "Cách nấu phở bò ngon tại nhà?",
+    "search_query": "Cách nấu phở bò ngon tại nhà?",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "cách nấu phở bò ngon tại nhà"
+    ],
+    "preparation_seconds": 0.7716980999975931,
+    "before": [],
+    "after": [],
+    "prepared_top_scores": [
+      {
+        "id": "d30e7aeec5c4cd9c9e63158b674d88563a27c351936ab3ee608beba243d1640c:1",
+        "score": 2.2156644773915e-05,
+        "title": "THÔNG TIN QUY HOẠCH"
+      },
+      {
+        "id": "5a2ef13d72141acf1c6bdf3002669fc451dbc4c1b5157a3e4c8a736573ed7bfe:1",
+        "score": 2.1048713757345568e-05,
+        "title": "XÁC NHẬN TÌNH TRẠNG NHÀ Ở"
+      },
+      {
+        "id": "769f3d0590421ced675416a49c0a5846ef8635d9e3e026c6efa6ddfb50f34bf4:1",
+        "score": 2.0315739438899743e-05,
+        "title": "Tạm ngừng kinh doanh/tiếp tục kinh doanh trước thời hạn đã thông báo của hộ kinh doanh"
+      },
+      {
+        "id": "f640083767d22e6b3b784a1dfe771414033002883c1db901b7af7f1bcce47b06:1",
+        "score": 1.9739736513612128e-05,
+        "title": "XÁC NHẬN VỊ TRÍ NHÀ - ĐẤT"
+      },
+      {
+        "id": "989e27d02e78faaa6d67e35170f61c7256be91e3d09c8eeefbcabeffe6601099:1",
+        "score": 1.7751631331292024e-05,
+        "title": "HỒ SƠ CẤP SỐ NHÀ"
+      }
+    ]
+  },
+  {
+    "question": "Xin chào, bạn khỏe không?",
+    "search_query": "Xin chào, bạn khỏe không?",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "Xin chào, bạn khỏe không?"
+    ],
+    "preparation_seconds": 0.7154950999974972,
+    "before": [],
+    "after": [],
+    "prepared_top_scores": [
+      {
+        "id": "d30e7aeec5c4cd9c9e63158b674d88563a27c351936ab3ee608beba243d1640c:1",
+        "score": 0.0003223830189661846,
+        "title": "THÔNG TIN QUY HOẠCH"
+      },
+      {
+        "id": "0279b831352a74f98e74351fe5128fccae0fa08eb9fc4db68ac147f6379ea6da:1",
+        "score": 5.2351722036666805e-05,
+        "title": "THÔNG BÁO KHỞI CÔNG"
+      },
+      {
+        "id": "cd19754a61fc76eb5065ae42b517ca26e8cc1337d7c988503820a7fdfdbaeaf4:1",
+        "score": 2.75643812695843e-05,
+        "title": "Thực hiện, điều chỉnh, thôi hưởng trợ cấp xã hội hàng tháng, hỗ trợ kinh phí chăm sóc, nuôi dưỡng hàng tháng"
+      },
+      {
+        "id": "9b67202fea1ebefb37b710513197791f37cd65def9b8ad1bc86561ce9eb50e0a:1",
+        "score": 2.5620306293856115e-05,
+        "title": "Nội quy lao động"
+      },
+      {
+        "id": "5a2ef13d72141acf1c6bdf3002669fc451dbc4c1b5157a3e4c8a736573ed7bfe:1",
+        "score": 1.8289704937050113e-05,
+        "title": "XÁC NHẬN TÌNH TRẠNG NHÀ Ở"
+      }
+    ]
+  },
+  {
+    "question": "Tôi muốn đăng ký, cần giấy tờ gì?",
+    "search_query": "Tôi muốn đăng ký, cần giấy tờ gì?",
+    "threshold": 0.5,
+    "preparation_status": "prepared",
+    "phrases": [
+      "Tôi muốn đăng ký, cần giấy tờ gì?"
+    ],
+    "preparation_seconds": 0.7321690999960992,
+    "before": [],
+    "after": [],
+    "prepared_top_scores": [
+      {
+        "id": "761936ac615b05047fcb64b1dceda09b954da6d6b51ea14cc3625237357ec106:1",
+        "score": 0.04943111708565074,
+        "title": "Thủ tục đăng ký khai sinh"
+      },
+      {
+        "id": "ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1",
+        "score": 0.041770769680535315,
+        "title": "Thủ tục đăng ký kết hôn"
+      },
+      {
+        "id": "2017ead2eb48e9be941bb30a7ccf27847e5e2c3af17868c107aff62410f6e708:1",
+        "score": 0.03459916317750319,
+        "title": "HỒ SƠ CẤP GIẤY PHÉP XÂY DỰNG"
+      },
+      {
+        "id": "d57379ee37eecad6c566edc21e5ad9b45f7d773b28f530e40d512d29778199bf:1",
+        "score": 0.020179321692449834,
+        "title": "CẤP GIẤY PHÉP XÂY DỰNG"
+      },
+      {
+        "id": "ca3e0a9eca6a44f4a770b0e51e347aec561cd2c2017c1fb291ac695ac8bb37b2:1",
+        "score": 0.013695002849602629,
+        "title": "Thủ tục Đăng ký thành lập hộ kinh doanh"
+      }
+    ]
+  }
+]
