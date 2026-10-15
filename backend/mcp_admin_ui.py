@@ -10,6 +10,9 @@ from rag.mcp_config import load_settings, save_settings, validate_settings, rule
 from backend.services.mcp_service import inspect_tools, retrieve_external, MCPSearchError
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
+@timed('backend.mcp_admin_ui.render_mcp_admin')
 def render_mcp_admin():
     st.subheader('Tìm kiếm trực tuyến (MCP)')
     st.caption('Chỉ tra cứu khi dữ liệu nội bộ không đủ và người dùng chọn Có. Cấu hình được áp dụng cho lượt tra cứu tiếp theo.')

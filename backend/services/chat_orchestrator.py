@@ -15,6 +15,8 @@ from services.db_service import (get_conversation, add_message, get_conversation
     update_conversation_title, update_conversation_state, update_domain_state, log_interaction)
 from services.domain_router import choose_domain, DomainClarification, property_followup, default_name
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def parse_sources(sources_data):
     if not sources_data:
         return []
@@ -64,6 +66,7 @@ NORMALIZED_FORM_TRIGGERS = [normalize_text(w) for w in RAW_FORM_TRIGGERS if norm
 def is_form_trigger(query: str) -> bool:
     return fuzzy_match_any(query, NORMALIZED_FORM_TRIGGERS)
 
+@timed('backend.services.chat_orchestrator.active_procedures')
 def active_procedures(messages, legacy_title="", domain=None):
     """Use the most recent local answer's source titles; no schema migration."""
     for message in reversed(messages):
@@ -83,6 +86,7 @@ def active_procedures(messages, legacy_title="", domain=None):
     return [legacy_title] if legacy_title and (domain is None or domain == default_name()) else []
 
 
+@timed('backend.services.chat_orchestrator.domain_history')
 def domain_history(messages, domain):
     """Bound model history to the current domain segment, including direct/fallback turns."""
     for position in range(len(messages) - 1, -1, -1):
@@ -98,6 +102,7 @@ def domain_history(messages, domain):
     return messages
 
 
+@timed('backend.services.chat_orchestrator.resolve_search_query')
 def resolve_search_query(prompt, active_titles, config=None):
     """Only plain property follow-ups reuse all active records.
 
@@ -130,6 +135,7 @@ def resolve_search_query(prompt, active_titles, config=None):
     return "; ".join(active_titles) + ". " + prompt.strip(), []
 
 
+@timed('backend.services.chat_orchestrator.orchestrate_chat')
 async def orchestrate_chat(conversation_id, payload, db):
     if not payload.user_prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
@@ -143,7 +149,8 @@ async def orchestrate_chat(conversation_id, payload, db):
     checklist.pop('_mcp_pending', None)
     conversation.checklist = checklist
     conversation.needs_search_permission = False
-    await db.commit()
+    with span('db.commit'):
+        await db.commit()
     await add_message(db, conversation_id, "user", payload.user_prompt)
     context_messages = await get_conversation_history(db, conversation_id)
 
@@ -168,8 +175,14 @@ async def orchestrate_chat(conversation_id, payload, db):
     state = (conversation.checklist or {}).get('_domain_state', {})
     reset_domain = getattr(payload, 'reset_domain', False)
     if reset_domain:
-        state = {}
+        state = {'allow_switching': state.get('allow_switching', False)}
         last_proc_title = ''
+    switching = getattr(payload, 'allow_switching', None)
+    if switching is not None:
+        state = {**state, 'allow_switching': switching}
+    # Save preference/reset even if detection asks for clarification.
+    if reset_domain or switching is not None:
+        await update_domain_state(db, conversation_id, state, clear_procedure=reset_domain)
     prior_domain = state.get('name') or default_name()
     active_titles = active_procedures(context_messages, last_proc_title, prior_domain)
     if reset_domain:
@@ -183,6 +196,7 @@ async def orchestrate_chat(conversation_id, payload, db):
         await log_interaction(db, conversation_id, payload.user_prompt, text, None, False, None, 'DOMAIN_CLARIFICATION')
         # Copy exception data before Python clears the except variable.
         choices = exc.domains
+        @timed('backend.services.chat_orchestrator.clarification_stream')
         async def clarification_stream():
             yield f"data: {json.dumps({'type': 'metadata', 'sources': [], 'domain_choices': choices}, ensure_ascii=False)}\n\n"
             yield f"data: {json.dumps({'type': 'chunk', 'text': text}, ensure_ascii=False)}\n\n"
@@ -209,6 +223,7 @@ async def orchestrate_chat(conversation_id, payload, db):
         stream_gen = get_friendly_response_stream(payload.user_prompt.strip(), friendly_history, config)
         max_score = None  # No retrieval was performed; never invent a relevance score.
 
+    @timed('backend.services.chat_orchestrator.stream_and_save_to_db')
     async def stream_and_save_to_db():
         # Report routing/mode even on direct Friendly answers and no-evidence paths.
         yield f"data: {json.dumps({'type': 'metadata', 'sources': [], 'domain': config.name, 'mode': mode}, ensure_ascii=False)}\n\n"
@@ -225,7 +240,8 @@ async def orchestrate_chat(conversation_id, payload, db):
                     'question': payload.user_prompt.strip(), 'message_id': offer.id}
                 conversation.checklist = checklist
                 conversation.needs_search_permission = True
-                await db.commit()
+                with span('db.commit'):
+                    await db.commit()
                 await log_interaction(db, conversation_id, payload.user_prompt, ask_msg, None, False, max_score, "MCP_PROMPT")
 
                 yield f"data: {json.dumps({'type': 'metadata', 'sources': [], 'needs_search_permission': True, 'offer_message_id': offer.id})}\n\n"

@@ -1,12 +1,0 @@
-{
-  "input_rows": 42,
-  "indexed_rows": 42,
-  "empty_rows": 0,
-  "missing_primary_entity_rows": [],
-  "unmapped_columns_preserved_in_raw_json": []
-}
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights: 100%|##########| 391/391 [00:00<00:00, 12517.16it/s]
-Applying transformations:   0%|          | 0/1 [00:00<?, ?it/s]Applying transformations: 100%|##########| 1/1 [00:00<00:00, 64.02it/s]
-Generating embeddings:   0%|          | 0/42 [00:00<?, ?it/s]Generating embeddings:  24%|##3       | 10/42 [00:05<00:18,  1.77it/s]Generating embeddings:  48%|####7     | 20/42 [00:08<00:09,  2.43it/s]Generating embeddings:  71%|#######1  | 30/42 [00:11<00:04,  2.70it/s]Generating embeddings:  95%|#########5| 40/42 [00:15<00:00,  2.64it/s]Generating embeddings: 100%|##########| 42/42 [00:16<00:00,  2.71it/s]Generating embeddings: 100%|##########| 42/42 [00:16<00:00,  2.56it/s]
-Activated administrative_procedures generation 191a05c725c740e686a4b161d2e9cd0a

@@ -24,6 +24,8 @@ class MCPSearchError(RuntimeError):
     pass
 
 # Kept for compatibility with older imports; eligibility now belongs to domain settings.
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def should_trigger_mcp(query):
     return bool(query.strip())
 
@@ -40,7 +42,7 @@ async def open_session(settings):
         if settings['transport'] == 'bundled':
             params = StdioServerParameters(command=sys.executable,
                 args=[str(ROOT / 'backend/services/mcp_search_server.py')],
-                env={**os.environ, 'PYTHONIOENCODING': 'utf-8'})
+                env={**os.environ, 'PYTHONIOENCODING': 'utf-8', 'LEGAL_TIMING_TRACE_ID': trace_id()})
             transport = stdio_client(params)
         else:
             headers = {}
@@ -54,14 +56,17 @@ async def open_session(settings):
                 sse_read_timeout=timedelta(seconds=settings['timeout_seconds']))
         async with transport as streams:
             async with ClientSession(streams[0], streams[1]) as session:
-                await session.initialize()
+                with span('mcp.initialize'):
+                    await session.initialize()
                 yield session
 
+@timed('backend.services.mcp_service.inspect_tools')
 async def inspect_tools(settings=None):
     settings = settings or load_settings()
     try:
         async with open_session(settings) as session:
-            tools = (await session.list_tools()).tools
+            with span('mcp.list_tools'):
+                tools = (await session.list_tools()).tools
             return [{'name': t.name, 'description': t.description or '', 'schema': t.inputSchema} for t in tools]
     except MCPSearchError:
         raise
@@ -75,6 +80,7 @@ class ExternalRecords(list):
         self.search_suggestions = search_suggestions
 
 
+@timed('backend.services.mcp_service.normalize_results')
 def normalize_results(result, settings, allowed_hosts):
     if getattr(result, 'isError', False):
         raise MCPSearchError('Công cụ tìm kiếm trả về lỗi. Kiểm tra khóa API và cấu hình công cụ.')
@@ -108,6 +114,7 @@ def normalize_results(result, settings, allowed_hosts):
     suggestions = data.get('search_suggestions', '') if isinstance(data, dict) else ''
     return ExternalRecords(clean, suggestions if isinstance(suggestions, str) else '')
 
+@timed('backend.services.mcp_service.retrieve_external')
 async def retrieve_external(query, config, location=None, settings=None):
     settings = settings or load_settings()
     if not search_enabled(config, settings):
@@ -129,10 +136,12 @@ async def retrieve_external(query, config, location=None, settings=None):
         arguments[settings['query_argument']] += ' (' + ' OR '.join('site:' + h for h in rule['allowed_hosts']) + ')'
     try:
         async with open_session(settings) as session:
-            available = {t.name for t in (await session.list_tools()).tools}
+            with span('mcp.list_tools'):
+                available = {t.name for t in (await session.list_tools()).tools}
             if settings['tool_name'] not in available:
                 raise MCPSearchError('Máy chủ MCP không có công cụ đã chọn. Dùng Kiểm tra kết nối trong admin.')
-            result = await session.call_tool(settings['tool_name'], arguments)
+            with span('mcp.call_search_tool'):
+                result = await session.call_tool(settings['tool_name'], arguments)
             return normalize_results(result, settings, rule['allowed_hosts'])
     except MCPSearchError:
         raise
@@ -140,6 +149,7 @@ async def retrieve_external(query, config, location=None, settings=None):
         logger.warning('MCP search failed (%s)', type(exc).__name__)
         raise MCPSearchError('Tra cứu MCP chưa hoàn tất. Kiểm tra kết nối, khóa API hoặc thời gian chờ rồi thử lại.') from exc
 
+@timed('backend.services.mcp_service.execute_mcp_search')
 async def execute_mcp_search(user_query, location=None, *, config, settings=None):
     settings = settings or load_settings()
     records = await retrieve_external(user_query, config, location, settings)
@@ -152,7 +162,8 @@ async def execute_mcp_search(user_query, location=None, *, config, settings=None
         'stream': False, 'temperature': 0, 'max_tokens': settings['max_tokens']}
     try:
         async with httpx.AsyncClient(timeout=120) as client:
-            response = await client.post(llm_url() + '/v1/chat/completions', json=payload)
+            with span('backend.services.mcp_service.http_or_mcp_call'):
+                response = await client.post(llm_url() + '/v1/chat/completions', json=payload, headers=trace_headers())
             response.raise_for_status()
             answer = response.json()['choices'][0]['message']['content']
             if not isinstance(answer, str) or not answer.strip():

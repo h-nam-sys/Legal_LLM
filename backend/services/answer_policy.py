@@ -9,6 +9,8 @@ from rag.domain_config import llm_url
 logger = logging.getLogger(__name__)
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def resolve_mode(requested, config):
     value = requested if requested is not None else config.profile.get('default_mode', os.getenv('CHAT_MODE', 'strict'))
     if not isinstance(value, str) or value.strip().lower() not in {"strict", "friendly"}:
@@ -26,6 +28,7 @@ def parse_retrieval_decision(content):
     return data["retrieve"]
 
 
+@timed('backend.services.answer_policy.needs_retrieval')
 async def needs_retrieval(prompt, active_titles, config):
     """Friendly-only classifier. Uncertainty/failure retains the existing RAG path."""
     payload = {"messages": [
@@ -48,7 +51,8 @@ async def needs_retrieval(prompt, active_titles, config):
     ], "stream": False, "temperature": 0.0, "max_tokens": 64}
     try:
         async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.post(f"{llm_url()}/v1/chat/completions", json=payload)
+            with span('backend.services.answer_policy.http_or_mcp_call'):
+                response = await client.post(f"{llm_url()}/v1/chat/completions", json=payload, headers=trace_headers())
             response.raise_for_status()
             decision = parse_retrieval_decision(response.json()["choices"][0]["message"]["content"])
         logger.info("Friendly retrieval decision=%s domain=%s", decision, config.name)

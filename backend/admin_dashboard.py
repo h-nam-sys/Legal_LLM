@@ -23,7 +23,10 @@ API_URL = "http://localhost:8000" # Update this if your FastAPI runs on a differ
 st.set_page_config(page_title="Bảng quản trị", layout="wide")
 
 # --- DATA FETCHING ---
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 @st.cache_data(ttl=60) # Cache for 60 seconds to prevent DB locking
+@timed('backend.admin_dashboard.load_db_data')
 def load_db_data(query):
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -34,6 +37,7 @@ def load_db_data(query):
         return pd.DataFrame()
 
 @st.cache_data(ttl=60)
+@timed('backend.admin_dashboard.load_feedback_data')
 def load_feedback_data():
     if not os.path.exists(FEEDBACK_FILE):
         return pd.DataFrame()

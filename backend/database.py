@@ -18,6 +18,13 @@ engine = create_async_engine(
 )
 
 # 2. Force SQLite into WAL mode (Must be attached to the underlying sync engine)
+import sys
+from pathlib import Path
+_TIMING_ROOT = Path(__file__).resolve().parents[1]
+if str(_TIMING_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TIMING_ROOT))
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 @event.listens_for(engine.sync_engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
@@ -85,6 +92,7 @@ class AuditLog(Base):
 
 # ============ Database Lifecycle ============
 
+@timed('backend.database.init_db')
 async def init_db():
     """Create all tables asynchronously"""
     async with engine.begin() as conn:

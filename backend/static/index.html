@@ -139,13 +139,20 @@
     <div id="main">
         <div style="padding:12px 30px;background:white;border-bottom:1px solid var(--border-color);display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
             <label for="domain-select">Lĩnh vực:</label>
-            <select id="domain-select" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;"><option value="auto">Tự động</option></select>
+            <select id="domain-select" onchange="updateRoutingControls()" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;"><option value="auto">Tự động</option></select>
             <button onclick="loadDomains()" title="Tải lại danh sách lĩnh vực, giữ lựa chọn hiện tại" style="padding:8px;cursor:pointer;">Làm mới danh sách</button>
             <button onclick="resetDomainRouting()" title="Nhận diện lại lĩnh vực từ câu hỏi tiếp theo, bỏ ngữ cảnh chủ đề cũ" style="padding:8px;cursor:pointer;">Nhận diện lại</button>
             <label for="mode-select">Chế độ:</label>
             <select id="mode-select" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;">
                 <option value="">Mặc định của lĩnh vực</option><option value="strict">Strict</option><option value="friendly">Friendly</option>
             </select>
+            <details style="font-size:13px;">
+                <summary style="cursor:pointer;">Tùy chọn nâng cao</summary>
+                <label style="display:block;margin-top:8px;">
+                    <input type="checkbox" id="allow-switching"> Cho phép tự động chuyển lĩnh vực
+                </label>
+                <p style="max-width:340px;margin:6px 0;color:#64748b;">Khi dùng Tự động: mặc định nhận diện một lần rồi giữ lĩnh vực. Bật để nhận diện lại khi đổi chủ đề. Chọn lĩnh vực cụ thể luôn giữ lựa chọn đó. Thay đổi áp dụng từ câu hỏi tiếp theo.</p>
+            </details>
             <span id="active-domain" style="font-size:12px;color:#64748b;"></span>
         </div>
         <div id="chat-window"></div>
@@ -187,20 +194,27 @@
                     select.appendChild(option);
                 });
                 select.value = data.some(d => d.id === previous) ? previous : 'auto';
+                updateRoutingControls();
             } catch (err) { console.warn('Could not load domains', err); }
         }
 
         function chatPayload(text) {
             const payload = {user_prompt: text, domain: document.getElementById('domain-select').value};
+            payload.allow_switching = document.getElementById('allow-switching').checked;
             if (resetDomainPending) payload.reset_domain = true;
             const mode = document.getElementById('mode-select').value;
             if (mode) payload.mode = mode;
             return payload;
         }
 
+        function updateRoutingControls() {
+            document.getElementById('allow-switching').disabled = document.getElementById('domain-select').value !== 'auto';
+        }
+
         function resetDomainRouting() {
             document.getElementById('domain-select').value = 'auto';
             resetDomainPending = true;
+            updateRoutingControls();
             document.getElementById('active-domain').textContent = 'Sẽ nhận diện lại từ câu hỏi tiếp theo';
         }
 
@@ -361,7 +375,7 @@
             const res = await fetch("/start-conversation", {
                 method: "POST",
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ title: "Tư vấn mới", domain: document.getElementById("domain-select").value })
+                body: JSON.stringify({ title: "Tư vấn mới", domain: document.getElementById("domain-select").value, allow_switching: document.getElementById("allow-switching").checked })
             });
             const data = await res.json();
             currentConvId = data.conversation_id;
@@ -401,6 +415,8 @@
             const domainState = (data.checklist || {})._domain_state || {};
             resetDomainPending = false;
             document.getElementById('domain-select').value = domainState.selection === 'manual' ? domainState.name : 'auto';
+            document.getElementById('allow-switching').checked = domainState.allow_switching === true;
+            updateRoutingControls();
             document.getElementById('active-domain').textContent = domainState.name ? 'Đang dùng: ' + domainState.name : '';
             data.messages.forEach(msg => {
                 const isUser = msg.role === "user";

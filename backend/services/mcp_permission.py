@@ -4,6 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import HTTPException
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
+@timed('backend.services.mcp_permission.authorize_pending')
 def authorize_pending(conversation, current_user_id, owner_id, offer_message_id):
     if owner_id != current_user_id:
         raise HTTPException(403, 'Bạn không có quyền truy cập cuộc trò chuyện này.')
@@ -22,7 +25,7 @@ class SearchLocks:
         entry = self.entries.setdefault(conversation_id, [asyncio.Lock(), 0])
         entry[1] += 1
         try:
-            async with entry[0]:
+            async with TimedLock(entry[0], 'mcp.approval_queue'):
                 yield
         finally:
             entry[1] -= 1

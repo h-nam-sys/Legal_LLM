@@ -17,14 +17,18 @@ LLM_SERVICE_URL = os.getenv("LLM_SERVICE_URL", "http://localhost:8001")
 RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "http://localhost:8002")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 app = FastAPI(
     title="Legal LLM Backend",
     version="1.0",
     description="Vietnamese legal consulting system with RAG and LLM integration"
 )
+app.add_middleware(TimingMiddleware, service='backend')
 
 # 0. Initialize the async database when the server starts
 @app.on_event("startup")
+@timed('backend.main.startup_event')
 async def startup_event():
     await init_db()
 

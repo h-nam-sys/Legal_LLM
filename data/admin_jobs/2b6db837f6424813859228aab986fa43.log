@@ -1,0 +1,6 @@
+Reading and validating uploaded file
+Writing SQL snapshot
+Building and verifying vector index
+Applying transformations:   0%|          | 0/1 [00:00<?, ?it/s]Applying transformations: 100%|██████████| 1/1 [00:00<00:00, 250.59it/s]
+Generating embeddings:   0%|          | 0/24 [00:00<?, ?it/s]Generating embeddings:  33%|███▎      | 8/24 [00:03<00:07,  2.10it/s]Generating embeddings:  67%|██████▋   | 16/24 [00:05<00:02,  3.32it/s]Generating embeddings: 100%|██████████| 24/24 [00:06<00:00,  4.05it/s]Generating embeddings: 100%|██████████| 24/24 [00:06<00:00,  3.58it/s]
+Activating completed snapshot

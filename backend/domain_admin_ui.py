@@ -16,6 +16,8 @@ from rag.ingest_pipeline import read_input, prepare_records
 from rag.ingestion_jobs import start_job, list_jobs
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def dump(value):
     return json.dumps(value, ensure_ascii=False, indent=2)
 
@@ -24,6 +26,7 @@ def ui_error(exc):
     st.error(str(exc))
 
 
+@timed('backend.domain_admin_ui.upload_page')
 def upload_page():
     st.subheader('Thêm dữ liệu hoặc tạo lĩnh vực')
     st.caption('Tải tệp → tạo cấu hình → kiểm tra → nhập dữ liệu. '
@@ -142,6 +145,7 @@ def upload_page():
         ui_error(exc)
 
 
+@timed('backend.domain_admin_ui.settings_page')
 def settings_page():
     st.subheader('Cấu hình theo lĩnh vực')
     configs = {c.name: c for c in list_domain_configs(include_inactive=True)}
@@ -219,6 +223,7 @@ def settings_page():
             st.rerun()
 
 
+@timed('backend.domain_admin_ui.status_page')
 def status_page():
     st.subheader('Tiến độ nhập dữ liệu')
     if st.button('Làm mới trạng thái'):
@@ -263,6 +268,7 @@ def status_page():
             ui_error(exc)
 
 
+@timed('backend.domain_admin_ui.management_page')
 def management_page():
     st.subheader('Bật, tắt hoặc xóa lĩnh vực')
     configs = {c.name: c for c in list_domain_configs(include_inactive=True)}
@@ -311,6 +317,7 @@ def management_page():
                 ui_error(exc)
 
 
+@timed('backend.domain_admin_ui.render_domain_admin')
 def render_domain_admin():
     st.header('Quản lý lĩnh vực và dữ liệu')
     notice = st.session_state.pop('domain_management_notice', None)

@@ -23,10 +23,13 @@ qa_cache = TTLCache(maxsize=100, ttl=3600)
 _rag_gate = asyncio.Semaphore(1)
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def event(value):
     return f"data: {json.dumps(value, ensure_ascii=False)}\n\n"
 
 
+@timed('backend.services.llm_service.render_explicit_lookup')
 def render_explicit_lookup(context, question, config):
     """Opt-in verbatim rendering for explicit administrative field lookups.
 
@@ -70,6 +73,7 @@ def render_explicit_lookup(context, question, config):
         return None
 
 
+@timed('backend.services.llm_service.get_legal_response_stream')
 async def get_legal_response_stream(prompt, search_query, domain=None, *, active_procedures=None, mode='strict'):
     from fastapi import HTTPException
     try:
@@ -85,19 +89,23 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
         key = (config.name, config.revision, mode, tuple(active_procedures or []), os.getenv("RAG_EXACT_FIELD_OUTPUT", "0"), prompt, search_query, url,
                json.dumps(prompts, sort_keys=True, ensure_ascii=False))
         if key in qa_cache:
+            emit('answer.cache', cache_hit=True)
             cached = qa_cache[key]
+            @timed('backend.services.llm_service.cached_stream')
             async def cached_stream():
                 yield event({"type": "metadata", "sources": cached["sources"]})
                 yield event({"type": "chunk", "text": cached["text"]})
                 yield "data: [DONE]\n\n"
             return cached_stream(), cached["score"]
-        async with _rag_gate:
+        emit('answer.cache', cache_hit=False)
+        async with TimedLock(_rag_gate, 'rag.request_queue'):
             context, score, sources = await build_evidence_bundle(prompt, search_query, config=config, active_procedures=active_procedures)
     except (RAGConfigurationError, RAGUnavailableError, OSError, ValueError) as exc:
         logger.exception("RAG is unavailable")
         raise HTTPException(status_code=503, detail="Kho dữ liệu tạm thời không khả dụng. Vui lòng thử lại sau.") from exc
 
     if not context or score < config.minimum_score:
+        @timed('backend.services.llm_service.empty_stream')
         async def empty_stream():
             yield event({"type": "metadata", "sources": []})
             yield "data: [DONE]\n\n"
@@ -105,6 +113,7 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
 
     lookup = render_explicit_lookup(context, prompt, config)
     if lookup is not None:
+        @timed('backend.services.llm_service.lookup_stream')
         async def lookup_stream():
             yield event({"type": "metadata", "sources": sources})
             yield event({"type": "chunk", "text": lookup})
@@ -134,13 +143,14 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
     if 'top_p' in prompts:
         payload['top_p'] = prompts['top_p']
 
+    @timed('backend.services.llm_service.stream_generator')
     async def stream_generator():
         yield event({"type": "metadata", "sources": sources})
         chunks = []
         complete = False
         try:
             async with httpx.AsyncClient(timeout=300) as client:
-                async with client.stream("POST", f"{url}/v1/chat/completions", json=payload) as response:
+                async with client.stream("POST", f"{url}/v1/chat/completions", json=payload, headers=trace_headers()) as response:
                     response.raise_for_status()
                     async for line in response.aiter_lines():
                         if not line.startswith("data:"):
@@ -172,6 +182,7 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
     return stream_generator(), score
 
 
+@timed('backend.services.llm_service.get_friendly_response_stream')
 async def get_friendly_response_stream(prompt, history, config=None):
     """Ungrounded conversation is explicitly separate from the evidence path."""
     messages = [{"role": "system", "content": (
@@ -194,7 +205,7 @@ async def get_friendly_response_stream(prompt, history, config=None):
             async with client.stream("POST", f"{llm_url()}/v1/chat/completions", json={
                 'messages': messages, 'stream': True, 'max_tokens': settings.get('max_tokens', 800),
                 'temperature': settings.get('temperature', 0.3), 'top_p': settings.get('top_p', 0.95),
-            }) as response:
+            }, headers=trace_headers()) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if not line.startswith("data:"):

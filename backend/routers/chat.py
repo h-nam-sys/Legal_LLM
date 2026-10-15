@@ -35,7 +35,10 @@ import ast
 router = APIRouter(tags=["Chat"])
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 @router.get('/domains')
+@timed('backend.routers.chat.available_domains')
 async def available_domains():
     from services.domain_router import ready_domains
     return [{'id': c.name, 'description': c.profile.get('description', ''),
@@ -103,6 +106,7 @@ def is_form_trigger(query: str) -> bool:
 # ==========================================
 
 @router.post("/start-conversation", response_model=dict)
+@timed('backend.routers.chat.start_conversation')
 async def start_conversation(
     request: StartConversationRequest,
     db: AsyncSession = Depends(get_db),
@@ -114,8 +118,10 @@ async def start_conversation(
             if request.domain not in {c.name for c in ready_domains()}:
                 raise HTTPException(400, 'Selected domain is unavailable or not ingested')
         conversation = await create_conversation(db, current_user_id, request.title)
+        state = {'allow_switching': request.allow_switching}
         if request.domain and request.domain != 'auto':
-            await update_domain_state(db, conversation.id, {'name': request.domain, 'selection': 'manual'})
+            state.update({'name': request.domain, 'selection': 'manual', 'locked': True})
+        await update_domain_state(db, conversation.id, state)
         return {
             "conversation_id": conversation.id,
             "title": conversation.title,
@@ -129,6 +135,7 @@ async def start_conversation(
 
 @router.post("/chat/{conversation_id}")
 @limiter.limit("10/minute")
+@timed('backend.routers.chat.handle_chat')
 async def handle_chat(
     request: Request,
     conversation_id: int,
@@ -142,6 +149,7 @@ async def handle_chat(
 
 
 @router.post("/chat/{conversation_id}/action/mcp")
+@timed('backend.routers.chat.action_mcp')
 async def action_mcp(
     conversation_id: int,
     payload: MCPActionRequest | None = None,
@@ -155,7 +163,8 @@ async def action_mcp(
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
         # Keep the project's existing mock-login contract; check conversation ownership here.
-        owner = (await db.execute(select(User.user_id).where(User.id == conversation.user_id))).scalar_one_or_none()
+        with span('db.execute'):
+            owner = (await db.execute(select(User.user_id).where(User.id == conversation.user_id))).scalar_one_or_none()
         pending = authorize_pending(conversation, current_user_id, owner, payload.offer_message_id)
         from rag.domain_config import load_domain_config, RAGConfigurationError
         try:
@@ -172,7 +181,8 @@ async def action_mcp(
             await log_interaction(db, conversation_id, pending['query'], str(exc), None, False, None, 'MCP_FAILED')
             raise HTTPException(503, str(exc)) from exc
         # Do not consume a newer offer if another chat turn arrived during the search.
-        await db.refresh(conversation)
+        with span('db.refresh'):
+            await db.refresh(conversation)
         if (conversation.checklist or {}).get('_mcp_pending') != pending:
             raise HTTPException(409, 'Câu hỏi đã thay đổi. Vui lòng dùng đề nghị tìm kiếm mới nhất.')
         saved_sources = sources + ['RAG_DOMAIN:' + config.name]
@@ -181,7 +191,8 @@ async def action_mcp(
         checklist.pop('_mcp_pending', None)
         conversation.checklist = checklist
         conversation.needs_search_permission = False
-        await db.commit()
+        with span('db.commit'):
+            await db.commit()
         await log_interaction(db, conversation_id, pending['query'], answer,
             json.dumps(saved_sources, ensure_ascii=False), True, None,
             'MCP_SEARCH_EXECUTED' if sources else 'MCP_NO_RESULTS')
@@ -189,6 +200,7 @@ async def action_mcp(
 
 
 @router.post("/chat/{conversation_id}/action/form")
+@timed('backend.routers.chat.action_form')
 async def action_form(
     conversation_id: int,
     db: AsyncSession = Depends(get_db),
@@ -236,6 +248,7 @@ async def action_form(
 
 
 @router.get("/conversations", response_model=list[dict])
+@timed('backend.routers.chat.get_user_chats')
 async def get_user_chats(
     db: AsyncSession = Depends(get_db),
     current_user_id: str = Depends(get_current_user)
@@ -256,6 +269,7 @@ async def get_user_chats(
 
 
 @router.get("/history/{conversation_id}", response_model=ConversationSchema)
+@timed('backend.routers.chat.get_chat_history')
 async def get_chat_history(
     conversation_id: int,
     db: AsyncSession = Depends(get_db),
@@ -296,6 +310,7 @@ async def get_chat_history(
 
 
 @router.post("/feedback/{message_id}")
+@timed('backend.routers.chat.submit_feedback')
 async def submit_feedback(
     message_id: int,
     payload: FeedbackRequest,
@@ -309,16 +324,18 @@ async def submit_feedback(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/admin/failed-logs")
+@timed('backend.routers.chat.get_failed_queries')
 async def get_failed_queries(
     limit: int = 50,
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(
-        select(AuditLog)
-        .where(AuditLog.failure_type.in_(["LOW_CONFIDENCE", "MCP_PROMPT", "ONLINE_SEARCH_EXECUTED"]))
-        .order_by(AuditLog.created_at.desc())
-        .limit(limit)
-    )
+    with span('db.execute'):
+        result = await db.execute(
+            select(AuditLog)
+            .where(AuditLog.failure_type.in_(["LOW_CONFIDENCE", "MCP_PROMPT", "ONLINE_SEARCH_EXECUTED"]))
+            .order_by(AuditLog.created_at.desc())
+            .limit(limit)
+        )
     logs = result.scalars().all()
 
     return [

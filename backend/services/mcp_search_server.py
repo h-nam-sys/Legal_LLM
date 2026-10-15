@@ -20,6 +20,9 @@ load_dotenv(ROOT / '.env')
 server = FastMCP('Legal LLM Gemini Search')
 GOOGLE_REDIRECT_HOSTS = {'vertexaisearch.cloud.google.com', 'vertexaisearch.google.com'}
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
+@timed('backend.services.mcp_search_server.source_url')
 async def source_url(uri):
     """Expand only known Google grounding redirect links; never fetch destination pages."""
     if not valid_source_url(uri):
@@ -31,7 +34,8 @@ async def source_url(uri):
             for _ in range(3):
                 if urlsplit(uri).hostname not in GOOGLE_REDIRECT_HOSTS:
                     return uri
-                response = await client.get(uri)
+                with span('backend.services.mcp_search_server.http_or_mcp_call'):
+                    response = await client.get(uri)
                 if response.status_code not in {301, 302, 303, 307, 308}:
                     return ''
                 uri = urljoin(uri, response.headers.get('location', ''))
@@ -41,6 +45,7 @@ async def source_url(uri):
     except httpx.HTTPError:
         return ''
 
+@timed('backend.services.mcp_search_server.generate_grounded')
 async def generate_grounded(query, model):
     key = os.getenv('GEMINI_API_KEY')
     if not key:
@@ -62,6 +67,7 @@ async def generate_grounded(query, model):
         if client is not None:
             client.close()
 
+@timed('backend.services.mcp_search_server.grounded_records')
 async def grounded_records(response, count, allowed):
     candidates = response.candidates or []
     metadata = candidates[0].grounding_metadata if candidates else None
@@ -100,6 +106,7 @@ async def grounded_records(response, count, allowed):
     return {'results': results, 'search_suggestions': suggestions}
 
 @server.tool()
+@timed('backend.services.mcp_search_server.web_search')
 async def web_search(query: str, count: int = 5, allowed_hosts: list[str] | None = None,
                      model: str = 'gemini-2.5-flash') -> dict:
     """Google Search through Gemini; returns cited generated findings and actual source URLs."""

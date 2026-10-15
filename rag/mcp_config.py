@@ -16,6 +16,8 @@ DEFAULTS = dict(enabled=False, gemini_model='gemini-2.5-flash', transport='bundl
 class MCPConfigError(ValueError):
     pass
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def hosts(value):
     if not isinstance(value, list):
         raise MCPConfigError('Danh sách website phải là một danh sách tên miền.')
@@ -73,10 +75,12 @@ def validate_settings(value):
         rule['allowed_hosts'] = hosts(rule['allowed_hosts'])
     return result
 
+@timed('rag.mcp_config.load_settings')
 def load_settings(*, root=None):
     path = Path(root or ROOT_DIR) / 'data/mcp_settings.json'
     return validate_settings(read_json(path) if path.exists() else {})
 
+@timed('rag.mcp_config.save_settings')
 def save_settings(value, *, root=None):
     clean = validate_settings(value)
     atomic_json(Path(root or ROOT_DIR) / 'data/mcp_settings.json', clean)

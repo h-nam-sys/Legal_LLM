@@ -19,6 +19,9 @@ class DomainClarification(Exception):
         super().__init__('Bạn muốn tra cứu lĩnh vực nào: ' + ', '.join(domains) + '?')
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
+@timed('backend.services.domain_router.ready_domains')
 def ready_domains():
     return [c for c in list_domain_configs() if c.db_path.is_file() and c.vector_dir.is_dir()]
 
@@ -69,6 +72,7 @@ def route_tokens(text):
 
 
 @lru_cache(maxsize=64)
+@timed('backend.services.domain_router.stored_titles')
 def stored_titles(path, revision, table, column):
     """Read bounded title-only routing hints; never load vectors or model weights."""
     # DomainConfig validates identifiers, but defend this read independently as well.
@@ -84,11 +88,13 @@ def stored_titles(path, revision, table, column):
         return ()
 
 
+@timed('backend.services.domain_router.domain_hints')
 def domain_hints(config):
     return (*stored_titles(str(config.db_path), config.revision, config.table, config.primary_entity),
             *config.profile.get('routing_examples', []))
 
 
+@timed('backend.services.domain_router.local_domain_matches')
 def local_domain_matches(prompt, configs):
     """Only phrases unique to a dataset can bypass classification.
 
@@ -117,35 +123,43 @@ def local_domain_matches(prompt, configs):
     return sorted({name for _, name in specific})
 
 
-async def choose_domain(prompt, state, active_titles, requested=None):
+@timed('backend.services.domain_router.choose_domain')
+async def choose_domain(prompt, state, active_titles, requested=None, allow_switching=None):
     configs = ready_domains()
     choices = {c.name: c for c in configs}
     if not choices:
         raise HTTPException(503, 'No enabled domain is ready; contact the administrator')
     state = state if isinstance(state, dict) else {}
+    switching = state.get('allow_switching', False) if allow_switching is None else allow_switching
+    def route_state(name, selection='auto', locked=True):
+        return {'name': name, 'selection': selection, 'allow_switching': bool(switching), 'locked': locked}
     current = state.get('name') if state.get('name') in choices else None
+    previous = current
     if state.get('name') and not current:
         active_titles = []
     explicit = requested if requested not in {None, 'auto'} else None
     if explicit:
         if explicit not in choices:
             raise HTTPException(400, 'Selected domain is unavailable or not ingested')
-        return choices[explicit], {'name': explicit, 'selection': 'manual'}, explicit != current
+        return choices[explicit], route_state(explicit, 'manual'), explicit != previous
     selection = 'auto' if requested == 'auto' else state.get('selection', 'auto')
     if current and selection == 'manual':
-        return choices[current], state, False
+        return choices[current], route_state(current, 'manual'), False
+    # Auto keeps the active domain in detect-once mode; reset requests clear it upstream.
+    if current and not switching and state.get('locked', True):
+        return choices[current], route_state(current), False
     if len(choices) == 1:
         name = next(iter(choices))
-        return choices[name], {'name': name, 'selection': selection}, name != current
+        return choices[name], route_state(name, selection), name != previous
     if current and property_followup(prompt, active_titles, choices[current]):
-        return choices[current], {'name': current, 'selection': 'auto'}, False
+        return choices[current], route_state(current), False
     matches = local_domain_matches(prompt, configs)
     if len(matches) > 1:
         raise DomainClarification(matches)
     if matches:
         name = matches[0]
         logger.info('Domain route via dataset phrase previous=%s selected=%s', current, name)
-        return choices[name], {'name': name, 'selection': 'auto'}, name != current
+        return choices[name], route_state(name), name != previous
     request = {'question': prompt, 'current_domain': current, 'active_entities': active_titles,
                'domains': [{'id': c.name, 'description': c.profile.get('description', ''),
                             'entity_label': c.schema[c.primary_entity],
@@ -163,7 +177,8 @@ async def choose_domain(prompt, state, active_titles, requested=None):
         'temperature': 0.0, 'max_tokens': 120, 'stream': False}
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(f'{llm_url()}/v1/chat/completions', json=payload)
+            with span('backend.services.domain_router.http_or_mcp_call'):
+                response = await client.post(f'{llm_url()}/v1/chat/completions', json=payload, headers=trace_headers())
             response.raise_for_status()
         decision = parse_domain_decision(response.json()['choices'][0]['message']['content'], choices)
     except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
@@ -177,4 +192,4 @@ async def choose_domain(prompt, state, active_titles, requested=None):
     name = decision['domain'] if kind == 'domain' else current or default_name() or next(iter(choices))
     name = name if name in choices else next(iter(choices))
     logger.info('Domain route kind=%s previous=%s selected=%s', kind, current, name)
-    return choices[name], {'name': name, 'selection': 'auto'}, name != current
+    return choices[name], route_state(name, locked=kind in {'domain', 'followup'} or bool(current and state.get('locked', True))), name != previous

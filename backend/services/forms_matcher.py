@@ -1,5 +1,7 @@
 import re
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def normalize_text(text: str) -> str:
     if not text:
         return ""
@@ -238,6 +240,7 @@ FORMS_CATALOG = [
     }
 ]
 
+@timed('backend.services.forms_matcher.find_matching_form')
 def find_matching_form(procedure_title: str, query: str = "") -> dict | None:
     """Matches form based on procedure title first, falling back to user query."""
     normalized_title = normalize_text(procedure_title)

@@ -1,86 +1,0 @@
-GENERATION: 191a05c725c740e686a4b161d2e9cd0a
-THRESHOLD: 0.01
-PREPARATION: True
-QUESTION: đăng ký kết hôn ở đâu mất nhiêu tiền?
-INFO:httpx:HTTP Request: POST http://localhost:8002/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/BAAI/bge-m3/5617a9f61b028005a4858fdac845db406aefb181/modules.json?%2FBAAI%2Fbge-m3%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/BAAI/bge-m3/5617a9f61b028005a4858fdac845db406aefb181/config_sentence_transformers.json?%2FBAAI%2Fbge-m3%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%221fba91c78a6c8e17227058ab6d4d3acb5d8630a9%22 "HTTP/1.1 200 OK"
-INFO:sentence_transformers.base.model:Loading SentenceTransformer model from BAAI/bge-m3.
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/BAAI/bge-m3/5617a9f61b028005a4858fdac845db406aefb181/config_sentence_transformers.json?%2FBAAI%2Fbge-m3%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%221fba91c78a6c8e17227058ab6d4d3acb5d8630a9%22 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/BAAI/bge-m3/5617a9f61b028005a4858fdac845db406aefb181/README.md?%2FBAAI%2Fbge-m3%2Fresolve%2Fmain%2FREADME.md=&etag=%22e5a320176edd6ee1cfb256e68ee5ac0004de9447%22 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/BAAI/bge-m3/5617a9f61b028005a4858fdac845db406aefb181/modules.json?%2FBAAI%2Fbge-m3%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/BAAI/bge-m3/5617a9f61b028005a4858fdac845db406aefb181/sentence_bert_config.json?%2FBAAI%2Fbge-m3%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%220140ba1eac83a3c9b857d64baba91969d988624b%22 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
-Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 23061.51it/s]
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3/commits/main "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3/discussions?p=0 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3/commits/refs%2Fpr%2F130 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/refs%2Fpr%2F130/model.safetensors.index.json "HTTP/1.1 404 Not Found"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/refs%2Fpr%2F130/model.safetensors "HTTP/1.1 302 Found"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/BAAI/bge-m3/5617a9f61b028005a4858fdac845db406aefb181/1_Pooling%2Fconfig.json?%2FBAAI%2Fbge-m3%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%229bd85925f325e25246d94c4918dc02ab98f2a1b7%22 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: HEAD https://huggingface.co/BAAI/bge-m3/resolve/main/2_Normalize/config.json "HTTP/1.1 404 Not Found"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-m3 "HTTP/1.1 200 OK"
-INFO:llama_index.core.indices.loading:Loading all indices.
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-reranker-v2-m3 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-reranker-v2-m3/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-reranker-v2-m3/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-reranker-v2-m3 "HTTP/1.1 200 OK"
-INFO:httpx2:HTTP Request: GET https://huggingface.co/api/models/BAAI/bge-reranker-v2-m3 "HTTP/1.1 200 OK"
-Loading weights:   0%|          | 0/393 [00:00<?, ?it/s]Loading weights:   0%|          | 1/393 [00:00<00:48,  8.00it/s]Loading weights:   1%|          | 2/393 [00:00<01:35,  4.09it/s]Loading weights:   4%|▎         | 14/393 [00:00<00:13, 27.58it/s]Loading weights:   6%|▋         | 25/393 [00:00<00:08, 45.53it/s]Loading weights:   9%|▉         | 36/393 [00:00<00:06, 53.87it/s]Loading weights:  11%|█         | 43/393 [00:01<00:07, 43.85it/s]Loading weights:  12%|█▏        | 49/393 [00:01<00:08, 41.13it/s]Loading weights:  19%|█▉        | 75/393 [00:01<00:04, 78.86it/s]Loading weights:  26%|██▌       | 101/393 [00:01<00:02, 107.78it/s]Loading weights:  29%|██▉       | 113/393 [00:01<00:02, 108.23it/s]Loading weights:  32%|███▏      | 125/393 [00:01<00:02, 95.06it/s] Loading weights:  35%|███▍      | 136/393 [00:02<00:03, 70.17it/s]Loading weights: 100%|██████████| 393/393 [00:02<00:00, 177.17it/s]
-INFO:rag.retrieval_service:RAG domain=administrative_procedures candidates=20 kept=5 cutoff=0.0100 scores=[0.9926, 0.5262, 0.5048, 0.1046, 0.0467]
-INFO:httpx:HTTP Request: POST http://localhost:8002/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:rag.query_pipeline:Procedure selection candidates=[{'index': 0, 'title': 'Thủ tục đăng ký kết hôn'}, {'index': 1, 'title': 'Thủ tục xác nhận tình trạng hôn nhân'}, {'index': 2, 'title': 'Đăng ký kết hôn có yếu tố nước ngoài'}, {'index': 3, 'title': 'THÔNG TIN QUY HOẠCH'}, {'index': 4, 'title': 'THÔNG BÁO KHỞI CÔNG'}] raw='```json\n[\n  0,\n  2\n]\n```' retained=['ec7f8831acda20be52080dede65601d70719110d81e2e8710eb1ed884a83a040:1', 'e19fe0df0b7ef9a8e022e6c4d175e053b36d1843b02f57a294d236f5bf2c02bd:1']
-INFO:rag.query_pipeline:Query preparation status=prepared phrase_count=1 retained_records=2
-INFO:httpx:HTTP Request: POST http://localhost:8002/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:rag.query_pipeline:Field selection raw='["reception_location", "fee", "processing_time"]' explicit=['fee', 'reception_location'] selected=['fee', 'reception_location', 'processing_time']
-INFO:rag.query_pipeline:RAG trace generation=191a05c725c740e686a4b161d2e9cd0a cutoff=0.01 original='đăng ký kết hôn ở đâu mất nhiêu tiền?' resolved='đăng ký kết hôn ở đâu mất nhiêu tiền?' preparation=prepared phrases=('đăng ký kết hôn',) titles=['Thủ tục đăng ký kết hôn', 'Đăng ký kết hôn có yếu tố nước ngoài'] fields=['procedure_name', 'fee', 'reception_location', 'processing_time'] context={
-  "documents": [
-    {
-      "Tên thủ tục hành chính": "Thủ tục đăng ký kết hôn",
-      "Lệ phí": "Bản chính: Không thu phí Bản sao: 8.000đ/bản",
-      "Địa điểm tiếp nhận hồ sơ trực tiếp (nếu có)": "Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú",
-      "Thời gian giải quyết": "Trong ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào ngày hôm sau)."
-    },
-    {
-      "Tên thủ tục hành chính": "Đăng ký kết hôn có yếu tố nước ngoài",
-      "Lệ phí": "Bản chính: Không thu phí Bản sao: 8.000đ/bản sao",
-      "Địa điểm tiếp nhận hồ sơ trực tiếp (nếu có)": "Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú",
-      "Thời gian giải quyết": "5 ngày làm việc"
-    }
-  ]
-}
-SCORE: 0.9926243570807411
-TITLES: ['Thủ tục đăng ký kết hôn', 'Đăng ký kết hôn có yếu tố nước ngoài']
-LLM CONTEXT: {
-  "documents": [
-    {
-      "Tên thủ tục hành chính": "Thủ tục đăng ký kết hôn",
-      "Lệ phí": "Bản chính: Không thu phí Bản sao: 8.000đ/bản",
-      "Địa điểm tiếp nhận hồ sơ trực tiếp (nếu có)": "Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú",
-      "Thời gian giải quyết": "Trong ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào ngày hôm sau)."
-    },
-    {
-      "Tên thủ tục hành chính": "Đăng ký kết hôn có yếu tố nước ngoài",
-      "Lệ phí": "Bản chính: Không thu phí Bản sao: 8.000đ/bản sao",
-      "Địa điểm tiếp nhận hồ sơ trực tiếp (nếu có)": "Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú",
-      "Thời gian giải quyết": "5 ngày làm việc"
-    }
-  ]
-}

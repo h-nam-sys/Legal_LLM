@@ -11,6 +11,8 @@ import uuid
 from .domain_config import ROOT_DIR, RAGConfigurationError, load_domain_config, validate_profile
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def normalize_header(value):
     return " ".join(unicodedata.normalize("NFC", str(value)).split()).casefold()
 
@@ -24,6 +26,7 @@ def cell_text(value):
     return str(value).strip()
 
 
+@timed('rag.ingest_pipeline.read_input')
 def read_input(path, sheet=0):
     import pandas as pd
     suffix = path.suffix.lower()
@@ -44,6 +47,7 @@ def read_input(path, sheet=0):
     raise ValueError("Supported inputs: .xlsx, .xlsm, .csv, .tsv, .json, .jsonl")
 
 
+@timed('rag.ingest_pipeline.prepare_records')
 def prepare_records(df, profile):
     validate_profile(profile)
     if "_raw_json" in profile["schema_mapping"]:
@@ -96,6 +100,7 @@ def prepare_records(df, profile):
     return records, report
 
 
+@timed('rag.ingest_pipeline.write_database')
 def write_database(records, schema, path):
     columns = ["id"] + list(schema) + ["_raw_json"]
     quoted = ", ".join(f'"{column}"' for column in columns)
@@ -109,9 +114,10 @@ def write_database(records, schema, path):
             raise RuntimeError("SQL row count mismatch")
 
 
+@timed('rag.ingest_pipeline.build_vectors')
 def build_vectors(records, profile, destination):
     from llama_index.core import Document, VectorStoreIndex
-    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+    from .gpu_runtime import embedding_model
     primary = profile["primary_entity"]
     fields = profile.get("embedding_fields") or [primary]
     # Retain the legacy legal title representation unless configured otherwise.
@@ -125,9 +131,10 @@ def build_vectors(records, profile, destination):
         metadata = {"id": row["id"], primary: row[primary]}
         documents.append(Document(text=text, metadata=metadata,
                                   excluded_llm_metadata_keys=list(metadata), doc_id=row["id"]))
-    embedding = HuggingFaceEmbedding(model_name=profile.get("embedding_model", "BAAI/bge-m3"),
-                                     device=os.getenv("RAG_EMBED_DEVICE", "cpu"))
-    index = VectorStoreIndex.from_documents(documents, embed_model=embedding, show_progress=True)
+    with span('ingest.embedding_model_load'):
+        embedding = embedding_model(profile.get("embedding_model", "BAAI/bge-m3"))
+    with span('ingest.embedding_and_index_build'):
+        index = VectorStoreIndex.from_documents(documents, embed_model=embedding, show_progress=True)
     index.storage_context.persist(persist_dir=str(destination))
     # Verify the persisted index is readable and retains every source ID.
     from llama_index.core import StorageContext, load_index_from_storage
@@ -137,6 +144,7 @@ def build_vectors(records, profile, destination):
         raise RuntimeError("Persisted vectors are missing source IDs")
 
 
+@timed('rag.ingest_pipeline.publish_generation')
 def publish_generation(config, records, report, *, vector_builder=build_vectors, progress=None):
     generation = uuid.uuid4().hex
     directory = config.pointer_path.parent / generation
@@ -166,6 +174,7 @@ def publish_generation(config, records, report, *, vector_builder=build_vectors,
     return generation
 
 
+@timed('rag.ingest_pipeline.main')
 def main():
     from dotenv import load_dotenv
     load_dotenv(ROOT_DIR / "backend/.env")

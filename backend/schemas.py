@@ -7,6 +7,7 @@ class LoginRequest(BaseModel):
     username: str = Field(..., description="The user's username for deterministic ID generation")
 
 class ChatRequest(BaseModel):
+    allow_switching: Optional[bool] = Field(default=None, description="Allow Auto to switch domains; omitted preserves conversation preference, default off")
     reset_domain: bool = Field(default=False, description='Clear domain and active-entity context before routing this turn')
     domain: Optional[str] = Field(default=None, description='Domain ID or auto; omitted preserves conversation selection', pattern=r'^[A-Za-z0-9_-]+$')
     mode: Optional[Literal["strict", "friendly"]] = Field(default=None, description="Optional answer policy; omitted uses configured default")
@@ -66,6 +67,7 @@ class ConversationSchema(BaseModel):
 
 class StartConversationRequest(BaseModel):
     """Request to start a new conversation"""
+    allow_switching: bool = Field(default=False, description="Allow automatic domain switching in this conversation")
     title: str = Field(default="Legal Consultation", description="Conversation title")
     domain: Optional[str] = Field(default=None, pattern=r'^[A-Za-z0-9_-]+$')
 

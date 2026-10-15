@@ -18,6 +18,8 @@ class RAGUnavailableError(RuntimeError):
     pass
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def identifier(value):
     if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
         raise RAGConfigurationError(f"Invalid SQL identifier: {value!r}")
@@ -212,6 +214,7 @@ def domain_status(name, *, root=None):
     return status
 
 
+@timed('rag.domain_config.load_domain_config')
 def load_domain_config(domain=None, *, root=None, use_active=True, allow_inactive=False):
     root = Path(root or ROOT_DIR).resolve()
     default_path = root / 'data/domain_profile.json'
@@ -280,6 +283,7 @@ def load_domain_config(domain=None, *, root=None, use_active=True, allow_inactiv
     return DomainConfig(name, profile, db_path, vector_dir, table, id_column, generation, revision, pointer)
 
 
+@timed('rag.domain_config.list_domain_configs')
 def list_domain_configs(*, root=None, include_inactive=False):
     root = Path(root or ROOT_DIR)
     names = set()

@@ -14,6 +14,8 @@ import uuid
 from .domain_config import ROOT_DIR, RAGConfigurationError, atomic_json, read_json, validate_profile, domain_status
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -24,6 +26,7 @@ def lock_path(domain, root):
     return Path(root) / 'data/admin_jobs/locks' / f'{domain}.lock'
 
 
+@timed('rag.ingestion_jobs.claim')
 def claim(domain, owner, root):
     path = lock_path(domain, root)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -42,6 +45,7 @@ def claim(domain, owner, root):
     return path
 
 
+@timed('rag.ingestion_jobs.release')
 def release(path, owner):
     if path.exists() and read_json(path).get('owner') == owner:
         path.unlink()
@@ -58,6 +62,7 @@ def domain_lock(domain, *, root=None):
         release(path, owner)
 
 
+@timed('rag.ingestion_jobs.start_job')
 def start_job(input_path, profile, *, sheet=0, root=None):
     root = Path(root or ROOT_DIR).resolve()
     input_path = Path(input_path).resolve()
@@ -76,7 +81,7 @@ def start_job(input_path, profile, *, sheet=0, root=None):
     atomic_json(path, job)
     log_path = path.with_suffix('.log')
     try:
-        env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
+        env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1', 'LEGAL_TIMING_TRACE_ID': trace_id()}
         with log_path.open('w', encoding='utf-8') as log:
             process = subprocess.Popen([sys.executable, '-u', '-m', 'rag.ingestion_jobs', '--job-file', str(path)],
                 cwd=ROOT_DIR, stdout=log, stderr=subprocess.STDOUT, env=env,
@@ -91,6 +96,7 @@ def start_job(input_path, profile, *, sheet=0, root=None):
     return job_id
 
 
+@timed('rag.ingestion_jobs.list_jobs')
 def list_jobs(*, root=None):
     root = Path(root or ROOT_DIR)
     result = []
@@ -109,6 +115,7 @@ def list_jobs(*, root=None):
     return sorted(result, key=lambda j: j['created_at'], reverse=True)
 
 
+@timed('rag.ingestion_jobs.run_job')
 def run_job(path, *, vector_builder=None):
     from .domain_onboarding import config_from_profile, save_profile_registry
     from .ingest_pipeline import read_input, prepare_records, publish_generation, build_vectors

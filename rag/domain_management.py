@@ -9,6 +9,8 @@ from .domain_config import (ROOT_DIR, RAGConfigurationError, atomic_json,
 from .ingestion_jobs import domain_lock
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+
 def _state_path(root, name):
     return root / 'data/domain_lifecycle' / f'{name}.json'
 
@@ -19,6 +21,7 @@ def _protect_default(root, name):
         raise RAGConfigurationError('Không thể tắt hoặc xóa lĩnh vực mặc định hiện tại.')
 
 
+@timed('rag.domain_management.set_domain_enabled')
 def set_domain_enabled(name, enabled, *, root=None):
     if type(enabled) is not bool:
         raise RAGConfigurationError('enabled must be a boolean')
@@ -33,6 +36,7 @@ def set_domain_enabled(name, enabled, *, root=None):
         })
 
 
+@timed('rag.domain_management.deletion_targets')
 def deletion_targets(name, *, root=None):
     """Only domain-owned data is eligible; shared uploads/history stay untouched."""
     root = Path(root or ROOT_DIR).resolve()
@@ -59,6 +63,7 @@ def deletion_targets(name, *, root=None):
     return result
 
 
+@timed('rag.domain_management.delete_domain')
 def delete_domain(name, confirmation, *, root=None):
     if confirmation != name:
         raise RAGConfigurationError('Nhập chính xác mã lĩnh vực để xác nhận xóa.')

@@ -11,20 +11,29 @@ logger = logging.getLogger(__name__)
 _MODEL_LOCK = RLock()
 
 
+from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
+from rag.hardware_diagnostics import memory_stage, retrieval_device
+
 @lru_cache(maxsize=2)
+@timed('rag.retrieval_service._embedding')
 def _embedding(model_name):
-    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-    return HuggingFaceEmbedding(model_name=model_name, device=os.getenv("RAG_EMBED_DEVICE", "cpu"))
+    from .gpu_runtime import embedding_model
+    retrieval_device("rag.embedding_load", model_name, "directml")
+    with memory_stage("rag.embedding_load", model=model_name, configured_device="directml"):
+        return embedding_model(model_name)
 
 
 @lru_cache(maxsize=1)
+@timed('rag.retrieval_service._reranker')
 def _reranker():
-    from FlagEmbedding import FlagReranker
-    device = os.getenv("RAG_RERANK_DEVICE", "cpu")
-    return FlagReranker("BAAI/bge-reranker-v2-m3", devices=[device], use_fp16=device.startswith("cuda"))
+    from .gpu_runtime import DirectMLReranker
+    retrieval_device("rag.reranker_load", "BAAI/bge-reranker-v2-m3", "directml")
+    with memory_stage("rag.reranker_load", model="BAAI/bge-reranker-v2-m3", configured_device="directml"):
+        return DirectMLReranker()
 
 
 @lru_cache(maxsize=4)
+@timed('rag.retrieval_service._index')
 def _index(vector_dir, model_name, revision):
     from llama_index.core import StorageContext, load_index_from_storage
     context = StorageContext.from_defaults(persist_dir=vector_dir)
@@ -54,6 +63,7 @@ def _positive_integer(value, name):
     return value
 
 
+@timed('rag.retrieval_service.retrieve_and_rerank')
 def retrieve_and_rerank(query, top_k=None, domain=None, *, config=None,
                         candidate_k=None):
     """Return a ranked list of (record_id, score, metadata), not one tuple.
@@ -77,12 +87,15 @@ def retrieve_and_rerank(query, top_k=None, domain=None, *, config=None,
     if not config.vector_dir.is_dir():
         raise RAGUnavailableError(f"Index unavailable for domain {config.name}")
     try:
-        with _MODEL_LOCK:
-            index = _index(str(config.vector_dir), config.embedding_model, config.revision)
-            candidates = index.as_retriever(similarity_top_k=candidate_k).retrieve(query)
+        with TimedLock(_MODEL_LOCK, 'rag.model_lock'):
+            with span('rag.index_lookup_or_load'):
+                index = _index(str(config.vector_dir), config.embedding_model, config.revision)
+            with memory_stage('rag.embedding_and_vector_search'), span('rag.embedding_and_vector_search'):
+                candidates = index.as_retriever(similarity_top_k=candidate_k).retrieve(query)
             if not candidates:
                 return []
-            scores = _reranker().compute_score([[query, node.text] for node in candidates])
+            with memory_stage('rag.reranker_inference'), span('rag.reranker_inference'):
+                scores = _reranker().compute_score([[query, node.text] for node in candidates])
             if hasattr(scores, "tolist"):
                 scores = scores.tolist()
             if isinstance(scores, (int, float)):
