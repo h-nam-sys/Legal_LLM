@@ -1,12 +1,12 @@
-# Screenshot placeholders
+# Add screenshots
 
-Replace the four labeled SVG placeholders with actual PNG captures in `docs/images/`, then change `.svg` to `.png` in the matching README image links.
+The included SVGs are visible placeholders. Replace them with PNG screenshots of your application and update the corresponding `.svg` links to `.png`.
 
-| PNG to add | Capture |
-|---|---|
-| `chat-sources.png` | A completed question and answer with its source record expanded |
-| `domain-switching.png` | Two different topics answered with automatic switching enabled |
-| `admin-datasets.png` | Dataset configuration or ingestion status |
-| `test-results.png` | Actual test run identity, turn count and PASS/FAIL totals |
+| Image | Location | Suggested content |
+|---|---|---|
+| `chat-sources.png` | README introduction | A completed answer with the source record expanded |
+| `admin-datasets.png` | README features | Dataset configuration or ingestion status |
+| `domain-switching.png` | README usage | A conversation answering two different dataset topics |
+| `test-results.png` | Development notes | A dated test summary with its run identifier |
 
-Use the demonstrated build. Hide API keys and private user data. Remove the old SVG placeholders after adding the screenshots.
+Keep PNGs under `docs/images/`. In `docs/DEVELOPMENT.md`, the image path is relative to that document (`images/test-results.png`). Hide secrets and private user information before adding captures. Remove the old SVGs once replaced.

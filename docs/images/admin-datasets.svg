@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="260" viewBox="0 0 1000 260" role="img" aria-label="Screenshot placeholder: Dataset administration and ingestion">
 <rect x="1" y="1" width="998" height="258" rx="10" fill="#f6f8fa" stroke="#94a3b8" stroke-dasharray="8 5"/>
-<text x="36" y="45" font-family="Arial, sans-serif" font-size="15" fill="#64748b">SCREENSHOT PLACEHOLDER — REPLACE BEFORE REVIEW</text>
+<text x="36" y="45" font-family="Arial, sans-serif" font-size="15" fill="#64748b">SCREENSHOT PLACEHOLDER — ADD YOUR OWN CAPTURE</text>
 <text x="36" y="91" font-family="Arial, sans-serif" font-size="25" fill="#172b40">Dataset administration and ingestion</text>
 <text x="36" y="138" font-family="Arial, sans-serif" font-size="18" fill="#34495e">Show the actual dataset list, profile and generation status.</text>
 <text x="36" y="172" font-family="Arial, sans-serif" font-size="18" fill="#34495e">Use permitted data. Hide secrets and personal information.</text>
