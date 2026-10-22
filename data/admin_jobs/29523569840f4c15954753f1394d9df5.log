@@ -1,0 +1,124 @@
+Reading and validating uploaded file
+Writing SQL snapshot
+Building and verifying vector index
+Applying transformations:   0%|          | 0/1 [00:00<?, ?it/s]Applying transformations: 100%|██████████| 1/1 [00:01<00:00,  1.79s/it]Applying transformations: 100%|██████████| 1/1 [00:01<00:00,  1.79s/it]
+Generating embeddings:   0%|          | 0/2048 [00:00<?, ?it/s]Generating embeddings:   0%|          | 8/2048 [00:15<1:07:58,  2.00s/it]Generating embeddings:   1%|          | 16/2048 [00:17<31:24,  1.08it/s] Generating embeddings:   1%|          | 24/2048 [00:18<19:40,  1.71it/s]Generating embeddings:   2%|▏         | 32/2048 [00:20<14:17,  2.35it/s]Generating embeddings:   2%|▏         | 40/2048 [00:21<11:17,  2.96it/s]Generating embeddings:   2%|▏         | 48/2048 [00:23<09:30,  3.51it/s]Generating embeddings:   3%|▎         | 56/2048 [00:24<08:35,  3.87it/s]Generating embeddings:   3%|▎         | 64/2048 [00:26<07:49,  4.22it/s]Generating embeddings:   4%|▎         | 72/2048 [00:27<07:14,  4.55it/s]Generating embeddings:   4%|▍         | 80/2048 [00:29<06:46,  4.84it/s]Generating embeddings:   4%|▍         | 88/2048 [00:30<06:21,  5.14it/s]Generating embeddings:   5%|▍         | 96/2048 [00:31<06:08,  5.29it/s]Generating embeddings:   5%|▌         | 104/2048 [00:33<06:06,  5.30it/s]Generating embeddings:   5%|▌         | 112/2048 [00:34<05:57,  5.41it/s]Generating embeddings:   6%|▌         | 120/2048 [00:36<05:53,  5.46it/s]Generating embeddings:   6%|▋         | 128/2048 [00:37<05:43,  5.59it/s]Generating embeddings:   7%|▋         | 136/2048 [00:39<05:52,  5.42it/s]Generating embeddings:   7%|▋         | 144/2048 [00:40<05:32,  5.73it/s]Generating embeddings:   7%|▋         | 152/2048 [00:41<05:24,  5.84it/s]Generating embeddings:   8%|▊         | 160/2048 [00:43<05:30,  5.71it/s]Generating embeddings:   8%|▊         | 168/2048 [00:44<05:40,  5.52it/s]Generating embeddings:   9%|▊         | 176/2048 [00:46<05:46,  5.39it/s]Generating embeddings:   9%|▉         | 184/2048 [00:47<05:43,  5.43it/s]Generating embeddings:   9%|▉         | 192/2048 [00:49<05:49,  5.31it/s]Generating embeddings:  10%|▉         | 200/2048 [00:50<05:44,  5.37it/s]Generating embeddings:  10%|█         | 208/2048 [00:52<05:37,  5.45it/s]Generating embeddings:  11%|█         | 216/2048 [00:53<05:36,  5.45it/s]Generating embeddings:  11%|█         | 224/2048 [00:55<05:23,  5.64it/s]Generating embeddings:  11%|█▏        | 232/2048 [00:56<05:20,  5.67it/s]Generating embeddings:  12%|█▏        | 240/2048 [00:57<05:19,  5.66it/s]Generating embeddings:  12%|█▏        | 248/2048 [00:59<05:07,  5.85it/s]Generating embeddings:  12%|█▎        | 256/2048 [01:00<05:08,  5.80it/s]Generating embeddings:  13%|█▎        | 264/2048 [01:02<05:39,  5.25it/s]Generating embeddings:  13%|█▎        | 272/2048 [01:03<05:26,  5.44it/s]Generating embeddings:  14%|█▎        | 280/2048 [01:05<05:28,  5.38it/s]Generating embeddings:  14%|█▍        | 288/2048 [01:06<05:31,  5.31it/s]Generating embeddings:  14%|█▍        | 296/2048 [01:08<05:32,  5.27it/s]Generating embeddings:  15%|█▍        | 304/2048 [01:09<05:14,  5.55it/s]Generating embeddings:  15%|█▌        | 312/2048 [01:11<05:10,  5.59it/s]Generating embeddings:  16%|█▌        | 320/2048 [01:12<05:06,  5.63it/s]Generating embeddings:  16%|█▌        | 328/2048 [01:13<05:07,  5.59it/s]Generating embeddings:  16%|█▋        | 336/2048 [01:15<05:03,  5.64it/s]Generating embeddings:  17%|█▋        | 344/2048 [01:16<05:01,  5.65it/s]Generating embeddings:  17%|█▋        | 352/2048 [01:18<04:56,  5.73it/s]Generating embeddings:  18%|█▊        | 360/2048 [01:19<05:02,  5.59it/s]Generating embeddings:  18%|█▊        | 368/2048 [01:20<04:49,  5.80it/s]Generating embeddings:  18%|█▊        | 376/2048 [01:22<04:54,  5.68it/s]Generating embeddings:  19%|█▉        | 384/2048 [01:23<04:50,  5.73it/s]Generating embeddings:  19%|█▉        | 392/2048 [01:25<05:04,  5.44it/s]Generating embeddings:  20%|█▉        | 400/2048 [01:26<05:02,  5.44it/s]Generating embeddings:  20%|█▉        | 408/2048 [01:28<04:52,  5.60it/s]Generating embeddings:  20%|██        | 416/2048 [01:29<05:07,  5.31it/s]Generating embeddings:  21%|██        | 424/2048 [01:31<05:04,  5.33it/s]Generating embeddings:  21%|██        | 432/2048 [01:32<05:01,  5.36it/s]Generating embeddings:  21%|██▏       | 440/2048 [01:35<06:36,  4.06it/s]Generating embeddings:  22%|██▏       | 448/2048 [01:38<07:36,  3.50it/s]Generating embeddings:  22%|██▏       | 456/2048 [01:41<08:13,  3.22it/s]Generating embeddings:  23%|██▎       | 464/2048 [01:44<08:27,  3.12it/s]Generating embeddings:  23%|██▎       | 472/2048 [01:47<08:53,  2.95it/s]Generating embeddings:  23%|██▎       | 480/2048 [01:50<09:06,  2.87it/s]Generating embeddings:  24%|██▍       | 488/2048 [01:53<09:20,  2.78it/s]Generating embeddings:  24%|██▍       | 496/2048 [01:56<09:35,  2.70it/s]Generating embeddings:  25%|██▍       | 504/2048 [02:00<09:53,  2.60it/s]Generating embeddings:  25%|██▌       | 512/2048 [02:03<09:50,  2.60it/s]Generating embeddings:  25%|██▌       | 520/2048 [02:06<09:35,  2.65it/s]Generating embeddings:  26%|██▌       | 528/2048 [02:09<09:32,  2.65it/s]Generating embeddings:  26%|██▌       | 536/2048 [02:12<09:29,  2.65it/s]Generating embeddings:  27%|██▋       | 544/2048 [02:14<09:12,  2.72it/s]Generating embeddings:  27%|██▋       | 552/2048 [02:17<09:19,  2.68it/s]Generating embeddings:  27%|██▋       | 560/2048 [02:20<09:16,  2.67it/s]Generating embeddings:  28%|██▊       | 568/2048 [02:24<09:15,  2.66it/s]Generating embeddings:  28%|██▊       | 576/2048 [02:27<09:23,  2.61it/s]Generating embeddings:  29%|██▊       | 584/2048 [02:30<09:16,  2.63it/s]Generating embeddings:  29%|██▉       | 592/2048 [02:33<09:07,  2.66it/s]Generating embeddings:  29%|██▉       | 600/2048 [02:36<09:05,  2.66it/s]Generating embeddings:  30%|██▉       | 608/2048 [02:39<08:58,  2.68it/s]Generating embeddings:  30%|███       | 616/2048 [02:42<08:55,  2.67it/s]Generating embeddings:  30%|███       | 624/2048 [02:45<08:55,  2.66it/s]Generating embeddings:  31%|███       | 632/2048 [02:48<08:48,  2.68it/s]Generating embeddings:  31%|███▏      | 640/2048 [02:50<08:38,  2.71it/s]Generating embeddings:  32%|███▏      | 648/2048 [02:53<08:32,  2.73it/s]Generating embeddings:  32%|███▏      | 656/2048 [02:56<08:24,  2.76it/s]Generating embeddings:  32%|███▏      | 664/2048 [02:59<08:22,  2.75it/s]Generating embeddings:  33%|███▎      | 672/2048 [03:02<08:33,  2.68it/s]Generating embeddings:  33%|███▎      | 680/2048 [03:05<08:33,  2.66it/s]Generating embeddings:  34%|███▎      | 688/2048 [03:08<08:36,  2.63it/s]Generating embeddings:  34%|███▍      | 696/2048 [03:11<08:35,  2.62it/s]Generating embeddings:  34%|███▍      | 704/2048 [03:14<08:30,  2.64it/s]Generating embeddings:  35%|███▍      | 712/2048 [03:17<08:25,  2.64it/s]Generating embeddings:  35%|███▌      | 720/2048 [03:21<08:30,  2.60it/s]Generating embeddings:  36%|███▌      | 728/2048 [03:23<08:15,  2.66it/s]Generating embeddings:  36%|███▌      | 736/2048 [03:27<08:15,  2.65it/s]Generating embeddings:  36%|███▋      | 744/2048 [03:30<08:11,  2.65it/s]Generating embeddings:  37%|███▋      | 752/2048 [03:33<08:18,  2.60it/s]Generating embeddings:  37%|███▋      | 760/2048 [03:36<08:10,  2.63it/s]Generating embeddings:  38%|███▊      | 768/2048 [03:39<07:59,  2.67it/s]Generating embeddings:  38%|███▊      | 776/2048 [03:42<07:51,  2.70it/s]Generating embeddings:  38%|███▊      | 784/2048 [03:44<07:46,  2.71it/s]Generating embeddings:  39%|███▊      | 792/2048 [03:47<07:26,  2.82it/s]Generating embeddings:  39%|███▉      | 800/2048 [03:50<07:28,  2.78it/s]Generating embeddings:  39%|███▉      | 808/2048 [03:53<07:42,  2.68it/s]Generating embeddings:  40%|███▉      | 816/2048 [03:56<07:45,  2.64it/s]Generating embeddings:  40%|████      | 824/2048 [03:59<07:37,  2.68it/s]Generating embeddings:  41%|████      | 832/2048 [04:02<07:32,  2.69it/s]Generating embeddings:  41%|████      | 840/2048 [04:05<07:24,  2.72it/s]Generating embeddings:  41%|████▏     | 848/2048 [04:08<07:25,  2.70it/s]Generating embeddings:  42%|████▏     | 856/2048 [04:11<07:14,  2.75it/s]Generating embeddings:  42%|████▏     | 864/2048 [04:14<07:14,  2.73it/s]Generating embeddings:  43%|████▎     | 872/2048 [04:17<07:25,  2.64it/s]Generating embeddings:  43%|████▎     | 880/2048 [04:21<07:50,  2.48it/s]Generating embeddings:  43%|████▎     | 888/2048 [04:24<07:57,  2.43it/s]Generating embeddings:  44%|████▍     | 896/2048 [04:27<07:50,  2.45it/s]Generating embeddings:  44%|████▍     | 904/2048 [04:31<07:49,  2.44it/s]Generating embeddings:  45%|████▍     | 912/2048 [04:34<07:38,  2.48it/s]Generating embeddings:  45%|████▍     | 920/2048 [04:37<07:32,  2.49it/s]Generating embeddings:  45%|████▌     | 928/2048 [04:40<07:31,  2.48it/s]Generating embeddings:  46%|████▌     | 936/2048 [04:44<07:37,  2.43it/s]Generating embeddings:  46%|████▌     | 944/2048 [04:47<07:34,  2.43it/s]Generating embeddings:  46%|████▋     | 952/2048 [04:51<08:06,  2.25it/s]Generating embeddings:  47%|████▋     | 960/2048 [04:55<07:59,  2.27it/s]Generating embeddings:  47%|████▋     | 968/2048 [04:58<07:54,  2.28it/s]Generating embeddings:  48%|████▊     | 976/2048 [05:02<07:47,  2.29it/s]Generating embeddings:  48%|████▊     | 984/2048 [05:05<07:38,  2.32it/s]Generating embeddings:  48%|████▊     | 992/2048 [05:09<07:40,  2.29it/s]Generating embeddings:  49%|████▉     | 1000/2048 [05:12<07:18,  2.39it/s]Generating embeddings:  49%|████▉     | 1008/2048 [05:15<07:02,  2.46it/s]Generating embeddings:  50%|████▉     | 1016/2048 [05:17<06:44,  2.55it/s]Generating embeddings:  50%|█████     | 1024/2048 [05:20<06:35,  2.59it/s]Generating embeddings:  50%|█████     | 1032/2048 [05:24<06:39,  2.54it/s]Generating embeddings:  51%|█████     | 1040/2048 [05:27<06:25,  2.62it/s]Generating embeddings:  51%|█████     | 1048/2048 [05:30<06:22,  2.62it/s]Generating embeddings:  52%|█████▏    | 1056/2048 [05:33<06:24,  2.58it/s]Generating embeddings:  52%|█████▏    | 1064/2048 [05:36<06:25,  2.55it/s]Generating embeddings:  52%|█████▏    | 1072/2048 [05:39<06:14,  2.61it/s]Generating embeddings:  53%|█████▎    | 1080/2048 [05:42<06:17,  2.56it/s]Generating embeddings:  53%|█████▎    | 1088/2048 [05:45<06:17,  2.54it/s]Generating embeddings:  54%|█████▎    | 1096/2048 [05:49<06:15,  2.54it/s]Generating embeddings:  54%|█████▍    | 1104/2048 [05:52<06:09,  2.55it/s]Generating embeddings:  54%|█████▍    | 1112/2048 [05:55<06:10,  2.53it/s]Generating embeddings:  55%|█████▍    | 1120/2048 [05:58<06:05,  2.54it/s]Generating embeddings:  55%|█████▌    | 1128/2048 [06:01<05:58,  2.56it/s]Generating embeddings:  55%|█████▌    | 1136/2048 [06:04<05:52,  2.59it/s]Generating embeddings:  56%|█████▌    | 1144/2048 [06:07<05:44,  2.62it/s]Generating embeddings:  56%|█████▋    | 1152/2048 [06:10<05:46,  2.59it/s]Generating embeddings:  57%|█████▋    | 1160/2048 [06:13<05:31,  2.68it/s]Generating embeddings:  57%|█████▋    | 1168/2048 [06:16<05:25,  2.70it/s]Generating embeddings:  57%|█████▋    | 1176/2048 [06:19<05:22,  2.71it/s]Generating embeddings:  58%|█████▊    | 1184/2048 [06:22<05:19,  2.70it/s]Generating embeddings:  58%|█████▊    | 1192/2048 [06:25<05:17,  2.69it/s]Generating embeddings:  59%|█████▊    | 1200/2048 [06:28<05:09,  2.74it/s]Generating embeddings:  59%|█████▉    | 1208/2048 [06:31<05:07,  2.73it/s]Generating embeddings:  59%|█████▉    | 1216/2048 [06:33<05:03,  2.74it/s]Generating embeddings:  60%|█████▉    | 1224/2048 [06:36<05:02,  2.72it/s]Generating embeddings:  60%|██████    | 1232/2048 [06:40<05:05,  2.67it/s]Generating embeddings:  61%|██████    | 1240/2048 [06:42<04:59,  2.70it/s]Generating embeddings:  61%|██████    | 1248/2048 [06:45<04:46,  2.79it/s]Generating embeddings:  61%|██████▏   | 1256/2048 [06:48<04:50,  2.73it/s]Generating embeddings:  62%|██████▏   | 1264/2048 [06:51<04:47,  2.73it/s]Generating embeddings:  62%|██████▏   | 1272/2048 [06:54<04:41,  2.76it/s]Generating embeddings:  62%|██████▎   | 1280/2048 [06:57<04:44,  2.70it/s]Generating embeddings:  63%|██████▎   | 1288/2048 [07:00<04:46,  2.65it/s][activity] rag.directml.service_call: ERROR ConnectError [request e29d81ba14894c3c]
+[activity] ingest.embedding_and_index_build: ERROR RAGUnavailableError [request e29d81ba14894c3c]
+[activity] rag.ingest_pipeline.build_vectors: ERROR RAGUnavailableError [request e29d81ba14894c3c]
+[activity] rag.ingest_pipeline.publish_generation: ERROR RAGUnavailableError [request e29d81ba14894c3c]
+Traceback (most recent call last):
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    raise exc
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpcore\_sync\connection.py", line 78, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpcore\_sync\connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpcore\_backends\sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_client.py", line 22, in gpu_call
+    response = _client(llm_url()).post(path, json=payload, headers=trace_headers())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_client.py", line 1144, in post
+    return self.request(
+           ^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\ingestion_jobs.py", line 139, in run_job
+    generation = publish_generation(config, records, report, vector_builder=vector_builder or build_vectors, progress=progress)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\timing.py", line 215, in wrapped
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\ingest_pipeline.py", line 158, in publish_generation
+    vector_builder(records, config.profile, directory / "vectors")
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\timing.py", line 215, in wrapped
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\ingest_pipeline.py", line 137, in build_vectors
+    index = VectorStoreIndex.from_documents(documents, embed_model=embedding, show_progress=True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\indices\base.py", line 122, in from_documents
+    return cls(
+           ^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\indices\vector_store\base.py", line 75, in __init__
+    super().__init__(
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\indices\base.py", line 79, in __init__
+    index_struct = self.build_index_from_nodes(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\indices\vector_store\base.py", line 309, in build_index_from_nodes
+    return self._build_index_from_nodes(content_nodes, **insert_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\indices\vector_store\base.py", line 278, in _build_index_from_nodes
+    self._add_nodes_to_index(
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\indices\vector_store\base.py", line 231, in _add_nodes_to_index
+    nodes_batch = self._get_node_with_embedding(nodes_batch, show_progress)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\indices\vector_store\base.py", line 138, in _get_node_with_embedding
+    id_to_embed_map = embed_nodes(
+                      ^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\indices\utils.py", line 196, in embed_nodes
+    new_embeddings = embed_model.get_text_embedding_batch(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index_instrumentation\dispatcher.py", line 413, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\llama_index\core\base\embeddings\base.py", line 517, in get_text_embedding_batch
+    embeddings = self._get_text_embeddings(cur_batch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_client.py", line 56, in _get_text_embeddings
+    result.extend(self._vectors(texts[start:start + 32], 'text'))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_client.py", line 36, in _vectors
+    result = gpu_call('/v1/rag/embeddings', {'texts': texts, 'kind': kind})['embeddings']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_client.py", line 26, in gpu_call
+    raise RAGUnavailableError('Shared GPU inference unavailable. Check the LLM service and GPU setup logs; CPU fallback is disabled.') from exc
+rag.domain_config.RAGUnavailableError: Shared GPU inference unavailable. Check the LLM service and GPU setup logs; CPU fallback is disabled.
+Generating embeddings:  63%|██████▎   | 1295/2048 [07:05<04:07,  3.05it/s]

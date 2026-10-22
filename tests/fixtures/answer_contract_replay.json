@@ -1,0 +1,176 @@
+[
+  {
+    "scenario": "novel_may_limits",
+    "raw_model_text": "[{\"record\":0,\"fields\":[\"Quy tắc và giới hạn\"]}",
+    "primary_entity": "service_title",
+    "schema": {
+      "record_code": "Mã dịch vụ",
+      "service_title": "Tên dịch vụ",
+      "station_name": "Trạm phục vụ",
+      "policy_details": "Quy tắc và giới hạn",
+      "request_turnaround": "Thời gian xử lý yêu cầu",
+      "service_charge": "Giá dịch vụ",
+      "service_desk": "Quầy hỗ trợ",
+      "booking_channel": "Kênh đăng ký",
+      "internal_marker": "Mã kiểm tra nội bộ"
+    },
+    "evidence_fields": [
+      "service_title",
+      "station_name",
+      "policy_details",
+      "request_turnaround",
+      "service_charge",
+      "service_desk",
+      "booking_channel"
+    ],
+    "documents": [
+      {
+        "Tên dịch vụ": "Mượn máy khoan — Trạm Mây",
+        "Trạm phục vụ": "Trạm Mây",
+        "Quy tắc và giới hạn": "Mỗi lượt tối đa 2 máy khoan, được giữ trong 5 ngày. Chỉ dành cho thành viên.",
+        "Thời gian xử lý yêu cầu": "20 phút",
+        "Giá dịch vụ": "15000 đồng mỗi lượt",
+        "Quầy hỗ trợ": "Bàn thiết bị Trạm Mây",
+        "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+      }
+    ],
+    "expected_normalization": "closed_outer_array",
+    "required_text": [
+      "2 máy khoan",
+      "5 ngày",
+      "Chỉ dành cho thành viên"
+    ],
+    "expected_fields": [
+      "service_title",
+      "policy_details"
+    ]
+  },
+  {
+    "scenario": "novel_room_full_attributes",
+    "raw_model_text": "[{\"record\":0,\"fields\":[\"Tên dịch vụ\",\"Trạm phục vụ\",\"Quy tắc và giới hạn\",\"Giá dịch vụ\",\"Quầy hỗ trợ\"]}",
+    "primary_entity": "service_title",
+    "schema": {
+      "record_code": "Mã dịch vụ",
+      "service_title": "Tên dịch vụ",
+      "station_name": "Trạm phục vụ",
+      "policy_details": "Quy tắc và giới hạn",
+      "request_turnaround": "Thời gian xử lý yêu cầu",
+      "service_charge": "Giá dịch vụ",
+      "service_desk": "Quầy hỗ trợ",
+      "booking_channel": "Kênh đăng ký",
+      "internal_marker": "Mã kiểm tra nội bộ"
+    },
+    "evidence_fields": [
+      "service_title",
+      "station_name",
+      "policy_details",
+      "request_turnaround",
+      "service_charge",
+      "service_desk",
+      "booking_channel"
+    ],
+    "documents": [
+      {
+        "Tên dịch vụ": "Đặt phòng làm việc — Trạm Nắng",
+        "Trạm phục vụ": "Trạm Nắng",
+        "Quy tắc và giới hạn": "Phòng tối đa 8 người, mỗi lượt tối đa 2 giờ.",
+        "Thời gian xử lý yêu cầu": "25 phút",
+        "Giá dịch vụ": "45000 đồng mỗi giờ",
+        "Quầy hỗ trợ": "Quầy không gian Trạm Nắng",
+        "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+      }
+    ],
+    "expected_normalization": "closed_outer_array",
+    "required_text": [
+      "8 người",
+      "2 giờ",
+      "45000 đồng",
+      "Quầy không gian Trạm Nắng"
+    ],
+    "expected_fields": [
+      "service_title",
+      "station_name",
+      "policy_details",
+      "service_charge",
+      "service_desk"
+    ]
+  },
+  {
+    "scenario": "admissions_overview",
+    "raw_model_text": "[{\"record\":0,\"fields\":[\"Chủ đề\",\"Nội dung\"]},{\"record\":1,\"fields\":[\"Chủ đề\",\"Nội dung\"]},{\"record\":2,\"fields\":[\"Chủ đề\",\"Nội dung\"]}]",
+    "primary_entity": "topic",
+    "schema": {
+      "topic": "Chủ đề",
+      "content": "Nội dung",
+      "required_documents": "Hồ sơ",
+      "timeframe": "Thời gian",
+      "fee_or_scholarship": "Phí hoặc học bổng",
+      "submission_method": "Kênh thực hiện",
+      "application_year": "Năm áp dụng",
+      "source_url": "Nguồn",
+      "university": "Trường",
+      "source_check_date": "Ngày kiểm tra nguồn"
+    },
+    "evidence_fields": [
+      "topic",
+      "content",
+      "required_documents",
+      "timeframe",
+      "fee_or_scholarship",
+      "submission_method",
+      "application_year",
+      "source_url",
+      "university",
+      "source_check_date"
+    ],
+    "documents": [
+      {
+        "Chủ đề": "Tuyển sinh phương thức 1a",
+        "Nội dung": "Tuyển thẳng và ưu tiên theo quy định của Bộ GDĐT.",
+        "Hồ sơ": "",
+        "Thời gian": "",
+        "Phí hoặc học bổng": "",
+        "Kênh thực hiện": "",
+        "Năm áp dụng": "2026",
+        "Nguồn": "https://tuyensinh.hcmus.edu.vn/2026-thong-tin-tuyen-sinh/",
+        "Trường": "ĐH Khoa học tự nhiên, ĐHQG-HCM",
+        "Ngày kiểm tra nguồn": "2026-10-15"
+      },
+      {
+        "Chủ đề": "Tuyển sinh phương thức 1b",
+        "Nội dung": "Dành cho người nước ngoài tốt nghiệp THPT nước ngoài; xét học tập THPT.",
+        "Hồ sơ": "",
+        "Thời gian": "",
+        "Phí hoặc học bổng": "",
+        "Kênh thực hiện": "",
+        "Năm áp dụng": "2026",
+        "Nguồn": "https://tuyensinh.hcmus.edu.vn/2026-thong-tin-tuyen-sinh/",
+        "Trường": "ĐH Khoa học tự nhiên, ĐHQG-HCM",
+        "Ngày kiểm tra nguồn": "2026-10-15"
+      },
+      {
+        "Chủ đề": "Tuyển sinh phương thức 2",
+        "Nội dung": "Kết hợp điểm thi THPT hoặc ĐGNL ĐHQG-HCM với học bạ lớp 10–12.",
+        "Hồ sơ": "",
+        "Thời gian": "",
+        "Phí hoặc học bổng": "",
+        "Kênh thực hiện": "",
+        "Năm áp dụng": "2026",
+        "Nguồn": "https://tuyensinh.hcmus.edu.vn/2026-thong-tin-tuyen-sinh/",
+        "Trường": "ĐH Khoa học tự nhiên, ĐHQG-HCM",
+        "Ngày kiểm tra nguồn": "2026-10-15"
+      }
+    ],
+    "expected_normalization": null,
+    "required_text": [
+      "Tuyển thẳng",
+      "người nước ngoài",
+      "học bạ"
+    ],
+    "expected_fields": [
+      "topic",
+      "content"
+    ],
+    "expected_rendered_answer": "Tuyển sinh phương thức 1a:\n- Chủ đề: Tuyển sinh phương thức 1a\n- Nội dung: Tuyển thẳng và ưu tiên theo quy định của Bộ GDĐT.\n\nTuyển sinh phương thức 1b:\n- Chủ đề: Tuyển sinh phương thức 1b\n- Nội dung: Dành cho người nước ngoài tốt nghiệp THPT nước ngoài; xét học tập THPT.\n\nTuyển sinh phương thức 2:\n- Chủ đề: Tuyển sinh phương thức 2\n- Nội dung: Kết hợp điểm thi THPT hoặc ĐGNL ĐHQG-HCM với học bạ lớp 10–12."
+  }
+]

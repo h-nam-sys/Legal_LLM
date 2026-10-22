@@ -8,7 +8,7 @@ from pathlib import Path
 import platform
 import zipfile
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def recent_files(root):
@@ -35,6 +35,7 @@ def inspect(root, files):
     invalid_messages = []
     requests = defaultdict(Counter)
     context_records = 0
+    turns = []
     timing_requests = set()
     chat_completions = {}
     timing_errors = []
@@ -55,6 +56,8 @@ def inspect(root, files):
                                 missing_ids += 1
                             else:
                                 requests[request][role] += 1
+                        elif value.get('event') == 'turn':
+                            turns.append(value)
                         elif value.get('event') == 'interaction':
                             context_records += 1
                     except (ValueError, TypeError, AttributeError):
@@ -85,6 +88,8 @@ def inspect(root, files):
     paired = sum(bool(roles['user'] and roles['assistant']) for roles in requests.values())
     report = {
         'message_counts': dict(messages),
+        'turn_count': len(turns),
+        'turn_status_counts': dict(Counter(t.get('status') for t in turns)),
         'requests_with_user_and_assistant': paired,
         'messages_missing_request_ids': missing_ids,
         'conversation_requests_missing_timing': sorted(set(requests) - timing_requests),
@@ -113,6 +118,49 @@ def inspect(root, files):
     return report
 
 
+def transcript(files):
+    turns, messages = [], []
+    for path in files:
+        if path.suffix != '.jsonl':
+            continue
+        for line in path.read_text(encoding='utf-8', errors='replace').splitlines():
+            try:
+                item = json.loads(line)
+                if item.get('event') == 'turn':
+                    turns.append(item)
+                elif item.get('event') == 'message':
+                    messages.append(item)
+            except (ValueError, AttributeError):
+                continue
+    entries = []
+    summarized = {(t.get('request_id'), t.get('pid'), t.get('conversation_id')) for t in turns}
+    for turn in turns:
+        lines = [
+            'Time: ' + str(turn.get('started_at')),
+            'Chat: ' + str(turn.get('conversation_id')) + ' | Request: ' + str(turn.get('request_id')),
+            'Domain: ' + str(turn.get('selected_domain')) + ' | Status: ' + str(turn.get('status')) + ' | Duration (ms): ' + str(turn.get('elapsed_ms')),
+            'Classifier: ' + json.dumps(turn.get('classifier_decision'), ensure_ascii=False),
+            'USER:', turn.get('user_prompt') or '',
+            'ASSISTANT:', turn.get('assistant_response') or '[No response captured]',
+            'Error: ' + str(turn.get('error') or ''), '', '=' * 60, '',
+        ]
+        entries.append((turn.get('started_at', turn.get('timestamp', '')), '\n'.join(lines)))
+    # Include form/MCP action replies and older logs which have no combined turn.
+    for message in messages:
+        key = (message.get('request_id'), message.get('pid'), message.get('conversation_id'))
+        if key in summarized:
+            continue
+        text = '\n'.join([
+            'Time: ' + str(message.get('timestamp')),
+            'Chat: ' + str(message.get('conversation_id')) + ' | Request: ' + str(message.get('request_id')),
+            'Saved message (no combined turn summary):',
+            str(message.get('role', '')).upper() + ':', message.get('content') or '',
+            '', '=' * 60, '',
+        ])
+        entries.append((message.get('timestamp', ''), text))
+    return '\n'.join(text for _, text in sorted(entries, key=lambda item: item[0])) or 'No chat records found.\n'
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check-only', action='store_true', help='Print log checks without making a ZIP')
@@ -133,6 +181,7 @@ def main():
     name = 'diagnostics_' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S_%fZ') + '.zip'
     destination = directory / name
     with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('chat_transcript.txt', transcript(files))
         archive.writestr('diagnostic_report.json', json.dumps(report, ensure_ascii=False, indent=2))
         for path in files:
             archive.write(path, path.relative_to(ROOT).as_posix())

@@ -1,0 +1,829 @@
+{
+  "version": 5,
+  "purpose": "Automated end-to-end prompt regression suite for the current five-domain demo. Expected facts reflect the supplied demo; review/update if datasets change. Rejection of unsupported private details or fabricated-fee instructions is permitted and reviewed rather than forced into a dataset.",
+  "limits": "Automated checks cover routing, saved answers, evidence records, field selection and known answer patterns. They are not a complete semantic correctness judgment or an exhaustive language test.",
+  "scenarios": [
+    {
+      "id": "novel_may_limits",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Ở Xưởng Nhỏ Trạm Mây, mỗi lượt được mượn tối đa mấy máy khoan và giữ trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:2|hai) may",
+              "(?:5|nam) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_nang_limits",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Ở Xưởng Nhỏ Trạm Nắng, mỗi lượt được mượn mấy máy khoan và giữ trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:1|mot) may",
+              "(?:2|hai) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_processing_vs_loan",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Xưởng Nhỏ Trạm Mây xử lý yêu cầu mượn máy khoan trong bao lâu? Tôi hỏi thời gian xử lý, không phải hạn giữ máy.",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "request_turnaround"
+            ],
+            "answer_patterns": [
+              "(?:20|hai muoi) phut"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_fee_only",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Phí mượn máy khoan tại Xưởng Nhỏ Trạm Mây là bao nhiêu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "service_charge"
+            ],
+            "answer_patterns": [
+              "15[., ]?000"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_thanks_renewal",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Ở Xưởng Nhỏ Trạm Mây, mỗi lượt được mượn tối đa mấy máy khoan và giữ trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:2|hai) may",
+              "(?:5|nam) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        },
+        {
+          "prompt": "Cảm ơn bạn.",
+          "expected": {
+            "routes": [
+              "conversation"
+            ],
+            "no_retrieval": true,
+            "state_domain": "maker_lab_test",
+            "contradiction_patterns": [
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        },
+        {
+          "prompt": "Gia hạn được mấy lần, thêm bao nhiêu ngày và có điều kiện gì?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Gia hạn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:1|mot) lan",
+              "(?:3|ba) ngay",
+              "khong co nguoi dat truoc"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        },
+        {
+          "prompt": "Làm ở đâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Gia hạn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "service_desk"
+            ],
+            "answer_patterns": [
+              "ban thiet bi tram may"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_change_item",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Ở Xưởng Nhỏ Trạm Mây, mỗi lượt được mượn tối đa mấy máy khoan và giữ trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:2|hai) may",
+              "(?:5|nam) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        },
+        {
+          "prompt": "Ở Xưởng Nhỏ Trạm Mây, mượn máy chiếu được mấy máy, trong bao lâu và phí bao nhiêu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy chiếu — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details",
+              "service_charge"
+            ],
+            "answer_patterns": [
+              "(?:1|mot) may",
+              "(?:1|mot) ngay",
+              "50[., ]?000"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_change_station",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Ở Xưởng Nhỏ Trạm Mây, mỗi lượt được mượn tối đa mấy máy khoan và giữ trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:2|hai) may",
+              "(?:5|nam) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        },
+        {
+          "prompt": "Còn tại Xưởng Nhỏ Trạm Nắng, mỗi lượt được mượn mấy máy khoan và trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:1|mot) may",
+              "(?:2|hai) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_cross_domain",
+      "requires": [
+        "maker_lab_test",
+        "administrative_procedures",
+        "university_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Đăng ký khai sinh mất bao lâu và lệ phí bao nhiêu?",
+          "expected": {
+            "domain": "administrative_procedures",
+            "records": [
+              "Thủ tục đăng ký khai sinh"
+            ],
+            "exact_records": true,
+            "fields": [
+              "processing_time",
+              "fee"
+            ],
+            "answer_patterns": [
+              "(?:1|mot) ngay",
+              "8[., ]?000"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        },
+        {
+          "prompt": "Ở Xưởng Nhỏ Trạm Mây, mỗi lượt được mượn tối đa mấy máy khoan và giữ trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:2|hai) may",
+              "(?:5|nam) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        },
+        {
+          "prompt": "Ở thư viện Demo, mỗi lần được mượn mấy cuốn và trong bao lâu?",
+          "expected": {
+            "domain": "university_test",
+            "records": [
+              "Mượn sách thư viện"
+            ],
+            "exact_records": true,
+            "fields": [
+              "description"
+            ],
+            "answer_patterns": [
+              "(?:3|ba) (?:cuon|quyen)",
+              "(?:14|muoi bon) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_two_stations",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "So sánh phí mượn máy khoan tại Xưởng Nhỏ Trạm Mây và Trạm Nắng.",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây",
+              "Mượn máy khoan — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "service_charge"
+            ],
+            "answer_patterns": [
+              "15[., ]?000",
+              "30[., ]?000"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_missing_deposit",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Xưởng Nhỏ Trạm Mây yêu cầu đặt cọc bao nhiêu khi mượn máy chiếu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy chiếu — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "answer_any_patterns": [
+              "(?:khong|chua).*(?:thong tin|du lieu|quy dinh)|khong.*de cap"
+            ],
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_no_accents",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "xuong nho tram nang cho muon may khoan toi da may may va giu may ngay?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:1|mot) may",
+              "(?:2|hai) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_room_limits",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Phòng làm việc của Xưởng Nhỏ Trạm Mây chứa tối đa mấy người và được đặt mấy giờ mỗi lượt?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Đặt phòng làm việc — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:6|sau) nguoi",
+              "(?:3|ba) gio"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_related_action",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Sửa máy khoan ở Xưởng Nhỏ Trạm Mây mất bao lâu và phí bao nhiêu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Sửa máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "request_turnaround",
+              "service_charge"
+            ],
+            "answer_patterns": [
+              "(?:4|bon) ngay",
+              "80[., ]?000"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_negated_topic",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Tôi không hỏi mượn máy khoan. Tôi hỏi phòng làm việc Xưởng Nhỏ Trạm Nắng: tối đa mấy người và mấy giờ mỗi lượt?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Đặt phòng làm việc — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:8|tam) nguoi",
+              "(?:2|hai) gio"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_repeat_cached",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Ở Xưởng Nhỏ Trạm Mây, mỗi lượt được mượn tối đa mấy máy khoan và giữ trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "fields": [
+              "policy_details"
+            ],
+            "answer_patterns": [
+              "(?:2|hai) may",
+              "(?:5|nam) ngay"
+            ],
+            "require_answer_patterns": true,
+            "contradiction_patterns": [
+              "(?:khong|chua).{0,50}(?:thong tin|de cap|ghi ro)(?: nao)? (?:ve|den|lien quan den) (?:dich vu |viec (?:muon|dat|su dung).{0,50} tai )?xuong nho",
+              "khong the (?:xac dinh|xac nhan) (?:quy tac|quy dinh|so luong|thoi gian|viec muon|viec dat).{0,120}(?:xuong nho|dia diem nay|doi tuong nay)",
+              "khong (?:ghi ro|xac dinh).{0,80}don vi thoi gian",
+              "khong (?:ghi ro|co|xac dinh).{0,120}(?:to chuc|xuong nho)",
+              "khong the xac nhan.{0,120}xuong nho",
+              "(?:thong tin|quy dinh).{0,100}khong co.{0,100}cac dich vu khac",
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel_room_full_attributes",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Phòng làm việc Xưởng Nhỏ Trạm Nắng chứa tối đa mấy người, đặt được mấy giờ mỗi lượt, giá bao nhiêu và liên hệ quầy nào?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Đặt phòng làm việc — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "fields": [
+              "policy_details",
+              "service_charge",
+              "service_desk"
+            ],
+            "require_answer_patterns": true,
+            "answer_patterns": [
+              "(?:8|tam) nguoi",
+              "(?:2|hai) gio",
+              "45[.,]?000",
+              "quay khong gian tram nang"
+            ],
+            "forbidden_patterns": [
+              "internal_canary_xuong_nho_731"
+            ],
+            "contradiction_patterns": [
+              "(?:gia|quay ho tro).{0,60}khong co trong du lieu"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

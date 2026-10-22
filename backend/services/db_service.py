@@ -109,6 +109,7 @@ async def update_domain_state(db, conversation_id, state, *, clear_procedure=Fal
             conv.current_procedure = None
         with span('db.commit'):
             await db.commit()
+        diagnostic_record('domain_state', conversation_id=conversation_id, state=dict(state))
 
 # ============ Message Operations ============
 

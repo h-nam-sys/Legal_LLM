@@ -10,6 +10,8 @@ import threading
 import time
 import urllib.request
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+from rag.service_config import llm_port
 
 ROOT = Path(__file__).resolve().parent
 STOP = threading.Event()
@@ -85,12 +87,19 @@ def stop_process(process):
                 pass
 
 
-def main():
-    services = [
-        ('LLM', ROOT, [sys.executable, '-u', 'llm_service/main.py'], 8002, '/v1/rag/status'),
+def service_definitions():
+    inference_port=llm_port()
+    return [
+        ('LLM', ROOT, [sys.executable, '-u', 'llm_service/main.py'], inference_port, '/v1/rag/status'),
         ('Backend', ROOT / 'backend', [sys.executable, '-u', '-m', 'uvicorn', 'main:app', '--port', '8000', '--reload'], 8000, '/health'),
         ('Admin', ROOT / 'backend', [sys.executable, '-u', '-m', 'streamlit', 'run', 'admin_dashboard.py', '--server.address', '127.0.0.1', '--server.port', '8501'], 8501, '/_stcore/health'),
     ]
+
+
+def main():
+    load_dotenv(ROOT / 'backend/.env')
+    load_dotenv(ROOT / '.env')
+    services = service_definitions()
     for name, _, _, port, _ in services:
         with socket.socket() as probe:
             probe.settimeout(0.5)

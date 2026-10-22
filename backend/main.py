@@ -13,8 +13,9 @@ from slowapi import _rate_limit_exceeded_handler
 
 load_dotenv()
 
-LLM_SERVICE_URL = os.getenv("LLM_SERVICE_URL", "http://localhost:8001")
-RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "http://localhost:8002")
+from rag.service_config import llm_url
+LLM_SERVICE_URL = llm_url()
+RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", LLM_SERVICE_URL)
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id

@@ -1,0 +1,6 @@
+2026-10-20 15:11:33,645 TIMING {"request_id": "1a679b3e4ecb45bc", "pid": 24824, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:11:33,653 TIMING {"request_id": "1a679b3e4ecb45bc", "pid": 24824, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 9.153, "status": "ok", "error": null}
+2026-10-20 15:11:33,775 TIMING {"request_id": "79e2aa1bc67a4dbf", "pid": 24824, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:11:33,777 TIMING {"request_id": "79e2aa1bc67a4dbf", "pid": 24824, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.781, "status": "ok", "error": null}
+2026-10-20 15:11:33,827 TIMING {"request_id": "ba2aa236c15d4b75", "pid": 24824, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:11:33,830 TIMING {"request_id": "ba2aa236c15d4b75", "pid": 24824, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.65, "status": "ok", "error": null}

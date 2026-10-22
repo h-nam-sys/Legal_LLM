@@ -97,6 +97,8 @@ def exception_outcome(exc):
     # Streamlit rerun/stop deliberately unwind the script. Keep re-raising them;
     # only their diagnostic classification changes.
     kind = type(exc)
+    if getattr(kind, '_timing_control_flow', False):
+        return 'control_flow', None
     if kind.__module__.startswith('streamlit.') and kind.__name__ in {'RerunException', 'StopException'}:
         return 'control_flow', None
     if isinstance(exc, GeneratorExit) or (kind.__name__ == 'CancelledError' and kind.__module__ in {'asyncio.exceptions', 'concurrent.futures._base'}):

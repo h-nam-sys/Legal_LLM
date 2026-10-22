@@ -1,6 +1,14 @@
 {
-  "description": "",
-  "routing_examples": [],
+  "description": "Tra cứu thủ tục hành chính tại phường Tăng Nhơn Phú: đăng ký khai sinh, khai tử, kết hôn, xác nhận tình trạng hôn nhân, chứng thực, hộ kinh doanh, đất đai, trợ cấp xã hội và học bổng chính sách.",
+  "routing_examples": [
+    "Đăng ký khai sinh mất bao lâu và lệ phí bao nhiêu?",
+    "Đăng ký khai tử cần những giấy tờ gì?",
+    "Đăng ký kết hôn nộp hồ sơ ở đâu?",
+    "Xin xác nhận tình trạng hôn nhân như thế nào?",
+    "Chứng thực chữ ký mất bao nhiêu tiền?",
+    "Đăng ký thành lập hộ kinh doanh cần hồ sơ gì?",
+    "Thủ tục xét, cấp học bổng chính sách tại phường Tăng Nhơn Phú nộp ở đâu?"
+  ],
   "default_mode": "strict",
   "exact_field_output": true,
   "modes": {

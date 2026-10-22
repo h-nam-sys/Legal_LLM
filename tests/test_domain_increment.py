@@ -247,7 +247,7 @@ def test_explicit_and_property_followup_skip_domain_llm(roots, monkeypatch):
 
 def test_auto_topic_switch_and_invalid_decision_clarify(roots, monkeypatch):
     two_domains(roots)
-    fake_async_client(monkeypatch, {'kind': 'domain', 'domain': 'university'})
+    fake_async_client(monkeypatch, {'route': 'university'})
     c, state, changed = asyncio.run(routing.choose_domain('Scholarship requirements', {'name': 'legal', 'selection': 'auto'}, ['Marriage']))
     assert c.name == 'university' and changed
     with pytest.raises(ValueError):
@@ -267,7 +267,7 @@ def test_legacy_modes_and_exact_rendering_are_preserved(roots, monkeypatch):
 
 def test_chat_domain_isolation_followup_and_full_sources(roots, monkeypatch):
     two_domains(roots)
-    def retrieve(phrase, *, config):
+    def retrieve(phrase, *, config, **kwargs):
         with sqlite3.connect(config.db_path) as conn:
             conn.row_factory = sqlite3.Row
             rows = [dict(row) for row in conn.execute('SELECT * FROM records')]
@@ -277,6 +277,7 @@ def test_chat_domain_isolation_followup_and_full_sources(roots, monkeypatch):
     async def fields(*args, **kwargs):
         return '[]'
     monkeypatch.setattr(qp, 'retrieve_and_rerank', retrieve)
+    monkeypatch.setattr(qp, 'rerank_records', lambda question, matches, **kw: matches[:kw['top_k']])
     monkeypatch.setattr(qp, 'prepare_search_queries', prep)
     monkeypatch.setattr(qp, 'call_llm_json', fields)
     async def run():
@@ -311,7 +312,7 @@ def test_chat_domain_isolation_followup_and_full_sources(roots, monkeypatch):
 
 def test_ambiguous_chat_returns_reviewable_clarification(roots, monkeypatch):
     two_domains(roots)
-    fake_async_client(monkeypatch, {'kind': 'ambiguous', 'domain': None})
+    fake_async_client(monkeypatch, {'route': 'clarify'})
     async def run():
         engine = create_async_engine('sqlite+aiosqlite:///' + str(roots / 'chat.db'))
         async with engine.begin() as conn:
@@ -334,7 +335,7 @@ def test_fastapi_contracts_domains_history_and_streaming(roots, monkeypatch):
         return '[]'
     async def prep(prompt, search, config):
         return PreparedQueries(('Scholarship',), 'prepared')
-    def retrieve(phrase, *, config):
+    def retrieve(phrase, *, config, **kwargs):
         with sqlite3.connect(config.db_path) as conn:
             conn.row_factory = sqlite3.Row
             row = dict(conn.execute('SELECT * FROM records').fetchone())
@@ -342,6 +343,7 @@ def test_fastapi_contracts_domains_history_and_streaming(roots, monkeypatch):
     monkeypatch.setattr(qp, 'call_llm_json', retrieve_fields)
     monkeypatch.setattr(qp, 'prepare_search_queries', prep)
     monkeypatch.setattr(qp, 'retrieve_and_rerank', retrieve)
+    monkeypatch.setattr(qp, 'rerank_records', lambda question, matches, **kw: matches[:kw['top_k']])
     async def run():
         engine = create_async_engine('sqlite+aiosqlite:///' + str(roots / 'api.db'))
         async with engine.begin() as conn:

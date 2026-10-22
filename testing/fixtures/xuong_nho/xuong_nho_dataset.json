@@ -1,0 +1,134 @@
+[
+  {
+    "Mã dịch vụ": "M-DRILL",
+    "Tên dịch vụ": "Mượn máy khoan — Trạm Mây",
+    "Trạm phục vụ": "Trạm Mây",
+    "Quy tắc và giới hạn": "Mỗi lượt tối đa 2 máy khoan, được giữ trong 5 ngày. Chỉ dành cho thành viên.",
+    "Thời gian xử lý yêu cầu": "20 phút",
+    "Giá dịch vụ": "15000 đồng mỗi lượt",
+    "Quầy hỗ trợ": "Bàn thiết bị Trạm Mây",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "N-DRILL",
+    "Tên dịch vụ": "Mượn máy khoan — Trạm Nắng",
+    "Trạm phục vụ": "Trạm Nắng",
+    "Quy tắc và giới hạn": "Mỗi lượt tối đa 1 máy khoan, được giữ trong 2 ngày. Chỉ dành cho thành viên.",
+    "Thời gian xử lý yêu cầu": "1 ngày làm việc",
+    "Giá dịch vụ": "30000 đồng mỗi lượt",
+    "Quầy hỗ trợ": "Bàn thiết bị Trạm Nắng",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "M-RENEW",
+    "Tên dịch vụ": "Gia hạn máy khoan — Trạm Mây",
+    "Trạm phục vụ": "Trạm Mây",
+    "Quy tắc và giới hạn": "Gia hạn tối đa 1 lần, thêm 3 ngày, nếu không có người đặt trước.",
+    "Thời gian xử lý yêu cầu": "10 phút",
+    "Giá dịch vụ": "Miễn phí",
+    "Quầy hỗ trợ": "Bàn thiết bị Trạm Mây",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "N-RENEW",
+    "Tên dịch vụ": "Gia hạn máy khoan — Trạm Nắng",
+    "Trạm phục vụ": "Trạm Nắng",
+    "Quy tắc và giới hạn": "Không cho gia hạn máy khoan. Phải trả đúng hạn ban đầu.",
+    "Thời gian xử lý yêu cầu": "Trong ngày",
+    "Giá dịch vụ": "Không áp dụng",
+    "Quầy hỗ trợ": "Bàn thiết bị Trạm Nắng",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "M-PROJECTOR",
+    "Tên dịch vụ": "Mượn máy chiếu — Trạm Mây",
+    "Trạm phục vụ": "Trạm Mây",
+    "Quy tắc và giới hạn": "Mỗi lượt tối đa 1 máy chiếu, được giữ trong 1 ngày.",
+    "Thời gian xử lý yêu cầu": "30 phút",
+    "Giá dịch vụ": "50000 đồng mỗi lượt",
+    "Quầy hỗ trợ": "Bàn thiết bị Trạm Mây",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "N-PROJECTOR",
+    "Tên dịch vụ": "Mượn máy chiếu — Trạm Nắng",
+    "Trạm phục vụ": "Trạm Nắng",
+    "Quy tắc và giới hạn": "Mỗi lượt tối đa 2 máy chiếu, được giữ trong 3 ngày.",
+    "Thời gian xử lý yêu cầu": "40 phút",
+    "Giá dịch vụ": "70000 đồng mỗi lượt",
+    "Quầy hỗ trợ": "Bàn thiết bị Trạm Nắng",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "M-ROOM",
+    "Tên dịch vụ": "Đặt phòng làm việc — Trạm Mây",
+    "Trạm phục vụ": "Trạm Mây",
+    "Quy tắc và giới hạn": "Phòng tối đa 6 người, mỗi lượt tối đa 3 giờ.",
+    "Thời gian xử lý yêu cầu": "15 phút",
+    "Giá dịch vụ": "60000 đồng mỗi giờ",
+    "Quầy hỗ trợ": "Quầy không gian Trạm Mây",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "N-ROOM",
+    "Tên dịch vụ": "Đặt phòng làm việc — Trạm Nắng",
+    "Trạm phục vụ": "Trạm Nắng",
+    "Quy tắc và giới hạn": "Phòng tối đa 8 người, mỗi lượt tối đa 2 giờ.",
+    "Thời gian xử lý yêu cầu": "25 phút",
+    "Giá dịch vụ": "45000 đồng mỗi giờ",
+    "Quầy hỗ trợ": "Quầy không gian Trạm Nắng",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "M-REPAIR",
+    "Tên dịch vụ": "Sửa máy khoan — Trạm Mây",
+    "Trạm phục vụ": "Trạm Mây",
+    "Quy tắc và giới hạn": "Nhận sửa máy khoan của thành viên. Không bao gồm dịch vụ cho mượn.",
+    "Thời gian xử lý yêu cầu": "4 ngày làm việc",
+    "Giá dịch vụ": "80000 đồng mỗi máy",
+    "Quầy hỗ trợ": "Bàn thiết bị Trạm Mây",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "N-REPAIR",
+    "Tên dịch vụ": "Sửa máy khoan — Trạm Nắng",
+    "Trạm phục vụ": "Trạm Nắng",
+    "Quy tắc và giới hạn": "Nhận sửa máy khoan của thành viên. Không bao gồm dịch vụ cho mượn.",
+    "Thời gian xử lý yêu cầu": "6 ngày làm việc",
+    "Giá dịch vụ": "110000 đồng mỗi máy",
+    "Quầy hỗ trợ": "Bàn thiết bị Trạm Nắng",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "M-CARD",
+    "Tên dịch vụ": "Làm thẻ thành viên — Trạm Mây",
+    "Trạm phục vụ": "Trạm Mây",
+    "Quy tắc và giới hạn": "Cần ảnh chân dung và giấy tờ có ảnh.",
+    "Thời gian xử lý yêu cầu": "2 ngày làm việc",
+    "Giá dịch vụ": "10000 đồng mỗi thẻ",
+    "Quầy hỗ trợ": "Quầy thành viên Trạm Mây",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  },
+  {
+    "Mã dịch vụ": "N-CARD",
+    "Tên dịch vụ": "Làm thẻ thành viên — Trạm Nắng",
+    "Trạm phục vụ": "Trạm Nắng",
+    "Quy tắc và giới hạn": "Cần ảnh chân dung và giấy tờ có ảnh.",
+    "Thời gian xử lý yêu cầu": "3 ngày làm việc",
+    "Giá dịch vụ": "20000 đồng mỗi thẻ",
+    "Quầy hỗ trợ": "Quầy thành viên Trạm Nắng",
+    "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ",
+    "Mã kiểm tra nội bộ": "INTERNAL_CANARY_XUONG_NHO_731"
+  }
+]

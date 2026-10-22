@@ -17,12 +17,13 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
 from rag.hardware_diagnostics import memory_stage, NativeStartupLog, llama_runtime, finish_llama_startup
+from rag.service_config import llm_port
 import llama_cpp.llama_cpp as llama_api
 load_dotenv(ROOT_DIR / "backend/.env")
 load_dotenv(ROOT_DIR / ".env")
-app = FastAPI(title="Legal LLM Service (Port 8002)")
+app = FastAPI(title="Legal LLM Service")
 app.add_middleware(TimingMiddleware, service='llm')
-MODEL_PATH = Path(os.getenv("MODEL_PATH", "models/qwen3_1.7b_q8_0.gguf"))
+MODEL_PATH = Path(os.getenv("MODEL_PATH", "models/qwen3.5_4b.gguf"))
 if not MODEL_PATH.is_absolute():
     MODEL_PATH = ROOT_DIR / MODEL_PATH
 # Preserve the existing tokenizer choice; override TOKENIZER_NAME if your GGUF needs another.
@@ -156,4 +157,4 @@ def gpu_rerank(payload: GPURerankRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    uvicorn.run(app, host="0.0.0.0", port=llm_port())

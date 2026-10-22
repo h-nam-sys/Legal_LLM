@@ -1,0 +1,409 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\eithe\\Documents\\GitHub\\Legal_LLM\\backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [7052] using StatReload
+INFO:     Started server process [13384]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:53110 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53114 - "GET /admin/failed-logs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53132 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53133 - "GET /domains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53134 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request c648d7dcfe1443f7]
+[activity] Retrieval finished (39.97 s) [request c648d7dcfe1443f7]
+[activity] Retrieval finished (0.17 s) [request c648d7dcfe1443f7]
+INFO:     127.0.0.1:53135 - "POST /chat/486 HTTP/1.1" 200 OK
+[activity] Chat finished (67.26 s) [request c648d7dcfe1443f7]
+INFO:     127.0.0.1:53149 - "GET /history/486 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53150 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 059f83e51dd14f79]
+[activity] Retrieval finished (2.28 s) [request 059f83e51dd14f79]
+[activity] Retrieval finished (0.21 s) [request 059f83e51dd14f79]
+[activity] Retrieval finished (0.19 s) [request 059f83e51dd14f79]
+INFO:     127.0.0.1:53151 - "POST /chat/487 HTTP/1.1" 200 OK
+[activity] Chat finished (12.27 s) [request 059f83e51dd14f79]
+INFO:     127.0.0.1:53168 - "GET /history/487 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53169 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request b9622e53ab14476b]
+INFO:     127.0.0.1:53170 - "POST /chat/488 HTTP/1.1" 200 OK
+[activity] Chat finished (3.01 s) [request b9622e53ab14476b]
+INFO:     127.0.0.1:53173 - "GET /history/488 HTTP/1.1" 200 OK
+[activity] Chat working... [request 129b156151eb414f]
+INFO:     127.0.0.1:53174 - "POST /chat/488 HTTP/1.1" 200 OK
+[activity] Chat finished (3.13 s) [request 129b156151eb414f]
+INFO:     127.0.0.1:53177 - "GET /history/488 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53178 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request d726afbe08874c1c]
+INFO:     127.0.0.1:53179 - "POST /chat/489 HTTP/1.1" 200 OK
+[activity] Chat finished (2.99 s) [request d726afbe08874c1c]
+INFO:     127.0.0.1:53182 - "GET /history/489 HTTP/1.1" 200 OK
+[activity] Chat working... [request a432d6bc50f94f61]
+INFO:     127.0.0.1:53183 - "POST /chat/489 HTTP/1.1" 200 OK
+[activity] Chat finished (4.67 s) [request a432d6bc50f94f61]
+INFO:     127.0.0.1:53189 - "GET /history/489 HTTP/1.1" 200 OK
+[activity] Chat working... [request 564ae105200b4772]
+[activity] Retrieval finished (2.29 s) [request 564ae105200b4772]
+[activity] Retrieval finished (0.15 s) [request 564ae105200b4772]
+[activity] Retrieval finished (0.15 s) [request 564ae105200b4772]
+INFO:     127.0.0.1:53190 - "POST /chat/489 HTTP/1.1" 200 OK
+[activity] Chat finished (13.38 s) [request 564ae105200b4772]
+INFO:     127.0.0.1:53201 - "GET /history/489 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53202 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request a1aeeef369274f41]
+[activity] Retrieval finished (2.51 s) [request a1aeeef369274f41]
+[activity] Retrieval finished (0.15 s) [request a1aeeef369274f41]
+INFO:     127.0.0.1:53203 - "POST /chat/490 HTTP/1.1" 200 OK
+[activity] Chat finished (18.80 s) [request a1aeeef369274f41]
+INFO:     127.0.0.1:53215 - "GET /history/490 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53216 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 34b3c0163b644352]
+INFO:     127.0.0.1:53217 - "POST /chat/491 HTTP/1.1" 200 OK
+[activity] Chat finished (3.39 s) [request 34b3c0163b644352]
+INFO:     127.0.0.1:53220 - "GET /history/491 HTTP/1.1" 200 OK
+[activity] Chat working... [request c0915ffd02b54a07]
+INFO:     127.0.0.1:53221 - "POST /chat/491 HTTP/1.1" 200 OK
+[activity] Chat finished (3.21 s) [request c0915ffd02b54a07]
+INFO:     127.0.0.1:53224 - "GET /history/491 HTTP/1.1" 200 OK
+[activity] Chat working... [request b4ff83691af548c2]
+INFO:     127.0.0.1:53225 - "POST /chat/491 HTTP/1.1" 200 OK
+[activity] Chat finished (3.26 s) [request b4ff83691af548c2]
+INFO:     127.0.0.1:53230 - "GET /history/491 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53231 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 2dd859b13b0b42ef]
+INFO:     127.0.0.1:53232 - "POST /chat/492 HTTP/1.1" 200 OK
+[activity] Chat finished (3.08 s) [request 2dd859b13b0b42ef]
+INFO:     127.0.0.1:53235 - "GET /history/492 HTTP/1.1" 200 OK
+[activity] Chat working... [request e19756147f4f4994]
+INFO:     127.0.0.1:53236 - "POST /chat/492 HTTP/1.1" 200 OK
+[activity] Chat finished (3.17 s) [request e19756147f4f4994]
+INFO:     127.0.0.1:53239 - "GET /history/492 HTTP/1.1" 200 OK
+[activity] Chat working... [request 68970d631d07494d]
+INFO:     127.0.0.1:53240 - "POST /chat/492 HTTP/1.1" 200 OK
+[activity] Chat finished (3.16 s) [request 68970d631d07494d]
+INFO:     127.0.0.1:53243 - "GET /history/492 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53244 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 32115a2b20a1442d]
+[activity] Retrieval finished (2.22 s) [request 32115a2b20a1442d]
+[activity] Retrieval finished (0.16 s) [request 32115a2b20a1442d]
+INFO:     127.0.0.1:53245 - "POST /chat/493 HTTP/1.1" 200 OK
+[activity] Chat finished (19.19 s) [request 32115a2b20a1442d]
+INFO:     127.0.0.1:53256 - "GET /history/493 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53257 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 3ebed2269de14d27]
+[activity] Retrieval finished (2.21 s) [request 3ebed2269de14d27]
+[activity] Retrieval finished (0.21 s) [request 3ebed2269de14d27]
+INFO:     127.0.0.1:53258 - "POST /chat/494 HTTP/1.1" 200 OK
+[activity] Chat finished (19.57 s) [request 3ebed2269de14d27]
+INFO:     127.0.0.1:53269 - "GET /history/494 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53270 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 562457c4e5584e8e]
+[activity] Retrieval finished (2.25 s) [request 562457c4e5584e8e]
+[activity] Retrieval finished (0.18 s) [request 562457c4e5584e8e]
+INFO:     127.0.0.1:53271 - "POST /chat/495 HTTP/1.1" 200 OK
+[activity] Chat finished (18.16 s) [request 562457c4e5584e8e]
+INFO:     127.0.0.1:53282 - "GET /history/495 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53283 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 08426bd4ef1a460e]
+[activity] Retrieval finished (2.34 s) [request 08426bd4ef1a460e]
+[activity] Retrieval finished (0.15 s) [request 08426bd4ef1a460e]
+[activity] Retrieval finished (0.15 s) [request 08426bd4ef1a460e]
+INFO:     127.0.0.1:53284 - "POST /chat/496 HTTP/1.1" 200 OK
+[activity] Chat finished (21.92 s) [request 08426bd4ef1a460e]
+INFO:     127.0.0.1:53295 - "GET /history/496 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53296 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 49414e20bd364e4e]
+[activity] Retrieval finished (2.29 s) [request 49414e20bd364e4e]
+[activity] Retrieval finished (0.15 s) [request 49414e20bd364e4e]
+INFO:     127.0.0.1:53297 - "POST /chat/497 HTTP/1.1" 200 OK
+[activity] Chat finished (19.63 s) [request 49414e20bd364e4e]
+INFO:     127.0.0.1:53309 - "GET /history/497 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53310 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 02d255e07f0d4c5f]
+[activity] Retrieval finished (2.21 s) [request 02d255e07f0d4c5f]
+[activity] Retrieval finished (0.32 s) [request 02d255e07f0d4c5f]
+[activity] Retrieval finished (0.24 s) [request 02d255e07f0d4c5f]
+INFO:     127.0.0.1:53311 - "POST /chat/498 HTTP/1.1" 200 OK
+[activity] Chat finished (13.42 s) [request 02d255e07f0d4c5f]
+INFO:     127.0.0.1:53324 - "GET /history/498 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53325 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 57f0a9a1567146bf]
+INFO:     127.0.0.1:53326 - "POST /chat/499 HTTP/1.1" 200 OK
+[activity] Chat finished (3.06 s) [request 57f0a9a1567146bf]
+INFO:     127.0.0.1:53329 - "GET /history/499 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53330 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 421e2dfca07a4518]
+INFO:     127.0.0.1:53331 - "POST /chat/500 HTTP/1.1" 200 OK
+[activity] Chat finished (3.41 s) [request 421e2dfca07a4518]
+INFO:     127.0.0.1:53335 - "GET /history/500 HTTP/1.1" 200 OK
+[activity] Chat working... [request 8e4ee3093ea54f20]
+[activity] Retrieval finished (2.20 s) [request 8e4ee3093ea54f20]
+[activity] Retrieval finished (0.15 s) [request 8e4ee3093ea54f20]
+[activity] Retrieval finished (0.21 s) [request 8e4ee3093ea54f20]
+INFO:     127.0.0.1:53336 - "POST /chat/500 HTTP/1.1" 200 OK
+[activity] Chat finished (14.34 s) [request 8e4ee3093ea54f20]
+INFO:     127.0.0.1:53349 - "GET /history/500 HTTP/1.1" 200 OK
+[activity] Chat working... [request e9d924c9e5e440b5]
+[activity] Retrieval finished (2.44 s) [request e9d924c9e5e440b5]
+[activity] Retrieval finished (0.15 s) [request e9d924c9e5e440b5]
+INFO:     127.0.0.1:53350 - "POST /chat/500 HTTP/1.1" 200 OK
+[activity] Chat finished (5.16 s) [request e9d924c9e5e440b5]
+INFO:     127.0.0.1:53355 - "GET /history/500 HTTP/1.1" 200 OK
+[activity] Chat working... [request c34cae02857c4aa2]
+[activity] Retrieval finished (2.22 s) [request c34cae02857c4aa2]
+[activity] Retrieval finished (0.17 s) [request c34cae02857c4aa2]
+INFO:     127.0.0.1:53356 - "POST /chat/500 HTTP/1.1" 200 OK
+[activity] Chat finished (13.96 s) [request c34cae02857c4aa2]
+INFO:     127.0.0.1:53369 - "GET /history/500 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53370 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 085dc706c3bb4793]
+INFO:     127.0.0.1:53371 - "POST /chat/501 HTTP/1.1" 200 OK
+[activity] Chat finished (4.65 s) [request 085dc706c3bb4793]
+INFO:     127.0.0.1:53376 - "GET /history/501 HTTP/1.1" 200 OK
+[activity] Chat working... [request 00a8fa4d60b2466b]
+INFO:     127.0.0.1:53377 - "POST /chat/501 HTTP/1.1" 200 OK
+[activity] Chat finished (3.40 s) [request 00a8fa4d60b2466b]
+INFO:     127.0.0.1:53380 - "GET /history/501 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53381 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 23ba997449404ff1]
+INFO:     127.0.0.1:53382 - "POST /chat/502 HTTP/1.1" 200 OK
+[activity] Chat finished (3.17 s) [request 23ba997449404ff1]
+INFO:     127.0.0.1:53385 - "GET /history/502 HTTP/1.1" 200 OK
+[activity] Chat working... [request 1a5a8df20f434036]
+INFO:     127.0.0.1:53386 - "POST /chat/502 HTTP/1.1" 200 OK
+[activity] Chat finished (3.25 s) [request 1a5a8df20f434036]
+INFO:     127.0.0.1:53389 - "GET /history/502 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53390 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 961262d4203f4695]
+INFO:     127.0.0.1:53391 - "POST /chat/503 HTTP/1.1" 200 OK
+[activity] Chat finished (3.02 s) [request 961262d4203f4695]
+INFO:     127.0.0.1:53394 - "GET /history/503 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53395 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request e93ecea23b174c3d]
+INFO:     127.0.0.1:53396 - "POST /chat/504 HTTP/1.1" 200 OK
+[activity] Chat finished (3.06 s) [request e93ecea23b174c3d]
+INFO:     127.0.0.1:53399 - "GET /history/504 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53400 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request aa62e788af334bf2]
+INFO:     127.0.0.1:53401 - "POST /chat/505 HTTP/1.1" 200 OK
+[activity] Chat finished (0.10 s) [request aa62e788af334bf2]
+INFO:     127.0.0.1:53402 - "GET /history/505 HTTP/1.1" 200 OK
+[activity] Chat working... [request ef2d75fd83b741f7]
+Query preparation failed (ValueError); retaining original search query
+[activity] Retrieval finished (2.14 s) [request ef2d75fd83b741f7]
+INFO:     127.0.0.1:53404 - "POST /chat/505 HTTP/1.1" 200 OK
+[activity] Chat finished (6.39 s) [request ef2d75fd83b741f7]
+INFO:     127.0.0.1:53411 - "GET /history/505 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53412 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 9fd6a199832349d0]
+INFO:     127.0.0.1:53413 - "POST /chat/506 HTTP/1.1" 200 OK
+[activity] Chat finished (3.25 s) [request 9fd6a199832349d0]
+INFO:     127.0.0.1:53416 - "GET /history/506 HTTP/1.1" 200 OK
+[activity] Chat working... [request 81b03415d10547fc]
+[activity] Retrieval finished (2.26 s) [request 81b03415d10547fc]
+[activity] Retrieval finished (0.15 s) [request 81b03415d10547fc]
+INFO:     127.0.0.1:53417 - "POST /chat/506 HTTP/1.1" 200 OK
+[activity] Chat finished (10.05 s) [request 81b03415d10547fc]
+INFO:     127.0.0.1:53424 - "GET /history/506 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53425 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 8ef0cccc03c34387]
+INFO:     127.0.0.1:53426 - "POST /chat/507 HTTP/1.1" 200 OK
+[activity] Chat finished (3.18 s) [request 8ef0cccc03c34387]
+INFO:     127.0.0.1:53429 - "GET /history/507 HTTP/1.1" 200 OK
+[activity] Chat working... [request 6a95fecc551d4ac9]
+INFO:     127.0.0.1:53430 - "POST /chat/507 HTTP/1.1" 200 OK
+[activity] Chat finished (3.13 s) [request 6a95fecc551d4ac9]
+INFO:     127.0.0.1:53433 - "GET /history/507 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53434 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 68a6641d030c4713]
+[activity] Retrieval finished (8.64 s) [request 68a6641d030c4713]
+[activity] Retrieval finished (0.35 s) [request 68a6641d030c4713]
+INFO:     127.0.0.1:53435 - "POST /chat/508 HTTP/1.1" 200 OK
+[activity] Chat finished (16.23 s) [request 68a6641d030c4713]
+INFO:     127.0.0.1:53443 - "GET /history/508 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53444 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 98578880e1ab4283]
+[activity] Retrieval finished (14.53 s) [request 98578880e1ab4283]
+[activity] Retrieval finished (0.22 s) [request 98578880e1ab4283]
+[activity] Retrieval finished (0.23 s) [request 98578880e1ab4283]
+[activity] Retrieval finished (0.24 s) [request 98578880e1ab4283]
+INFO:     127.0.0.1:53445 - "POST /chat/509 HTTP/1.1" 200 OK
+[activity] Chat finished (37.71 s) [request 98578880e1ab4283]
+INFO:     127.0.0.1:53454 - "GET /history/509 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53455 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 8a5ef8473b074724]
+INFO:     127.0.0.1:53456 - "POST /chat/510 HTTP/1.1" 200 OK
+[activity] Chat finished (3.29 s) [request 8a5ef8473b074724]
+INFO:     127.0.0.1:53459 - "GET /history/510 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53460 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request ff0177f86f0a46ab]
+INFO:     127.0.0.1:53461 - "POST /chat/511 HTTP/1.1" 200 OK
+[activity] Chat finished (3.12 s) [request ff0177f86f0a46ab]
+INFO:     127.0.0.1:53464 - "GET /history/511 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53465 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request ab3417fa783b4171]
+[activity] Retrieval finished (2.38 s) [request ab3417fa783b4171]
+[activity] Retrieval finished (0.15 s) [request ab3417fa783b4171]
+[activity] Retrieval finished (0.29 s) [request ab3417fa783b4171]
+[activity] Retrieval finished (0.33 s) [request ab3417fa783b4171]
+INFO:     127.0.0.1:53466 - "POST /chat/512 HTTP/1.1" 200 OK
+[activity] Chat finished (16.06 s) [request ab3417fa783b4171]
+INFO:     127.0.0.1:53477 - "GET /history/512 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53478 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 182091a22d2242f8]
+[activity] Retrieval finished (2.32 s) [request 182091a22d2242f8]
+[activity] Retrieval finished (0.22 s) [request 182091a22d2242f8]
+[activity] Retrieval finished (0.21 s) [request 182091a22d2242f8]
+[activity] Retrieval finished (0.20 s) [request 182091a22d2242f8]
+INFO:     127.0.0.1:53479 - "POST /chat/513 HTTP/1.1" 200 OK
+[activity] Chat finished (14.83 s) [request 182091a22d2242f8]
+INFO:     127.0.0.1:53490 - "GET /history/513 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53491 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 10a2521692674e1f]
+[activity] Retrieval finished (2.25 s) [request 10a2521692674e1f]
+[activity] Retrieval finished (0.58 s) [request 10a2521692674e1f]
+INFO:     127.0.0.1:53492 - "POST /chat/514 HTTP/1.1" 200 OK
+[activity] Chat finished (15.38 s) [request 10a2521692674e1f]
+INFO:     127.0.0.1:53503 - "GET /history/514 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53504 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 94203a6d5b6d4b40]
+[activity] Retrieval finished (2.25 s) [request 94203a6d5b6d4b40]
+[activity] Retrieval finished (0.15 s) [request 94203a6d5b6d4b40]
+INFO:     127.0.0.1:53505 - "POST /chat/515 HTTP/1.1" 200 OK
+[activity] Chat finished (14.36 s) [request 94203a6d5b6d4b40]
+INFO:     127.0.0.1:53516 - "GET /history/515 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53517 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 1b5e32ef9a914d0a]
+INFO:     127.0.0.1:53518 - "POST /chat/516 HTTP/1.1" 200 OK
+[activity] Chat finished (3.22 s) [request 1b5e32ef9a914d0a]
+INFO:     127.0.0.1:53521 - "GET /history/516 HTTP/1.1" 200 OK
+[activity] Chat working... [request d1abfac31b83426e]
+INFO:     127.0.0.1:53522 - "POST /chat/516 HTTP/1.1" 200 OK
+[activity] Chat finished (5.41 s) [request d1abfac31b83426e]
+INFO:     127.0.0.1:53527 - "GET /history/516 HTTP/1.1" 200 OK
+[activity] Chat working... [request 6fac235aea274658]
+[activity] Retrieval finished (2.52 s) [request 6fac235aea274658]
+[activity] Retrieval finished (0.33 s) [request 6fac235aea274658]
+[activity] Retrieval finished (0.17 s) [request 6fac235aea274658]
+[activity] Retrieval finished (0.14 s) [request 6fac235aea274658]
+INFO:     127.0.0.1:53528 - "POST /chat/516 HTTP/1.1" 200 OK
+[activity] Chat finished (17.45 s) [request 6fac235aea274658]
+INFO:     127.0.0.1:53543 - "GET /history/516 HTTP/1.1" 200 OK
+[activity] Chat working... [request f98caab14c8f4a05]
+[activity] Retrieval finished (2.28 s) [request f98caab14c8f4a05]
+[activity] Retrieval finished (0.15 s) [request f98caab14c8f4a05]
+INFO:     127.0.0.1:53544 - "POST /chat/516 HTTP/1.1" 200 OK
+[activity] Chat finished (5.00 s) [request f98caab14c8f4a05]
+INFO:     127.0.0.1:53549 - "GET /history/516 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53550 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 31cbf4b2508943e1]
+INFO:     127.0.0.1:53551 - "POST /chat/517 HTTP/1.1" 200 OK
+[activity] Chat finished (3.35 s) [request 31cbf4b2508943e1]
+INFO:     127.0.0.1:53554 - "GET /history/517 HTTP/1.1" 200 OK
+[activity] Chat working... [request 343920b87d6b449d]
+[activity] Retrieval finished (2.56 s) [request 343920b87d6b449d]
+[activity] Retrieval finished (0.14 s) [request 343920b87d6b449d]
+[activity] Retrieval finished (0.15 s) [request 343920b87d6b449d]
+[activity] Retrieval finished (0.15 s) [request 343920b87d6b449d]
+[activity] Retrieval finished (0.15 s) [request 343920b87d6b449d]
+[activity] Retrieval finished (0.15 s) [request 343920b87d6b449d]
+[activity] Retrieval finished (0.15 s) [request 343920b87d6b449d]
+[activity] Retrieval finished (0.15 s) [request 343920b87d6b449d]
+[activity] Retrieval finished (0.17 s) [request 343920b87d6b449d]
+INFO:     127.0.0.1:53555 - "POST /chat/517 HTTP/1.1" 200 OK
+[activity] Chat finished (19.62 s) [request 343920b87d6b449d]
+INFO:     127.0.0.1:53568 - "GET /history/517 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53569 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 3895e9c0e6744419]
+INFO:     127.0.0.1:53570 - "POST /chat/518 HTTP/1.1" 200 OK
+[activity] Chat finished (3.17 s) [request 3895e9c0e6744419]
+INFO:     127.0.0.1:53573 - "GET /history/518 HTTP/1.1" 200 OK
+[activity] Chat working... [request 6c06711cff9a472b]
+[activity] Retrieval finished (2.30 s) [request 6c06711cff9a472b]
+[activity] Retrieval finished (0.18 s) [request 6c06711cff9a472b]
+[activity] Retrieval finished (0.19 s) [request 6c06711cff9a472b]
+[activity] Retrieval finished (0.18 s) [request 6c06711cff9a472b]
+INFO:     127.0.0.1:53574 - "POST /chat/518 HTTP/1.1" 200 OK
+[activity] Chat finished (16.96 s) [request 6c06711cff9a472b]
+INFO:     127.0.0.1:53587 - "GET /history/518 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53588 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 79cfa5296115407a]
+INFO:     127.0.0.1:53589 - "POST /chat/519 HTTP/1.1" 200 OK
+[activity] Chat finished (3.20 s) [request 79cfa5296115407a]
+INFO:     127.0.0.1:53592 - "GET /history/519 HTTP/1.1" 200 OK
+[activity] Chat working... [request c054cac7bede49b9]
+INFO:     127.0.0.1:53593 - "POST /chat/519 HTTP/1.1" 200 OK
+[activity] Chat finished (3.26 s) [request c054cac7bede49b9]
+INFO:     127.0.0.1:53596 - "GET /history/519 HTTP/1.1" 200 OK
+[activity] Chat working... [request 5186e19221274b96]
+INFO:     127.0.0.1:53597 - "POST /chat/519 HTTP/1.1" 200 OK
+[activity] Chat finished (3.64 s) [request 5186e19221274b96]
+INFO:     127.0.0.1:53600 - "GET /history/519 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53601 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 23806f91f7a947cc]
+[activity] Retrieval finished (2.25 s) [request 23806f91f7a947cc]
+[activity] Retrieval finished (0.19 s) [request 23806f91f7a947cc]
+[activity] Retrieval finished (0.17 s) [request 23806f91f7a947cc]
+INFO:     127.0.0.1:53603 - "POST /chat/520 HTTP/1.1" 200 OK
+[activity] Chat finished (16.31 s) [request 23806f91f7a947cc]
+INFO:     127.0.0.1:53614 - "GET /history/520 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53615 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request ac2d6d00c13c4c82]
+[activity] Retrieval finished (2.27 s) [request ac2d6d00c13c4c82]
+[activity] Retrieval finished (0.20 s) [request ac2d6d00c13c4c82]
+[activity] Retrieval finished (0.27 s) [request ac2d6d00c13c4c82]
+[activity] Retrieval finished (0.28 s) [request ac2d6d00c13c4c82]
+INFO:     127.0.0.1:53616 - "POST /chat/521 HTTP/1.1" 200 OK
+[activity] Chat finished (15.28 s) [request ac2d6d00c13c4c82]
+INFO:     127.0.0.1:53627 - "GET /history/521 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53628 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 3e693d033a664782]
+[activity] Retrieval finished (2.35 s) [request 3e693d033a664782]
+[activity] Retrieval finished (0.20 s) [request 3e693d033a664782]
+[activity] Retrieval finished (0.22 s) [request 3e693d033a664782]
+[activity] Retrieval finished (0.37 s) [request 3e693d033a664782]
+[activity] Retrieval finished (0.47 s) [request 3e693d033a664782]
+INFO:     127.0.0.1:53629 - "POST /chat/522 HTTP/1.1" 200 OK
+[activity] Chat finished (19.60 s) [request 3e693d033a664782]
+INFO:     127.0.0.1:53640 - "GET /history/522 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53641 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 4c4d74c5e4fa4449]
+[activity] Retrieval finished (2.27 s) [request 4c4d74c5e4fa4449]
+[activity] Retrieval finished (0.19 s) [request 4c4d74c5e4fa4449]
+[activity] Retrieval finished (0.17 s) [request 4c4d74c5e4fa4449]
+INFO:     127.0.0.1:53642 - "POST /chat/523 HTTP/1.1" 200 OK
+[activity] Chat finished (17.36 s) [request 4c4d74c5e4fa4449]
+INFO:     127.0.0.1:53653 - "GET /history/523 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53654 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request e7a5d6be57894421]
+[activity] Retrieval finished (2.23 s) [request e7a5d6be57894421]
+[activity] Retrieval finished (0.17 s) [request e7a5d6be57894421]
+[activity] Retrieval finished (0.19 s) [request e7a5d6be57894421]
+[activity] Retrieval finished (0.22 s) [request e7a5d6be57894421]
+[activity] Retrieval finished (0.16 s) [request e7a5d6be57894421]
+INFO:     127.0.0.1:53655 - "POST /chat/524 HTTP/1.1" 200 OK
+[activity] Chat finished (15.70 s) [request e7a5d6be57894421]
+INFO:     127.0.0.1:53666 - "GET /history/524 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request ba0c979311bc4206]
+[activity] Retrieval finished (2.33 s) [request ba0c979311bc4206]
+[activity] Retrieval finished (0.16 s) [request ba0c979311bc4206]
+[activity] Retrieval finished (0.17 s) [request ba0c979311bc4206]
+[activity] Retrieval finished (0.16 s) [request ba0c979311bc4206]
+INFO:     127.0.0.1:53668 - "POST /chat/525 HTTP/1.1" 200 OK
+[activity] Chat finished (15.50 s) [request ba0c979311bc4206]
+INFO:     127.0.0.1:53679 - "GET /history/525 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53680 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 8d4aa8b9adc944b1]
+INFO:     127.0.0.1:53681 - "POST /chat/526 HTTP/1.1" 200 OK
+[activity] Chat finished (3.19 s) [request 8d4aa8b9adc944b1]
+INFO:     127.0.0.1:53684 - "GET /history/526 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53685 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request e514f122b5f144d4]
+[activity] Retrieval finished (2.21 s) [request e514f122b5f144d4]
+[activity] Retrieval finished (0.26 s) [request e514f122b5f144d4]
+[activity] Retrieval finished (0.19 s) [request e514f122b5f144d4]
+[activity] Retrieval finished (0.14 s) [request e514f122b5f144d4]
+[activity] Retrieval finished (0.16 s) [request e514f122b5f144d4]
+INFO:     127.0.0.1:53687 - "POST /chat/527 HTTP/1.1" 200 OK
+[activity] Chat finished (20.28 s) [request e514f122b5f144d4]
+INFO:     127.0.0.1:53698 - "GET /history/527 HTTP/1.1" 200 OK

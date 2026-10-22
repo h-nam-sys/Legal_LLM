@@ -1,0 +1,33 @@
+{
+  "note": "Read-only source inspection. Title matches/nearby titles do not prove semantic completeness.",
+  "domains": {
+    "entertainment_content": {
+      "target": "Interstella",
+      "generation": "f61048aa542a4ced9f57ad2ae3b1df29",
+      "revision": "f7a6a9b250b3b3e1dc08aef73c96a71d5193d2a7f9780ef2a2f1a979b0b6a2f6",
+      "rows_scanned": 1000,
+      "title_match_count": 0,
+      "title_matches": [],
+      "nearby_titles": [
+        "Hating Peter Tatchell",
+        "A Cinderella Story",
+        "The Interpreter"
+      ],
+      "status": "no_title_match"
+    },
+    "amazon_products": {
+      "target": "Sony WH-1000XM5",
+      "generation": "e07e649353f24c66807c7d73c6f0bf47",
+      "revision": "50d29801fa0d8e018cb0cd8e2a5fc75ac41ba3926438d35e38e4fdd8accbf57e",
+      "rows_scanned": 1465,
+      "title_match_count": 0,
+      "title_matches": [],
+      "nearby_titles": [
+        "Bosch Pro 1000W Mixer Grinder MGM8842MIN - Black",
+        "Havells Cista Room Heater, White, 2000 Watts",
+        "Bajaj Immersion Rod Water Heater 1500 Watts, Silver"
+      ],
+      "status": "no_title_match"
+    }
+  }
+}

@@ -191,9 +191,21 @@ class LifecycleTests(unittest.TestCase):
     def test_stale_saved_domain_switches_and_clears_titles(self):
         routing = self.load_router()
         management.set_domain_enabled('campus', False)
-        with patch.object(routing, 'local_domain_matches', return_value=['student']) as local:
+        seen = []
+        class Client:
+            def __init__(self, **kwargs): pass
+            async def __aenter__(self): return self
+            async def __aexit__(self, *args): pass
+            async def post(self, url, **kwargs):
+                seen.append(kwargs['json']['messages'])
+                return types.SimpleNamespace(raise_for_status=lambda: None,
+                    json=lambda: {'choices': [{'message': {'content':
+                        json.dumps({'route': 'student'})}}]})
+        with patch.object(routing.httpx, 'AsyncClient', Client, create=True):
             config, state, changed = asyncio.run(routing.choose_domain(
                 'new question', {'name': 'campus', 'selection': 'manual'}, ['Old campus title']))
+        request = json.loads(seen[0][1]['content'])
+        self.assertNotIn('followup_context_available', request)
         self.assertEqual(config.name, 'student')
         self.assertEqual(state['selection'], 'auto')
         self.assertTrue(changed)

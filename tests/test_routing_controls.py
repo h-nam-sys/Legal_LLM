@@ -31,7 +31,7 @@ def test_detect_once_skips_all_detection(roots, monkeypatch, state):
 
 def test_first_detection_then_lock(roots, monkeypatch):
     two_domains(roots)
-    fake_async_client(monkeypatch, {'kind': 'domain', 'domain': 'university'})
+    fake_async_client(monkeypatch, {'route': 'university'})
     config, state, changed = run()
     assert config.name == 'university' and changed and state['locked']
     no_detection(monkeypatch)
@@ -40,15 +40,16 @@ def test_first_detection_then_lock(roots, monkeypatch):
 
 def test_switching_can_use_classifier(roots, monkeypatch):
     two_domains(roots)
-    fake_async_client(monkeypatch, {'kind': 'domain', 'domain': 'university'})
+    fake_async_client(monkeypatch, {'route': 'university'})
     config, state, changed = run({'name': 'legal', 'selection': 'auto', 'allow_switching': True})
     assert config.name == 'university' and changed and state['allow_switching']
 
 
-def test_switching_can_use_local_match(roots, monkeypatch):
+def test_title_matches_do_not_bypass_classifier(roots, monkeypatch):
     two_domains(roots)
-    monkeypatch.setattr(routing, 'local_domain_matches', lambda *a: ['university'])
-    monkeypatch.setattr(routing.httpx, 'AsyncClient', lambda **k: pytest.fail('Unexpected LLM'))
+    monkeypatch.setattr(routing, 'local_domain_matches',
+                        lambda *a: pytest.fail('Title shortcut must not run'))
+    fake_async_client(monkeypatch, {'route': 'university'})
     assert run({'name': 'legal', 'allow_switching': True})[0].name == 'university'
 
 
@@ -69,7 +70,7 @@ def test_manual_remains_locked_with_switching_on(roots, monkeypatch):
 
 def test_manual_to_auto_redetects(roots, monkeypatch):
     two_domains(roots)
-    fake_async_client(monkeypatch, {'kind': 'domain', 'domain': 'university'})
+    fake_async_client(monkeypatch, {'route': 'university'})
     config, state, changed = run({'name': 'legal', 'selection': 'manual'}, allow_switching=True)
     assert config.name == 'university' and changed and state['selection'] == 'auto'
 
@@ -77,10 +78,13 @@ def test_manual_to_auto_redetects(roots, monkeypatch):
 @pytest.mark.parametrize('kind', ['conversation', 'none'])
 def test_non_domain_turn_does_not_lock(roots, monkeypatch, kind):
     two_domains(roots)
-    fake_async_client(monkeypatch, {'kind': kind, 'domain': None})
-    _, state, _ = run()
-    assert state['locked'] is False
-    monkeypatch.setattr(routing, 'local_domain_matches', lambda *a: ['university'])
+    fake_async_client(monkeypatch, {'route': kind})
+    state = {}
+    expected = routing.DomainConversation if kind == 'conversation' else routing.DomainNoMatch
+    with pytest.raises(expected):
+        run(state)
+    assert state == {}
+    fake_async_client(monkeypatch, {'route': 'university'})
     assert run(state)[1]['locked'] is True
 
 
@@ -97,7 +101,7 @@ def test_disabled_lock_is_reselected(roots, monkeypatch):
 
 def test_classifier_failure_still_clarifies(roots, monkeypatch):
     two_domains(roots)
-    fake_async_client(monkeypatch, {'kind': 'domain', 'domain': 'unknown'})
+    fake_async_client(monkeypatch, {'route': 'unknown'})
     with pytest.raises(routing.DomainClarification):
         run()
 
@@ -112,7 +116,7 @@ def test_property_followup_with_switching_skips_llm(roots, monkeypatch):
 
 def test_reset_and_preference_survive_clarification_in_database(roots, monkeypatch):
     two_domains(roots)
-    fake_async_client(monkeypatch, {'kind': 'ambiguous', 'domain': None})
+    fake_async_client(monkeypatch, {'route': 'clarify'})
     async def exercise():
         engine = create_async_engine('sqlite+aiosqlite:///' + str(roots / 'controls.db'))
         async with engine.begin() as conn:
@@ -152,7 +156,7 @@ def test_preference_persists_across_chat_turns(roots, monkeypatch):
                 response = await chat.orchestrate_chat(conv.id, ChatRequest(user_prompt='Scholarship requirements', domain='auto', **kwargs), db)
                 _ = ''.join([chunk async for chunk in response.body_iterator])
             assert seen == ['legal', 'legal']
-            fake_async_client(monkeypatch, {'kind': 'domain', 'domain': 'university'})
+            fake_async_client(monkeypatch, {'route': 'university'})
             response = await chat.orchestrate_chat(conv.id, ChatRequest(user_prompt='Scholarship requirements', domain='auto', allow_switching=True), db)
             _ = ''.join([chunk async for chunk in response.body_iterator])
             await db.refresh(conv)

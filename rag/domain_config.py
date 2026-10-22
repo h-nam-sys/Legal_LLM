@@ -302,4 +302,5 @@ def list_domain_configs(*, root=None, include_inactive=False):
 
 
 def llm_url():
-    return os.getenv("LLM_SERVICE_URLS", os.getenv("LLM_SERVICE_URL", "http://127.0.0.1:8002")).split(",")[0].strip().rstrip("/")
+    from .service_config import llm_url as configured_llm_url
+    return configured_llm_url()

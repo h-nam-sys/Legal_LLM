@@ -1,0 +1,98 @@
+2026-10-20 15:07:22,766 TIMING {"request_id": "fd2c8f535d3f4ae5", "pid": 15524, "task": "backend.admin_dashboard.load_db_data", "event": "start"}
+2026-10-20 15:07:22,812 TIMING {"request_id": "fd2c8f535d3f4ae5", "pid": 15524, "task": "backend.admin_dashboard.load_db_data", "event": "end", "elapsed_ms": 45.487, "status": "ok", "error": null}
+2026-10-20 15:07:22,815 TIMING {"request_id": "d783090f622a4dd3", "pid": 15524, "task": "backend.admin_dashboard.load_db_data", "event": "start"}
+2026-10-20 15:07:22,890 TIMING {"request_id": "d783090f622a4dd3", "pid": 15524, "task": "backend.admin_dashboard.load_db_data", "event": "end", "elapsed_ms": 74.886, "status": "ok", "error": null}
+2026-10-20 15:07:22,892 TIMING {"request_id": "e724acddbc1b4fec", "pid": 15524, "task": "backend.admin_dashboard.load_db_data", "event": "start"}
+2026-10-20 15:07:22,923 TIMING {"request_id": "e724acddbc1b4fec", "pid": 15524, "task": "backend.admin_dashboard.load_db_data", "event": "end", "elapsed_ms": 30.959, "status": "ok", "error": null}
+2026-10-20 15:07:23,638 TIMING {"request_id": "0ab34771706549da", "pid": 15524, "task": "backend.admin_dashboard.load_db_data", "event": "start"}
+2026-10-20 15:07:23,664 TIMING {"request_id": "0ab34771706549da", "pid": 15524, "task": "backend.admin_dashboard.load_db_data", "event": "end", "elapsed_ms": 25.894, "status": "ok", "error": null}
+2026-10-20 15:07:23,697 TIMING {"request_id": "6ae64d73570e41f7", "pid": 15524, "task": "backend.admin_dashboard.load_feedback_data", "event": "start"}
+2026-10-20 15:07:23,701 TIMING {"request_id": "6ae64d73570e41f7", "pid": 15524, "task": "backend.admin_dashboard.load_feedback_data", "event": "end", "elapsed_ms": 4.174, "status": "ok", "error": null}
+2026-10-20 15:07:25,956 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.render_domain_admin", "event": "start"}
+2026-10-20 15:07:25,958 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.upload_page", "event": "start"}
+2026-10-20 15:07:25,959 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "start"}
+2026-10-20 15:07:25,963 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:25,967 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 3.863, "status": "ok", "error": null}
+2026-10-20 15:07:25,967 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:25,970 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.929, "status": "ok", "error": null}
+2026-10-20 15:07:25,970 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:25,974 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 3.742, "status": "ok", "error": null}
+2026-10-20 15:07:25,974 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:25,977 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 3.273, "status": "ok", "error": null}
+2026-10-20 15:07:25,977 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:25,980 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.693, "status": "ok", "error": null}
+2026-10-20 15:07:25,980 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:25,983 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.87, "status": "ok", "error": null}
+2026-10-20 15:07:25,983 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "end", "elapsed_ms": 24.826, "status": "ok", "error": null}
+2026-10-20 15:07:26,126 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.upload_page", "event": "end", "elapsed_ms": 168.15, "status": "ok", "error": null}
+2026-10-20 15:07:26,126 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.settings_page", "event": "start"}
+2026-10-20 15:07:26,126 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "start"}
+2026-10-20 15:07:26,128 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,130 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.153, "status": "ok", "error": null}
+2026-10-20 15:07:26,131 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,133 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.095, "status": "ok", "error": null}
+2026-10-20 15:07:26,133 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,135 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.2, "status": "ok", "error": null}
+2026-10-20 15:07:26,135 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,137 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.074, "status": "ok", "error": null}
+2026-10-20 15:07:26,137 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,139 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 1.988, "status": "ok", "error": null}
+2026-10-20 15:07:26,140 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,142 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.342, "status": "ok", "error": null}
+2026-10-20 15:07:26,142 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "end", "elapsed_ms": 15.566, "status": "ok", "error": null}
+2026-10-20 15:07:26,156 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.settings_page", "event": "end", "elapsed_ms": 29.788, "status": "ok", "error": null}
+2026-10-20 15:07:26,156 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.status_page", "event": "start"}
+2026-10-20 15:07:26,157 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.ingestion_jobs.list_jobs", "event": "start"}
+2026-10-20 15:07:26,173 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.ingestion_jobs.list_jobs", "event": "end", "elapsed_ms": 15.501, "status": "ok", "error": null}
+2026-10-20 15:07:26,242 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "start"}
+2026-10-20 15:07:26,247 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,249 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.388, "status": "ok", "error": null}
+2026-10-20 15:07:26,249 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,251 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.22, "status": "ok", "error": null}
+2026-10-20 15:07:26,252 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,254 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.272, "status": "ok", "error": null}
+2026-10-20 15:07:26,254 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,257 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.356, "status": "ok", "error": null}
+2026-10-20 15:07:26,257 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,259 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.368, "status": "ok", "error": null}
+2026-10-20 15:07:26,259 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,262 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.613, "status": "ok", "error": null}
+2026-10-20 15:07:26,262 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "end", "elapsed_ms": 19.738, "status": "ok", "error": null}
+2026-10-20 15:07:26,266 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,268 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.705, "status": "ok", "error": null}
+2026-10-20 15:07:26,275 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.status_page", "event": "end", "elapsed_ms": 118.761, "status": "ok", "error": null}
+2026-10-20 15:07:26,276 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.management_page", "event": "start"}
+2026-10-20 15:07:26,278 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "start"}
+2026-10-20 15:07:26,282 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,286 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 3.725, "status": "ok", "error": null}
+2026-10-20 15:07:26,286 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,289 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 3.102, "status": "ok", "error": null}
+2026-10-20 15:07:26,289 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,293 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 3.83, "status": "ok", "error": null}
+2026-10-20 15:07:26,293 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,298 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 4.296, "status": "ok", "error": null}
+2026-10-20 15:07:26,298 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,302 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 4.364, "status": "ok", "error": null}
+2026-10-20 15:07:26,303 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,306 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 3.836, "status": "ok", "error": null}
+2026-10-20 15:07:26,307 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "end", "elapsed_ms": 28.546, "status": "ok", "error": null}
+2026-10-20 15:07:26,312 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.management_page", "event": "end", "elapsed_ms": 35.597, "status": "ok", "error": null}
+2026-10-20 15:07:26,312 TIMING {"request_id": "2fe34821f6ae454e", "pid": 15524, "task": "backend.domain_admin_ui.render_domain_admin", "event": "end", "elapsed_ms": 355.582, "status": "ok", "error": null}
+2026-10-20 15:07:26,325 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "backend.mcp_admin_ui.render_mcp_admin", "event": "start"}
+2026-10-20 15:07:26,326 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.mcp_config.load_settings", "event": "start"}
+2026-10-20 15:07:26,326 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.mcp_config.load_settings", "event": "end", "elapsed_ms": 0.604, "status": "ok", "error": null}
+2026-10-20 15:07:26,327 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "start"}
+2026-10-20 15:07:26,328 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,330 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.261, "status": "ok", "error": null}
+2026-10-20 15:07:26,331 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,333 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.12, "status": "ok", "error": null}
+2026-10-20 15:07:26,333 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,335 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.301, "status": "ok", "error": null}
+2026-10-20 15:07:26,335 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,338 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.676, "status": "ok", "error": null}
+2026-10-20 15:07:26,338 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,341 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.289, "status": "ok", "error": null}
+2026-10-20 15:07:26,341 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "start"}
+2026-10-20 15:07:26,343 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.load_domain_config", "event": "end", "elapsed_ms": 2.451, "status": "ok", "error": null}
+2026-10-20 15:07:26,343 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "rag.domain_config.list_domain_configs", "event": "end", "elapsed_ms": 16.57, "status": "ok", "error": null}
+2026-10-20 15:07:26,350 TIMING {"request_id": "1e069b91686b4478", "pid": 15524, "task": "backend.mcp_admin_ui.render_mcp_admin", "event": "end", "elapsed_ms": 25.54, "status": "ok", "error": null}

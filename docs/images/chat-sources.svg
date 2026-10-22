@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="260" viewBox="0 0 1000 260" role="img" aria-label="Screenshot placeholder: Chat answer with source evidence">
+<rect x="1" y="1" width="998" height="258" rx="10" fill="#f6f8fa" stroke="#94a3b8" stroke-dasharray="8 5"/>
+<text x="36" y="45" font-family="Arial, sans-serif" font-size="15" fill="#64748b">SCREENSHOT PLACEHOLDER — REPLACE BEFORE REVIEW</text>
+<text x="36" y="91" font-family="Arial, sans-serif" font-size="25" fill="#172b40">Chat answer with source evidence</text>
+<text x="36" y="138" font-family="Arial, sans-serif" font-size="18" fill="#34495e">Show a completed answer and its expanded source record.</text>
+<text x="36" y="172" font-family="Arial, sans-serif" font-size="18" fill="#34495e">Example: birth registration time and fees.</text>
+<text x="36" y="224" font-family="Arial, sans-serif" font-size="15" fill="#64748b">Save a real screenshot as docs/images/chat-sources.png and update the README image path.</text>
+</svg>

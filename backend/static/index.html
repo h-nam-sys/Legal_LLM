@@ -1,678 +1,638 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Tư Vấn Pháp Lý</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-main: #f8fafc;
-            --bg-sidebar: #0f172a;
-            --text-main: #334155;
-            --text-light: #94a3b8;
-            --bot-bubble: #ffffff;
-            --border-color: #e2e8f0;
-        }
-
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Inter', sans-serif; display: flex; height: 100vh; background: var(--bg-main); color: var(--text-main); }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Login Overlay */
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .login-box { background: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 340px; }
-        .login-box h2 { margin-top: 0; color: #0f172a; font-weight: 600; margin-bottom: 25px; }
-        .login-box input { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; font-family: 'Inter', sans-serif; transition: all 0.2s; }
-        .login-box input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        .login-box button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: background 0.2s; }
-        .login-box button:hover { background: var(--primary-hover); }
-
-        /* Sidebar */
-        #sidebar { width: 280px; background: var(--bg-sidebar); color: #f8fafc; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
-        #sidebar h3 { margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logout-btn { background: #334155; color: white; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.2s; }
-        .logout-btn:hover { background: #ef4444; }
-        .new-chat-btn { width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-weight: 500; font-family: 'Inter', sans-serif; transition: all 0.2s; }
-        .new-chat-btn:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.2); }
-        .conv-item { padding: 12px 15px; margin-bottom: 8px; background: transparent; border-radius: 8px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #cbd5e1; transition: all 0.2s; }
-        .conv-item:hover { background: rgba(255,255,255,0.05); }
-        .conv-item.active { background: var(--primary); color: white; font-weight: 500; }
-
-        /* Main Chat Area */
-        #main { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); }
-        #chat-window { flex: 1; padding: 30px; overflow-y: auto; scroll-behavior: smooth; }
-
-        /* Input Area */
-        #input-area { padding: 20px 30px; background: var(--bg-main); display: flex; align-items: center; }
-        .input-wrapper { display: flex; width: 100%; max-width: 800px; margin: 0 auto; background: white; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); padding: 5px; transition: box-shadow 0.2s; }
-        .input-wrapper:focus-within { box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15); border-color: #bfdbfe; }
-        input[type="text"] { flex: 1; padding: 15px 20px; border: none; background: transparent; font-size: 15px; font-family: 'Inter', sans-serif; }
-        input[type="text"]:focus { outline: none; }
-
-        /* Mic Button & Pulse Animation */
-        button#mic-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 0 15px; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; margin: 5px; width: 45px; height: 45px; }
-        button#mic-btn:hover:not(.listening) { background: #f1f5f9; }
-
-        @keyframes mic-pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        button#mic-btn.listening {
-            animation: mic-pulse 1.5s infinite;
-            background-color: #ef4444;
-            color: white;
-        }
-
-        button.send-btn { padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: 600; transition: background 0.2s; margin-left: 5px; }
-        button.send-btn:hover { background: var(--primary-hover); }
-
-        /* Messages */
-        .msg-wrapper { display: flex; width: 100%; flex-direction: column; margin-bottom: 24px; }
-        .message { padding: 16px 20px; border-radius: 16px; max-width: 85%; line-height: 1.6; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-
-        .user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 4px; margin-left: auto; }
-        .bot { background: var(--bot-bubble); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; margin-right: auto; border: 1px solid var(--border-color); }
-
-        .sources { font-size: 0.85em; color: var(--text-light); margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 8px; }
-        .rag-score { font-size: 0.85em; color: #ea580c; margin-top: 8px; font-weight: 600; }
-
-        /* Collapsible Sources (New) */
-        .sources-details { margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 8px; font-size: 0.85em; }
-        .sources-details summary { cursor: pointer; color: var(--text-light); font-weight: 500; outline: none; user-select: none; }
-        .sources-details summary:hover { color: var(--primary); }
-        .sources-content { margin-top: 8px; max-height: 220px; overflow-y: auto; color: var(--text-main); background: #f8fafc; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; line-height: 1.5; white-space: pre-wrap; font-size: 0.9em; }
-
-        /* Feedback Buttons */
-        .feedback-btns { display: flex; gap: 8px; margin-top: 6px; margin-bottom: 15px; align-self: flex-start; padding-left: 5px; }
-        .feedback-btn { background: transparent; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; padding: 4px 12px; color: var(--text-light); font-size: 12px; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
-        .feedback-btn:hover { background: #f1f5f9; color: var(--text-main); }
-        .feedback-btn.active-up { background: #dcfce7; color: #166534; border-color: #22c55e; }
-        .feedback-btn.active-down { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
-
-        /* Quick Action Buttons (Yes/No) */
-        .action-btns { display: flex; gap: 10px; margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 12px; }
-        .action-btn { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; border: none; transition: background 0.2s; }
-        .action-btn.yes { background: var(--primary); color: white; }
-        .action-btn.yes:hover { background: var(--primary-hover); }
-        .action-btn.no { background: #e2e8f0; color: var(--text-main); }
-        .action-btn.no:hover { background: #cbd5e1; }
-
-        /* Markdown Styling */
-        .message ul, .message ol { margin-top: 8px; margin-bottom: 8px; padding-left: 24px; }
-        .message li { margin-bottom: 4px; }
-        .message p { margin: 0 0 10px 0; }
-        .message p:last-child { margin-bottom: 0; }
-        .message strong { color: #0f172a; font-weight: 600; }
-
-        /* Loading Animation */
-        .loading-text { font-style: italic; color: var(--text-light); animation: pulse-text 1.5s infinite; border: none; background: transparent; box-shadow: none; padding: 8px 5px; display: inline-block; }
-        @keyframes pulse-text { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trợ lý tra cứu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#176c61;--primary-hover:#11564d;--bg-main:#fafbf9;--bg-sidebar:#f1f3ef;--text-main:#263b36;--text-light:#687a73;--border-color:#dfe5df;--bot-bubble:#fff}
+*{box-sizing:border-box}body{margin:0;display:flex;height:100vh;height:100dvh;overflow:hidden;background:var(--bg-main);color:var(--text-main);font-family:Inter,system-ui,sans-serif;font-size:14px}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opacity:.55}button,select,a,input{outline-offset:4px}button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--primary)}button{transition:background .15s,color .15s}a{color:var(--primary);text-underline-offset:3px}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#cbd5ce;border-radius:9px}[hidden]{display:none!important}
+#sidebar{width:268px;flex-shrink:0;background:var(--bg-sidebar);border-right:1px solid var(--border-color);padding:28px 18px 18px;display:flex;flex-direction:column;gap:24px}.brand{display:flex;gap:11px;align-items:center;padding:0 10px}.brand-mark{width:34px;height:36px;border-radius:11px;background:var(--primary);display:grid;place-items:center;color:white;font-size:23px}.brand strong{font-size:16px;letter-spacing:-.5px}.brand small{display:block;font-size:11px;color:var(--text-light);margin-top:4px}.new-chat-btn{width:100%;padding:12px 14px;border:1px solid #d5ddd5;border-radius:10px;background:white;text-align:left;color:var(--text-main);font-weight:600;box-shadow:0 2px 3px #20362a04}.new-chat-btn:hover{background:#e7ede7}.new-chat-btn span{margin-right:10px;font-size:19px;font-weight:400}.history-section{min-height:0;flex:1;display:flex;flex-direction:column}.section-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:#7b8980;padding:0 12px;margin:0 0 14px}#history-list{overflow-y:auto;flex:1}.conv-item{display:block;width:100%;border:0;padding:12px;margin-bottom:4px;text-align:left;background:transparent;border-radius:9px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#65756c}.conv-item:hover{background:#e5eae3}.conv-item.active{background:#e0e9df;color:#244c3a;font-weight:600}.sidebar-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border-color);padding:17px 9px 0;color:var(--text-light);font-size:11px}.logout-btn{border:0;background:none;color:#5c7166;font-size:11px;padding:6px}.logout-btn:hover{color:#9f3434}
+#main{display:flex;flex-direction:column;flex:1;min-width:0}.topbar{height:82px;flex-shrink:0;padding:0 38px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-color);background:#ffffffb3}.topbar h1{font-size:16px;font-weight:600;letter-spacing:-.3px;margin:0 0 5px}.topbar p{font-size:11px;color:var(--text-light);margin:0}.topbar-actions{display:flex;gap:8px;align-items:center}.quiet-btn{background:transparent;border:1px solid var(--border-color);padding:9px 12px;border-radius:9px;color:#64766c;font-size:12px}.quiet-btn:hover{background:#edf2ec}.mobile-menu{display:none}#sidebar-backdrop{position:fixed;inset:0;background:#172e2660;z-index:29;border:0}
+#chat-window{flex:1;min-height:0;overflow-y:auto;padding:34px max(24px,calc((100% - 830px)/2));scroll-behavior:smooth}.empty-state{min-height:80%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;max-width:600px;margin:auto}.empty-mark{width:64px;height:64px;border:1px solid #dce6d9;border-radius:21px;display:grid;place-items:center;background:#edf3e9;color:var(--primary);font-size:35px;margin-bottom:24px}.eyebrow{color:#78906f;font-size:10px;letter-spacing:2px;font-weight:600}.empty-state h2{font-size:30px;letter-spacing:-1px;line-height:1.3;font-weight:500;margin:12px 0}.empty-state>p{color:var(--text-light);font-size:13px;line-height:1.8;max-width:390px;margin:0 0 26px}.suggestions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.suggestions button{border:1px solid var(--border-color);background:#fff;border-radius:9px;padding:11px 13px;font-size:12px;color:#546b5d}.suggestions button:hover{border-color:#91ab96;background:#f1f6ee}.msg-wrapper{display:flex;flex-direction:column;align-items:flex-start;margin:0 0 30px;width:100%;min-width:0}.message-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7b8c80;margin:0 0 9px 2px;font-weight:600}.message{font-size:14px;line-height:1.85;overflow-wrap:anywhere;max-width:100%}.message.user{align-self:flex-end;margin-left:auto;background:#eaf0e7;padding:13px 18px;border-radius:15px 15px 4px 15px;max-width:85%;color:#304c39}.message.bot{width:100%;background:var(--bot-bubble);border:1px solid #e3e9e1;padding:23px 25px;border-radius:4px 16px 16px 16px;box-shadow:0 3px 10px #1a392503}.message p{margin:0 0 12px}.message p:last-child{margin-bottom:0}.message ul,.message ol{padding-left:23px;margin:8px 0 12px}.message li{margin:5px 0}.message pre{overflow:auto;max-width:100%;background:#f1f4ef;padding:12px;border-radius:8px}.message code{font-size:12px}.message table{display:block;overflow-x:auto;border-collapse:collapse;max-width:100%;font-size:12px}.message th,.message td{border:1px solid var(--border-color);padding:8px 10px}.message blockquote{margin:12px 0;padding-left:14px;border-left:3px solid #b3c8af;color:var(--text-light)}.loading-text{color:var(--text-light);animation:pulse 1.5s infinite}.loading-text::before{content:' ';display:inline-block;width:6px;height:6px;background:#77996b;border-radius:50%;margin-right:9px;vertical-align:middle}@keyframes pulse{50%{opacity:.45}}
+.sources-details{border-top:1px solid #edf0e9;margin-top:18px;padding-top:12px;font-size:12px}.sources-details summary{cursor:pointer;color:#6b806d;user-select:none}.sources-content{margin-top:12px;background:#f6f8f3;padding:14px;border-radius:8px;max-height:250px;overflow:auto;white-space:pre-wrap;font-size:12px;color:#536950}.feedback-btns{display:flex;gap:6px;margin-top:9px;align-items:center}.feedback-btn{border:1px solid transparent;background:transparent;color:#819080;border-radius:7px;padding:6px 9px;font-size:11px}.feedback-btn:hover{background:#eaf0e5;color:#36583d}.feedback-btn.active-up{background:#e0eddf;color:#28673c;border-color:#b8d2b7}.feedback-btn.active-down{background:#f7e9e5;color:#9a4f42;border-color:#e9c7bd}.feedback-status{font-size:11px;color:var(--text-light)}.action-btns{display:flex;gap:8px;margin-top:13px}.action-btn{padding:8px 15px;border-radius:8px;border:0;font-size:12px}.action-btn.yes{background:var(--primary);color:white}.action-btn.no{background:#e9eee5;color:#546650}.diagnostics{font-size:11px;color:#7d8979;margin-top:12px}.diagnostics summary{cursor:pointer}.rag-score{padding:9px 0;color:#6f7c65;font-variant-numeric:tabular-nums}.error-text{color:#a44239}.notice{font-size:12px;color:#9b5642;padding:12px 0}
+#input-area{flex-shrink:0;padding:16px 30px 20px;background:linear-gradient(0deg,var(--bg-main) 85%,transparent)}.input-wrapper{display:flex;align-items:center;max-width:830px;width:100%;margin:auto;padding:6px 7px 6px 16px;border:1px solid #d6dfd1;background:white;border-radius:15px;box-shadow:0 5px 20px #29482408}.input-wrapper:focus-within{border-color:#8ca986;box-shadow:0 0 0 3px #176c6109}#prompt{flex:1;min-width:0;border:0;background:transparent;padding:13px 5px;color:var(--text-main);font-size:13px}#prompt:focus{outline:none}#prompt::placeholder{color:#96a08f}#mic-btn{height:37px;width:37px;border:0;background:transparent;border-radius:9px;color:#819176;font-size:17px;flex-shrink:0}#mic-btn:hover{background:#edf2e7}#mic-btn.listening{background:#f9dfda;animation:pulse 1s infinite}.send-btn{border:0;background:var(--primary);color:white;border-radius:10px;padding:11px 16px;margin-left:5px;font-size:12px;font-weight:600}.send-btn:hover{background:var(--primary-hover)}.composer-note{text-align:center;font-size:10px;color:#94a08e;margin:10px 0 0}
+#advanced-dialog{position:fixed;inset:0 0 0 auto;margin:0;width:min(440px,100%);height:100%;max-height:100dvh;border:0;border-left:1px solid var(--border-color);padding:30px;background:#fafbf8;color:var(--text-main);box-shadow:-10px 0 50px #1a392510}#advanced-dialog::backdrop{background:#172e2640;backdrop-filter:blur(2px)}.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.panel-head h2{font-size:19px;margin:0}.panel-intro{font-size:12px;color:var(--text-light);line-height:1.8;margin-bottom:28px}.setting{margin:0 0 24px}.setting>label{display:block;font-size:12px;font-weight:600;margin-bottom:9px}.setting select{display:block;width:100%;padding:11px;border:1px solid #d6dfd1;border-radius:8px;background:white;color:var(--text-main)}.setting p{font-size:11px;line-height:1.8;color:var(--text-light);margin:9px 0}.setting-buttons{display:flex;gap:8px;margin-top:10px}.switch-label{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.7}.switch-label input{accent-color:var(--primary);margin-top:4px}#active-domain{display:block;font-size:11px;line-height:1.8;overflow-wrap:anywhere;padding:12px;background:#edf2e8;border-radius:8px;color:#627658}.setting-divider{border:0;border-top:1px solid var(--border-color);margin:26px 0}
+#login-overlay{position:fixed;inset:0;background:#f0f3edee;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}.login-box{width:390px;background:white;border:1px solid var(--border-color);border-radius:22px;padding:38px;box-shadow:0 20px 80px #26462c12}.login-box .brand-mark{margin-bottom:25px}.login-box h2{font-size:24px;letter-spacing:-.7px;margin:0 0 10px}.login-box p{font-size:12px;line-height:1.8;color:var(--text-light);margin:0 0 24px}.login-box label{display:block;font-size:12px;margin-bottom:8px}.login-box input{width:100%;padding:13px;border:1px solid var(--border-color);border-radius:9px;margin-bottom:14px}.login-box button{width:100%;padding:13px;border:0;border-radius:9px;background:var(--primary);color:white;font-weight:600}
+@media(min-width:1600px){#chat-window{padding-left:calc((100% - 900px)/2);padding-right:calc((100% - 900px)/2)}}
+@media(max-width:760px){#sidebar{position:fixed;inset:0 auto 0 0;z-index:30;transform:translateX(-100%);transition:transform .2s;width:268px}body.sidebar-open #sidebar{transform:translateX(0)}.mobile-menu{display:inline-block}.topbar{height:72px;padding:0 16px;gap:10px}.topbar h1{font-size:14px}.topbar p{font-size:10px}.topbar-actions .quiet-btn{padding:8px;font-size:11px}#chat-window{padding:24px 16px}.message.bot{padding:18px}.message{font-size:13px}.empty-state h2{font-size:25px}.empty-state{min-height:85%}#input-area{padding:10px 12px 12px}.composer-note{font-size:9px}.send-btn{padding:11px 13px}}
+@media(prefers-reduced-motion:reduce){*,*::before{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <div id="login-overlay">
-        <div class="login-box">
-            <h2>Hệ Thống Tư Vấn Pháp Lý</h2>
-            <input type="text" id="username-input" placeholder="Tên đăng nhập..." onkeypress="if(event.key==='Enter') performLogin()">
-            <button onclick="performLogin()">Vào Hệ Thống</button>
-        </div>
-    </div>
-
-    <div id="sidebar">
-        <h3>Lịch sử tư vấn <button class="logout-btn" onclick="logout()">Thoát</button></h3>
-        <button class="new-chat-btn" onclick="startNewChat()">+ Cuộc trò chuyện mới</button>
-        <div id="history-list"></div>
-    </div>
-
-    <div id="main">
-        <div style="padding:12px 30px;background:white;border-bottom:1px solid var(--border-color);display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-            <label for="domain-select">Lĩnh vực:</label>
-            <select id="domain-select" onchange="updateRoutingControls()" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;"><option value="auto">Tự động</option></select>
-            <button onclick="loadDomains()" title="Tải lại danh sách lĩnh vực, giữ lựa chọn hiện tại" style="padding:8px;cursor:pointer;">Làm mới danh sách</button>
-            <button onclick="resetDomainRouting()" title="Nhận diện lại lĩnh vực từ câu hỏi tiếp theo, bỏ ngữ cảnh chủ đề cũ" style="padding:8px;cursor:pointer;">Nhận diện lại</button>
-            <label for="mode-select">Chế độ:</label>
-            <select id="mode-select" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;">
-                <option value="">Mặc định của lĩnh vực</option><option value="strict">Strict</option><option value="friendly">Friendly</option>
-            </select>
-            <details style="font-size:13px;">
-                <summary style="cursor:pointer;">Tùy chọn nâng cao</summary>
-                <label style="display:block;margin-top:8px;">
-                    <input type="checkbox" id="allow-switching"> Cho phép tự động chuyển lĩnh vực
-                </label>
-                <p style="max-width:340px;margin:6px 0;color:#64748b;">Khi dùng Tự động: mặc định nhận diện một lần rồi giữ lĩnh vực. Bật để nhận diện lại khi đổi chủ đề. Chọn lĩnh vực cụ thể luôn giữ lựa chọn đó. Thay đổi áp dụng từ câu hỏi tiếp theo.</p>
-            </details>
-            <span id="active-domain" style="font-size:12px;color:#64748b;"></span>
-        </div>
-        <div id="chat-window"></div>
-        <div id="input-area">
-            <div class="input-wrapper">
-                <input type="text" id="prompt" placeholder="Nhập câu hỏi pháp lý của bạn vào đây..." autocomplete="off" onkeypress="handleEnter(event)">
-                <button id="mic-btn" title="Dùng giọng nói">🎤</button>
-                <button class="send-btn" onclick="sendMessage()">Gửi</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        marked.use({ gfm: true, breaks: true });
-
-        let currentConvId = null;
-        let resetDomainPending = false;
-        let userId = localStorage.getItem("user_id");
-
-        window.onload = () => {
-            loadDomains();
-            if (userId) {
-                document.getElementById("login-overlay").style.display = "none";
-                loadSidebar();
+<div id="login-overlay"><div class="login-box"><div class="brand-mark" aria-hidden="true">✳</div><h2>Chào bạn.</h2><p>Đăng nhập để bắt đầu tra cứu và tiếp tục những cuộc trò chuyện của bạn.</p><label for="username-input">Tên đăng nhập</label><input type="text" id="username-input" placeholder="Nhập tên của bạn" autocomplete="username" onkeydown="if(event.key==='Enter') performLogin()"><button onclick="performLogin()">Bắt đầu trò chuyện</button></div></div>
+<button id="sidebar-backdrop" aria-label="Đóng lịch sử" onclick="toggleSidebar(false)" hidden></button>
+<aside id="sidebar" aria-label="Lịch sử trò chuyện"><div class="brand"><span class="brand-mark" aria-hidden="true">✳</span><div><strong>Trợ lý tra cứu</strong><small>Thông tin trong tầm tay</small></div></div><button class="new-chat-btn" onclick="startNewChat()"><span aria-hidden="true">+</span>Cuộc trò chuyện mới</button><div class="history-section"><p class="section-label">GẦN ĐÂY</p><div id="history-list"></div></div><div class="sidebar-footer"><span>Lịch sử của bạn</span><button class="logout-btn" onclick="logout()">Đăng xuất ↗</button></div></aside>
+<main id="main"><header class="topbar"><div><h1>Không gian tra cứu</h1><p>Hỏi, khám phá và tìm thông tin bạn cần.</p></div><div class="topbar-actions"><button class="quiet-btn mobile-menu" onclick="toggleSidebar()" aria-label="Mở lịch sử">☰</button><button id="advanced-toggle" class="quiet-btn" onclick="openAdvanced()" aria-haspopup="dialog">⚙ Nâng cao</button></div></header><div id="chat-window" role="log" aria-label="Nội dung trò chuyện" aria-busy="false"></div><div id="input-area"><div class="input-wrapper"><input type="text" id="prompt" aria-label="Câu hỏi" placeholder="Bạn muốn tìm hiểu điều gì?" autocomplete="off" onkeydown="handleEnter(event)"><button id="mic-btn" title="Dùng giọng nói" aria-label="Dùng giọng nói">🎤</button><button id="send-btn" class="send-btn" onclick="sendMessage()">Gửi ↑</button></div><p class="composer-note">Thông tin có thể có sai sót. Hãy đối chiếu nguồn khi cần.</p></div></main>
+<dialog id="advanced-dialog" aria-labelledby="advanced-title"><div class="panel-head"><h2 id="advanced-title">Tùy chọn nâng cao</h2><button class="quiet-btn" onclick="closeAdvanced()" aria-label="Đóng tùy chọn nâng cao">✕</button></div><p class="panel-intro">Cấu hình tra cứu và thông tin kỹ thuật. Thay đổi áp dụng từ câu hỏi tiếp theo.</p><div class="setting"><label for="domain-select">Lĩnh vực tra cứu</label><select id="domain-select" onchange="updateRoutingControls()"><option value="auto">Tự động</option></select><div class="setting-buttons"><button class="quiet-btn" onclick="loadDomains()">Làm mới danh sách</button><button class="quiet-btn" onclick="resetDomainRouting()">Nhận diện lại</button></div><p>Nhận diện lại bỏ ngữ cảnh chủ đề cũ từ câu hỏi tiếp theo.</p></div><div class="setting"><label for="mode-select">Chế độ trả lời</label><select id="mode-select"><option value="">Mặc định của lĩnh vực</option><option value="strict">Strict · Bám sát dữ liệu</option><option value="friendly">Friendly · Thân thiện</option></select></div><div class="setting"><label class="switch-label"><input type="checkbox" id="allow-switching">Cho phép tự động chuyển lĩnh vực</label><p>Khi dùng Tự động, mặc định nhận diện một lần rồi giữ lĩnh vực. Bật để nhận diện lại khi đổi chủ đề. Chọn lĩnh vực cụ thể luôn giữ lựa chọn đó.</p></div><span id="active-domain">Chưa chọn lĩnh vực</span><hr class="setting-divider"><label class="switch-label"><input type="checkbox" id="show-diagnostics" onchange="updateDiagnostics()">Hiện chẩn đoán trong câu trả lời</label><p class="panel-intro">Hiện điểm truy xuất RAG trong mục thu gọn của từng câu trả lời. Đây không phải xác suất câu trả lời đúng.</p></dialog>
+<script>
+// API endpoints, routing preferences, action permissions and rating values retain the existing contracts.
+if (window.marked) marked.use({
+    gfm:true,breaks:true
+}
+);
+let currentConvId=null, resetDomainPending=false, userId=localStorage.getItem('user_id');
+let requestInFlight=false, creatingConversation=false, viewVersion=0;
+const mcpOffers={
+}
+;
+const $=id=>document.getElementById(id);
+const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}
+[c]));
+const markdown=text=>window.marked?marked.parse(text||''):escapeHTML(text).replace(/\n/g,'<br>');
+function getAuthHeaders(){
+    return {
+        'Content-Type':'application/json','X-User-ID':userId
+    }
+    ;
+}
+function toggleSidebar(open){
+    const show=open??!document.body.classList.contains('sidebar-open');
+    document.body.classList.toggle('sidebar-open',show);
+    $('sidebar-backdrop').hidden=!show;
+}
+function openAdvanced(){
+    $('advanced-dialog').showModal();
+}
+function closeAdvanced(){
+    $('advanced-dialog').close();
+}
+function updateDiagnostics(){
+    document.querySelectorAll('.diagnostics').forEach(el=>{
+        el.hidden=!$('show-diagnostics').checked;
+    }
+    );
+}
+function scrollChat(){
+    const el=$('chat-window');
+    el.scrollTop=el.scrollHeight;
+}
+function showEmpty(){
+    $('chat-window').innerHTML='<section class="empty-state"><div class="empty-mark" aria-hidden="true">✳</div><span class="eyebrow">BẮT ĐẦU TỪ MỘT CÂU HỎI</span><h2>Hôm nay, bạn cần tìm gì?</h2><p>Tra cứu thông tin từ các lĩnh vực có sẵn.<br>Bạn có thể hỏi tiếp để tìm hiểu rõ hơn.</p><div class="suggestions"><button onclick="suggestQuestion(this)">Tra cứu thủ tục hành chính</button><button onclick="suggestQuestion(this)">Tìm hiểu thông tin tuyển sinh</button><button onclick="suggestQuestion(this)">Tìm sản phẩm hoặc bộ phim</button></div></section>';
+}
+function suggestQuestion(button){
+    $('prompt').value=button.textContent;
+    $('prompt').focus();
+}
+window.onload=()=>{
+    showEmpty();
+    loadDomains();
+    if(userId){
+        $('login-overlay').style.display='none';
+        loadSidebar();
+    }
+}
+;
+async function loadDomains(){
+    try{
+        const res=await fetch('/domains');
+        if(!res.ok)return;
+        const data=await res.json(),select=$('domain-select'),previous=select.value;
+        select.replaceChildren(new Option('Tự động','auto'));
+        data.forEach(domain=>{
+            const option=new Option(domain.id,domain.id);
+            option.title=domain.description||'';
+            select.appendChild(option);
+        }
+        );
+        select.value=data.some(d=>d.id===previous)?previous:'auto';
+        updateRoutingControls();
+    }
+    catch(err){
+        console.warn('Could not load domains',err);
+    }
+}
+function chatPayload(text){
+    const payload={
+        user_prompt:text,domain:$('domain-select').value,allow_switching:$('allow-switching').checked
+    }
+    ;
+    if(resetDomainPending)payload.reset_domain=true;
+    if($('mode-select').value)payload.mode=$('mode-select').value;
+    return payload;
+}
+function updateRoutingControls(){
+    $('allow-switching').disabled=$('domain-select').value!=='auto';
+}
+function resetDomainRouting(){
+    $('domain-select').value='auto';
+    resetDomainPending=true;
+    updateRoutingControls();
+    $('active-domain').textContent='Sẽ nhận diện lại từ câu hỏi tiếp theo';
+}
+async function performLogin(){
+    const username=$('username-input').value.trim();
+    if(!username)return alert('Vui lòng nhập tên đăng nhập!');
+    try{
+        const res=await fetch('/mock-login',{
+            method:'POST',headers:{
+                'Content-Type':'application/json'
             }
-        };
-
-        async function loadDomains() {
-            try {
-                const res = await fetch('/domains');
-                if (!res.ok) return;
-                const data = await res.json();
-                const select = document.getElementById('domain-select');
-                const previous = select.value;
-                select.replaceChildren(new Option('Tự động', 'auto'));
-                data.forEach(domain => {
-                    const option = new Option(domain.id, domain.id);
-                    option.title = domain.description || '';
-                    select.appendChild(option);
-                });
-                select.value = data.some(d => d.id === previous) ? previous : 'auto';
-                updateRoutingControls();
-            } catch (err) { console.warn('Could not load domains', err); }
-        }
-
-        function chatPayload(text) {
-            const payload = {user_prompt: text, domain: document.getElementById('domain-select').value};
-            payload.allow_switching = document.getElementById('allow-switching').checked;
-            if (resetDomainPending) payload.reset_domain = true;
-            const mode = document.getElementById('mode-select').value;
-            if (mode) payload.mode = mode;
-            return payload;
-        }
-
-        function updateRoutingControls() {
-            document.getElementById('allow-switching').disabled = document.getElementById('domain-select').value !== 'auto';
-        }
-
-        function resetDomainRouting() {
-            document.getElementById('domain-select').value = 'auto';
-            resetDomainPending = true;
-            updateRoutingControls();
-            document.getElementById('active-domain').textContent = 'Sẽ nhận diện lại từ câu hỏi tiếp theo';
-        }
-
-        async function performLogin() {
-            const username = document.getElementById("username-input").value.trim();
-            if (!username) return alert("Vui lòng nhập tên đăng nhập!");
-
-            try {
-                const res = await fetch('/mock-login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: username })
-                });
-                const data = await res.json();
-                userId = data.user_id;
-                localStorage.setItem("user_id", userId);
-                document.getElementById("login-overlay").style.display = "none";
-                loadSidebar();
-            } catch (err) {
-                alert("Lỗi đăng nhập. Vui lòng thử lại.");
+            ,body:JSON.stringify({
+                username
             }
+            )
         }
-
-        function logout() {
-            localStorage.removeItem("user_id");
-            window.location.reload();
+        );
+        if(!res.ok)throw Error();
+        const data=await res.json();
+        userId=data.user_id;
+        localStorage.setItem('user_id',userId);
+        $('login-overlay').style.display='none';
+        loadSidebar();
+        $('prompt').focus();
+    }
+    catch(err){
+        alert('Lỗi đăng nhập. Vui lòng thử lại.');
+    }
+}
+function logout(){
+    localStorage.removeItem('user_id');
+    window.location.reload();
+}
+function handleEnter(event){
+    if(event.key==='Enter'&&!event.isComposing){
+        event.preventDefault();
+        sendMessage();
+    }
+}
+function setBusy(busy){
+    requestInFlight=busy;
+    $('send-btn').disabled=busy;
+    $('chat-window').setAttribute('aria-busy',String(busy));
+}
+async function loadSidebar(){
+    if(!userId)return;
+    try{
+        const res=await fetch('/conversations',{
+            headers:getAuthHeaders()
         }
-
-        function getAuthHeaders() {
-            return { "Content-Type": "application/json", "X-User-ID": userId };
+        );
+        if(!res.ok)return;
+        const data=await res.json();
+        $('history-list').replaceChildren();
+        data.forEach(conv=>{
+            const button=document.createElement('button');
+            button.className='conv-item'+(conv.id===currentConvId?' active':'');
+            button.textContent=conv.title;
+            button.title=conv.title;
+            button.setAttribute('aria-current',conv.id===currentConvId?'true':'false');
+            button.onclick=()=>loadChatHistory(conv.id);
+            $('history-list').appendChild(button);
         }
-
-        function handleEnter(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
-
-        window.hideActions = function(msgId) {
-            const btnDiv = document.getElementById(`action-btns-${msgId}`);
-            if (btnDiv) btnDiv.style.display = 'none';
-        };
-
-        const mcpOffers = {};
-        window.triggerAction = async function(msgId, actionType) {
-            hideActions(msgId);
-
-            const chatWindow = document.getElementById("chat-window");
-            const newMsgId = "bot-msg-" + Date.now();
-
-            chatWindow.innerHTML += `
-                <div class="msg-wrapper">
-                    <div class="message bot">
-                        <span id="${newMsgId}-text" class="loading-text">${actionType === 'mcp' ? 'Đang tra cứu trực tuyến...' : 'Đang lấy biểu mẫu...'}</span>
-                        <div id="${newMsgId}-meta"></div>
-                    </div>
-                </div>
-            `;
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
-            try {
-                const res = await fetch(`/chat/${currentConvId}/action/${actionType}`, {
-                    method: "POST",
-                    headers: actionType === 'mcp' ? {...getAuthHeaders(), 'Content-Type': 'application/json'} : getAuthHeaders(),
-                    ...(actionType === 'mcp' ? {body: JSON.stringify({offer_message_id: mcpOffers[msgId]})} : {})
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || "API call failed");
-
-                const textElement = document.getElementById(`${newMsgId}-text`);
-                const metaElement = document.getElementById(`${newMsgId}-meta`);
-
-                textElement.classList.remove("loading-text");
-                textElement.innerHTML = marked.parse(data.text);
-
-                if (data.sources && data.sources.length > 0) {
-                    const extracted = extractSourceData(data.sources);
-                    if (extracted.actualSources.length > 0 || extracted.ragContent) {
-                        metaElement.innerHTML = renderSourcesCollapsible(extracted.actualSources, extracted.ragContent, extracted.searchSuggestions);
-                    }
-                }
-
-                chatWindow.scrollTop = chatWindow.scrollHeight;
-                loadSidebar();
-            } catch (err) {
-                const textElement = document.getElementById(`${newMsgId}-text`);
-                if (textElement) {
-                    textElement.classList.remove("loading-text");
-                    textElement.textContent = err.message || 'Lỗi kết nối.';
-                    if (actionType === 'mcp') {
-                        textElement.insertAdjacentHTML('afterend', `<button class="action-btn yes" onclick="window.triggerAction('${msgId}', 'mcp')">Thử lại</button>`);
-                    }
-                }
+        );
+    }
+    catch(err){
+        console.warn('Could not load conversations',err);
+    }
+}
+async function startNewChat(){
+    if(creatingConversation)return;
+    creatingConversation=true;
+    try{
+        const res=await fetch('/start-conversation',{
+            method:'POST',headers:getAuthHeaders(),body:JSON.stringify({
+                title:'Tư vấn mới',domain:$('domain-select').value,allow_switching:$('allow-switching').checked
             }
-        };
-
-        function renderSourcesCollapsible(actualSources, ragContent, searchSuggestions = "") {
-            if ((!actualSources || actualSources.length === 0) && !ragContent) return "";
-
-            let displayHTML = "";
-            if (ragContent) {
-                displayHTML = ragContent.replace(/\n/g, '<br>');
-            } else if (actualSources && actualSources.length > 0) {
-                displayHTML = actualSources.join('<hr style="border:0;border-top:1px dashed var(--border-color);margin:8px 0;">');
+            )
+        }
+        );
+        if(!res.ok)throw Error();
+        const data=await res.json();
+        currentConvId=data.conversation_id;
+        viewVersion++;
+        resetDomainPending=false;
+        $('active-domain').textContent='Chưa chọn lĩnh vực';
+        showEmpty();
+        toggleSidebar(false);
+        loadSidebar();
+        $('prompt').focus();
+        return currentConvId;
+    }
+    catch(err){
+        alert('Không thể tạo cuộc trò chuyện. Vui lòng thử lại.');
+        return null;
+    }
+    finally{
+        creatingConversation=false;
+    }
+}
+function extractSourceData(sourceArray){
+    const actualSources=[];
+    let ragScore=null,ragContent=null,searchSuggestions='';
+    (Array.isArray(sourceArray)?sourceArray:[]).forEach(src=>{
+        if(typeof src!=='string')return;
+        if(src.startsWith('RAG_SCORE:')){
+            const n=Number(src.slice(10));
+            if(Number.isFinite(n))ragScore=n.toFixed(4);
+        }
+        else if(src.startsWith('RAG_CONTENT:'))ragContent=src.slice(12);
+        else if(src.startsWith('RAG_GOOGLE_SEARCH:'))searchSuggestions=src.slice(18);
+        else if(!src.startsWith('RAG_'))actualSources.push(src);
+    }
+    );
+    return{
+        actualSources,ragScore,ragContent,searchSuggestions
+    }
+    ;
+}
+function renderSourcesCollapsible(actualSources,ragContent,searchSuggestions=''){
+    if(!actualSources.length&&!ragContent&&!searchSuggestions)return '';
+    const content=ragContent?escapeHTML(ragContent):actualSources.map(escapeHTML).join('\n\n');
+    const search=searchSuggestions?`<iframe title="Gợi ý tìm kiếm" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${escapeHTML(searchSuggestions)}" style="width:100%;height:150px;border:0"></iframe>`:'';
+    return `${search}<details class="sources-details"><summary>Xem nguồn tham khảo</summary><div class="sources-content">${content}</div></details>`;
+}
+function renderMetadata(sources){
+    const data=extractSourceData(sources);
+    return renderSourcesCollapsible(data.actualSources,data.ragContent,data.searchSuggestions)+(data.ragScore===null?'':`<details class="diagnostics" ${$('show-diagnostics').checked?'':'hidden'}><summary>Chẩn đoán truy xuất</summary><div class="rag-score">Điểm truy xuất RAG: ${data.ragScore}</div></details>`);
+}
+function createMessage(role,text='',loading=false){
+    $('chat-window').querySelector('.empty-state')?.remove();
+    const wrapper=document.createElement('div');
+    wrapper.className='msg-wrapper';
+    const message=document.createElement('div');
+    message.className='message '+(role==='user'?'user':'bot');
+    if(role!=='user'){
+        const label=document.createElement('div');
+        label.className='message-label';
+        label.textContent='Trợ lý tra cứu';
+        wrapper.appendChild(label);
+    }
+    const content=document.createElement('div');
+    content.className=loading?'reply-text loading-text':'reply-text';
+    if(role==='user'||loading)content.textContent=text;
+    else content.innerHTML=markdown(text);
+    message.appendChild(content);
+    const meta=document.createElement('div');
+    meta.className='reply-meta';
+    message.appendChild(meta);
+    wrapper.appendChild(message);
+    $('chat-window').appendChild(wrapper);
+    return{
+        wrapper,content,meta
+    }
+    ;
+}
+function addFeedback(wrapper,msg){
+    if(!Number.isInteger(msg.id)||msg.id<=0)return;
+    wrapper.querySelector('.feedback-btns')?.remove();
+    wrapper.dataset.messageId=msg.id;
+    const bar=document.createElement('div');
+    bar.className='feedback-btns';
+    const status=document.createElement('span');
+    status.className='feedback-status';
+    status.setAttribute('role','status');
+    [[1,'👍','Phù hợp','active-up'],[0,'👎','Không phù hợp','active-down']].forEach(([rating,icon,label,active])=>{
+        const button=document.createElement('button');
+        button.className='feedback-btn'+(msg.rating===rating?' '+active:'');
+        button.textContent=icon+' '+label;
+        button.setAttribute('aria-label',label);
+        button.setAttribute('aria-pressed',String(msg.rating===rating));
+        button.onclick=()=>submitFeedback(msg.id,rating,button);
+        bar.appendChild(button);
+    }
+    );
+    bar.appendChild(status);
+    wrapper.appendChild(bar);
+}
+async function submitFeedback(messageId,rating,button){
+    const bar=button.closest('.feedback-btns');
+    bar.querySelectorAll('button').forEach(b=>b.disabled=true);
+    try{
+        const res=await fetch(`/feedback/${messageId}`,{
+            method:'POST',headers:getAuthHeaders(),body:JSON.stringify({
+                rating
             }
-
-            const escapeAttribute = text => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const searchLinks = searchSuggestions ? `<iframe title="Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${escapeAttribute(searchSuggestions)}" style="width:100%;height:150px;border:0;"></iframe>` : '';
-            return `${searchLinks}
-                <details class="sources-details">
-                    <summary>📑 Xem dữ liệu trích xuất (Nguồn)</summary>
-                    <div class="sources-content">${displayHTML}</div>
-                </details>
-            `;
+            )
         }
-
-        function extractSourceData(sourceArray) {
-            let actualSources = [];
-            let ragScore = null;
-            let ragContent = null;
-            let searchSuggestions = "";
-
-            if (sourceArray && sourceArray.length > 0) {
-                sourceArray.forEach(src => {
-                    if (typeof src === "string") {
-                        if (src.startsWith("RAG_SCORE:")) {
-                            ragScore = parseFloat(src.split(":")[1]).toFixed(4);
-                        } else if (src.startsWith("RAG_CONTENT:")) {
-                            ragContent = src.substring(12);
-                        } else if (src.startsWith("RAG_GOOGLE_SEARCH:")) {
-                            searchSuggestions = src.substring(18);
-                        } else if (!src.startsWith("RAG_")) {
-                            actualSources.push(src);
-                        }
-                    }
-                });
+        );
+        if(!res.ok)throw Error();
+        bar.querySelectorAll('button').forEach(b=>{
+            b.classList.remove('active-up','active-down');
+            b.setAttribute('aria-pressed','false');
+        }
+        );
+        button.classList.add(rating===1?'active-up':'active-down');
+        button.setAttribute('aria-pressed','true');
+        bar.querySelector('.feedback-status').textContent='Đã ghi nhận';
+    }
+    catch(err){
+        bar.querySelector('.feedback-status').textContent='Chưa gửi được. Hãy thử lại.';
+    }
+    finally{
+        bar.querySelectorAll('button').forEach(b=>b.disabled=false);
+    }
+}
+function hideActions(key){
+    document.getElementById('action-btns-'+key)?.remove();
+}
+function addActions(wrapper,key,type){
+    if(wrapper.querySelector('.action-btns'))return;
+    const bar=document.createElement('div');
+    bar.className='action-btns';
+    bar.id='action-btns-'+key;
+    const yes=document.createElement('button');
+    yes.className='action-btn yes';
+    yes.textContent='Có';
+    yes.onclick=()=>triggerAction(key,type);
+    const no=document.createElement('button');
+    no.className='action-btn no';
+    no.textContent='Không';
+    no.onclick=()=>hideActions(key);
+    bar.append(yes,no);
+    wrapper.appendChild(bar);
+}
+// Read the committed reply once after streaming/actions. This is presentation hydration only:
+// no second generation, routing, retrieval, or database write is performed.
+async function hydrateSavedReply(convId,view,reply,text){
+    try{
+        const res=await fetch(`/history/${convId}`,{
+            headers:getAuthHeaders()
+        }
+        );
+        if(!res.ok)throw Error();
+        const data=await res.json();
+        if(currentConvId!==convId||viewVersion!==view||!reply.wrapper.isConnected)return;
+        const msg=[...data.messages].reverse().find(m=>m.role==='assistant'&&m.content===text);
+        if(!msg)throw Error('Saved reply not found');
+        reply.meta.innerHTML=renderMetadata(msg.sources);
+        addFeedback(reply.wrapper,msg);
+        updateDiagnostics();
+    }
+    catch(err){
+        if(reply.wrapper.isConnected&&currentConvId===convId&&viewVersion===view){
+            const notice=document.createElement('div');
+            notice.className='notice';
+            notice.textContent='Chưa tải được đánh giá. ';
+            const retry=document.createElement('button');
+            retry.className='quiet-btn';
+            retry.textContent='Thử lại';
+            retry.onclick=()=>{
+                notice.remove();
+                return hydrateSavedReply(convId,view,reply,text);
             }
-            return { actualSources, ragScore, ragContent, searchSuggestions };
+            ;
+            notice.appendChild(retry);
+            reply.wrapper.appendChild(notice);
         }
-
-        async function loadSidebar() {
-            if (!userId) return;
-            const res = await fetch(`/conversations`, { headers: getAuthHeaders() });
-            const data = await res.json();
-            const list = document.getElementById("history-list");
-            list.innerHTML = "";
-
-            data.forEach(conv => {
-                const div = document.createElement("div");
-                div.className = `conv-item ${conv.id === currentConvId ? 'active' : ''}`;
-                div.innerText = conv.title;
-                div.title = conv.title;
-                div.onclick = () => loadChatHistory(conv.id);
-                list.appendChild(div);
-            });
+        console.warn('Could not hydrate saved reply',err);
+    }
+}
+async function loadChatHistory(convId){
+    currentConvId=convId;
+    const view=++viewVersion;
+    toggleSidebar(false);
+    loadSidebar();
+    $('chat-window').replaceChildren();
+    try{
+        const res=await fetch(`/history/${convId}`,{
+            headers:getAuthHeaders()
         }
-
-        async function startNewChat() {
-            const res = await fetch("/start-conversation", {
-                method: "POST",
-                headers: getAuthHeaders(),
-                body: JSON.stringify({ title: "Tư vấn mới", domain: document.getElementById("domain-select").value, allow_switching: document.getElementById("allow-switching").checked })
-            });
-            const data = await res.json();
-            currentConvId = data.conversation_id;
-            resetDomainPending = false;
-            document.getElementById('active-domain').textContent = '';
-            document.getElementById("chat-window").innerHTML = "";
-            loadSidebar();
+        );
+        if(!res.ok)throw Error();
+        const data=await res.json();
+        if(currentConvId!==convId||viewVersion!==view)return;
+        const state=(data.checklist||{
         }
-
-        async function submitFeedback(messageId, rating, btnElement) {
-            if (!messageId) return;
-            try {
-                const res = await fetch(`/feedback/${messageId}`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ rating: rating })
-                });
-                if (res.ok) {
-                    const wrapper = btnElement.closest('.feedback-btns');
-                    wrapper.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active-up', 'active-down'));
-                    if (rating === 3) btnElement.classList.add('active-up');
-                    if (rating === 1) btnElement.classList.add('active-down');
-                }
-            } catch (err) {
-                console.error("Failed to submit feedback:", err);
-            }
+        )._domain_state||{
         }
-
-        async function loadChatHistory(convId) {
-            currentConvId = convId;
-            loadSidebar();
-            const res = await fetch(`/history/${convId}`, { headers: getAuthHeaders() });
-            const data = await res.json();
-            const chatWindow = document.getElementById("chat-window");
-            chatWindow.innerHTML = "";
-
-            const domainState = (data.checklist || {})._domain_state || {};
-            resetDomainPending = false;
-            document.getElementById('domain-select').value = domainState.selection === 'manual' ? domainState.name : 'auto';
-            document.getElementById('allow-switching').checked = domainState.allow_switching === true;
-            updateRoutingControls();
-            document.getElementById('active-domain').textContent = domainState.name ? 'Đang dùng: ' + domainState.name : '';
-            data.messages.forEach(msg => {
-                const isUser = msg.role === "user";
-                let sourceHtml = "";
-                let scoreHtml = "";
-
-                if (!isUser) {
-                    const extracted = extractSourceData(msg.sources);
-                    if (extracted.actualSources.length > 0 || extracted.ragContent) {
-                        sourceHtml = renderSourcesCollapsible(extracted.actualSources, extracted.ragContent, extracted.searchSuggestions);
-                    }
-                    if (extracted.ragScore !== null) {
-                        scoreHtml = `<div class="rag-score">Điểm tin cậy (RAG): ${extracted.ragScore}</div>`;
-                    }
+        ;
+        resetDomainPending=false;
+        $('domain-select').value=state.selection==='manual'?state.name:'auto';
+        $('allow-switching').checked=state.allow_switching===true;
+        updateRoutingControls();
+        $('active-domain').textContent=state.name?'Đang dùng: '+state.name:'Chưa chọn lĩnh vực';
+        if(!data.messages.length)showEmpty();
+        data.messages.forEach((msg,index)=>{
+            const reply=createMessage(msg.role,msg.content);
+            if(msg.role!=='user'){
+                reply.meta.innerHTML=renderMetadata(msg.sources);
+                addFeedback(reply.wrapper,msg);
+                const pending=(data.checklist||{
                 }
-
-                const pendingSearch = (data.checklist || {})._mcp_pending;
-                if (pendingSearch && pendingSearch.message_id === msg.id) mcpOffers['history-' + msg.id] = msg.id;
-                const searchOfferHtml = !isUser && data.needs_search_permission && pendingSearch && pendingSearch.message_id === msg.id
-                    ? `<div class="action-btns" id="action-btns-history-${msg.id}"><button class="action-btn yes" onclick="window.triggerAction('history-${msg.id}', 'mcp')">Có</button><button class="action-btn no" onclick="window.hideActions('history-${msg.id}')">Không</button></div>` : '';
-                let feedbackHtml = (!isUser && msg.id)
-                    ? `<div class="feedback-btns">
-                           <button class="feedback-btn ${msg.rating === 3 ? 'active-up' : ''}" onclick="submitFeedback(${msg.id}, 1, this)">👍 Phù hợp</button>
-                           <button class="feedback-btn ${msg.rating === 1 ? 'active-down' : ''}" onclick="submitFeedback(${msg.id}, 0, this)">👎 Không phù hợp</button>
-                       </div>`
-                    : "";
-
-                const formattedContent = isUser ? msg.content : marked.parse(msg.content);
-
-                chatWindow.innerHTML += `
-                    <div class="msg-wrapper">
-                        <div class="message ${isUser ? 'user' : 'bot'}">
-                            ${formattedContent}
-                            ${scoreHtml}
-                            ${sourceHtml}
-                        </div>
-                        ${searchOfferHtml}${feedbackHtml}
-                    </div>
-                `;
-            });
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-
-        async function sendMessage() {
-            if (!currentConvId) await startNewChat();
-
-            const input = document.getElementById("prompt");
-            const text = input.value.trim();
-            if (!text) return;
-
-            const chatWindow = document.getElementById("chat-window");
-
-            chatWindow.innerHTML += `
-                <div class="msg-wrapper">
-                    <div class="message user">${text}</div>
-                </div>
-            `;
-            input.value = "";
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
-            const msgId = "bot-msg-" + Date.now();
-            chatWindow.innerHTML += `
-                <div class="msg-wrapper">
-                    <div class="message bot">
-                        <span id="${msgId}-text" class="loading-text">Đang phân tích yêu cầu...</span>
-                        <div id="${msgId}-meta"></div>
-                    </div>
-                </div>
-            `;
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
-            const textElement = document.getElementById(`${msgId}-text`);
-            const metaElement = document.getElementById(`${msgId}-meta`);
-
-            const fakeSteps = [
-                "Đang tra cứu cơ sở dữ liệu pháp luật...",
-                "Đang trích xuất quy định hiện hành...",
-                "Đang kết nối tới mô hình AI..."
-            ];
-            const fallbackStep = "Vẫn đang xử lý, vui lòng đợi thêm (có thể đang xếp hàng)...";
-            let step = 0;
-            let loadingTimer;
-
-            function updateLoadingText() {
-                if (!textElement || !textElement.classList.contains("loading-text")) return;
-
-                if (step < fakeSteps.length) {
-                    textElement.innerText = fakeSteps[step];
-                    step++;
-                    const randomDelay = Math.floor(Math.random() * 1300) + 1200;
-                    loadingTimer = setTimeout(updateLoadingText, randomDelay);
-                } else {
-                    textElement.innerText = fallbackStep;
+                )._mcp_pending,key='history-'+msg.id;
+                if(data.needs_search_permission&&pending?.message_id===msg.id){
+                    mcpOffers[key]=msg.id;
+                    addActions(reply.wrapper,key,'mcp');
                 }
-            }
-
-            loadingTimer = setTimeout(updateLoadingText, 1000);
-
-            try {
-                const res = await fetch(`/chat/${currentConvId}`, {
-                    method: "POST",
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(chatPayload(text))
-                });
-
-                if (!res.ok) throw new Error("Network response was not ok");
-
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-
-                let fullText = "";
-                let buffer = "";
-                let actualSources = [];
-                let searchPermissionOffered = false;
-                let isFirstToken = true;
-                let streamActive = true;
-                let needsRender = false;
-
-                function renderLoop() {
-                    if (needsRender) {
-                        textElement.innerHTML = marked.parse(fullText);
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
-                        needsRender = false;
-                    }
-
-                    if (streamActive) {
-                        requestAnimationFrame(renderLoop);
-                    } else {
-                        textElement.innerHTML = marked.parse(fullText);
-
-                        if (fullText.includes("Bạn có muốn tải biểu mẫu") || searchPermissionOffered) {
-                            const actionType = fullText.includes("Bạn có muốn tải biểu mẫu") ? 'form' : 'mcp';
-                            textElement.innerHTML += `
-                                <div class="action-btns" id="action-btns-${msgId}">
-                                    <button class="action-btn yes" onclick="window.triggerAction('${msgId}', '${actionType}')">Có</button>
-                                    <button class="action-btn no" onclick="window.hideActions('${msgId}')">Không</button>
-                                </div>
-                            `;
-                        }
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
-                    }
-                }
-
-                requestAnimationFrame(renderLoop);
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) {
-                        streamActive = false;
-                        break;
-                    }
-
-                    buffer += decoder.decode(value, { stream: true });
-
-                    let boundary = buffer.indexOf("\n\n");
-                    while (boundary !== -1) {
-                        let chunk = buffer.slice(0, boundary);
-                        buffer = buffer.slice(boundary + 2);
-
-                        if (chunk.startsWith("data: ")) {
-                            const dataStr = chunk.replace("data: ", "").trim();
-                            if (dataStr === "[DONE]") continue;
-
-                            try {
-                                const parsed = JSON.parse(dataStr);
-                                if (parsed.type === "metadata") {
-                                    actualSources = parsed.sources || [];
-                                    searchPermissionOffered = searchPermissionOffered || parsed.needs_search_permission === true;
-                                    if (parsed.offer_message_id) mcpOffers[msgId] = parsed.offer_message_id;
-                                    if (parsed.domain) {
-                                        resetDomainPending = false;
-                                        document.getElementById('active-domain').textContent = 'Đang dùng: ' + parsed.domain + (parsed.mode ? ' • ' + parsed.mode : '');
-                                    } else if (parsed.domain_choices) {
-                                        document.getElementById('active-domain').textContent = 'Cần chọn lĩnh vực: ' + parsed.domain_choices.join(', ');
-                                    }
-                                    console.log("[DIAGNOSTIC FRONTEND] Received metadata:", actualSources);
-                                } else if (parsed.type === "chunk") {
-                                    if (isFirstToken) {
-                                        clearTimeout(loadingTimer);
-                                        textElement.classList.remove("loading-text");
-                                        textElement.innerHTML = "";
-                                        isFirstToken = false;
-                                    }
-                                    fullText += parsed.text;
-                                    needsRender = true;
-                                }
-                            } catch (e) {
-                                console.warn("Stream parse error on chunk:", dataStr);
-                            }
-                        }
-                        boundary = buffer.indexOf("\n\n");
-                    }
-                }
-
-                if (actualSources.length > 0) {
-                    const extractedStream = extractSourceData(actualSources);
-                    if (extractedStream.actualSources.length > 0 || extractedStream.ragContent) {
-                        metaElement.innerHTML = renderSourcesCollapsible(extractedStream.actualSources, extractedStream.ragContent, extractedStream.searchSuggestions);
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
-                    }
-                }
-
-                loadSidebar();
-
-            } catch (err) {
-                clearTimeout(loadingTimer);
-                textElement.classList.remove("loading-text");
-                textElement.innerHTML = `<span style="color:red;">Lỗi kết nối đến máy chủ. Vui lòng thử lại.</span>`;
+                else if(index===data.messages.length-1&&msg.content.includes('Bạn có muốn tải biểu mẫu'))addActions(reply.wrapper,key,'form');
             }
         }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const micBtn = document.getElementById("mic-btn");
-            const chatInput = document.getElementById("prompt");
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-            if (!SpeechRecognition) {
-                micBtn.style.display = "none";
-                return;
-            }
-
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'vi-VN';
-            recognition.interimResults = false;
-
-            micBtn.addEventListener("click", () => {
-                if (micBtn.classList.contains("listening")) {
-                    recognition.stop();
-                    return;
+        );
+        scrollChat();
+    }
+    catch(err){
+        if(viewVersion===view){
+            const notice=document.createElement('p');
+            notice.className='notice';
+            notice.textContent='Không thể tải lịch sử. Vui lòng chọn lại cuộc trò chuyện.';
+            $('chat-window').appendChild(notice);
+        }
+    }
+}
+async function triggerAction(key,type){
+    if(requestInFlight)return;
+    const convId=currentConvId,view=viewVersion;
+    setBusy(true);
+    hideActions(key);
+    const reply=createMessage('assistant',type==='mcp'?'Đang tra cứu trực tuyến…':'Đang lấy biểu mẫu…',true);
+    scrollChat();
+    try{
+        const res=await fetch(`/chat/${convId}/action/${type}`,{
+            method:'POST',headers:getAuthHeaders(),...(type==='mcp'?{
+                body:JSON.stringify({
+                    offer_message_id:mcpOffers[key]
                 }
-
-                recognition.start();
-                micBtn.classList.add("listening");
-                micBtn.textContent = "🛑";
-                chatInput.placeholder = "Đang nghe...";
-            });
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                chatInput.value += (chatInput.value ? " " : "") + transcript;
-            };
-
-            recognition.onend = () => {
-                micBtn.classList.remove("listening");
-                micBtn.textContent = "🎤";
-                chatInput.placeholder = "Nhập câu hỏi pháp lý của bạn vào đây...";
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Speech recognition error:", event.error);
-                micBtn.classList.remove("listening");
-                micBtn.textContent = "🎤";
-                chatInput.placeholder = "Lỗi mic, vui lòng gõ phím...";
-            };
-        });
-    </script>
+                )
+            }
+            :{
+            }
+            )
+        }
+        );
+        const data=await res.json();
+        if(!res.ok)throw Error(typeof data.detail==='string'?data.detail:'Không thể thực hiện yêu cầu.');
+        reply.content.classList.remove('loading-text');
+        reply.content.innerHTML=markdown(data.text);
+        reply.meta.innerHTML=renderMetadata(data.sources);
+        await hydrateSavedReply(convId,view,reply,data.text);
+        loadSidebar();
+    }
+    catch(err){
+        reply.content.classList.remove('loading-text');
+        reply.content.textContent=err.message||'Lỗi kết nối.';
+        if(type==='mcp'){
+            const retry=document.createElement('button');
+            retry.className='action-btn yes';
+            retry.textContent='Thử lại';
+            retry.onclick=()=>triggerAction(key,'mcp');
+            reply.wrapper.appendChild(retry);
+        }
+    }
+    finally{
+        setBusy(false);
+        if(viewVersion===view)scrollChat();
+    }
+}
+async function sendMessage(){
+    const text=$('prompt').value.trim();
+    if(!text||requestInFlight||creatingConversation)return;
+    setBusy(true);
+    let reply,renderFrame=null,fullText='',sources=[],key,offered=false,doneReceived=false;
+    const convId=currentConvId||await startNewChat();
+    if(!convId){
+        setBusy(false);
+        return;
+    }
+    const view=viewVersion;
+    const payload=chatPayload(text);
+    createMessage('user',text);
+    $('prompt').value='';
+    key='live-'+Date.now();
+    reply=createMessage('assistant','Đang xử lý câu hỏi…',true);
+    scrollChat();
+    function renderNow(){
+        renderFrame=null;
+        reply.content.classList.remove('loading-text');
+        reply.content.innerHTML=markdown(fullText);
+        if(viewVersion===view)scrollChat();
+    }
+    function processEvent(event){
+        const data=event.split('\n').filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trimStart()).join('\n');
+        if(!data)return;
+        if(data.trim()==='[DONE]'){
+            doneReceived=true;
+            return;
+        }
+        let parsed;
+        try{
+            parsed=JSON.parse(data);
+        }
+        catch(err){
+            console.warn('Stream parse error',err);
+            return;
+        }
+        if(parsed.type==='metadata'){
+            if(Array.isArray(parsed.sources))sources=parsed.sources;
+            offered=offered||parsed.needs_search_permission===true;
+            if(parsed.offer_message_id)mcpOffers[key]=parsed.offer_message_id;
+            if(viewVersion===view&&currentConvId===convId){
+                if(parsed.domain){
+                    resetDomainPending=false;
+                    $('active-domain').textContent='Đang dùng: '+parsed.domain+(parsed.mode?' · '+parsed.mode:'');
+                }
+                else if(parsed.domain_choices)$('active-domain').textContent='Cần chọn lĩnh vực: '+parsed.domain_choices.join(', ');
+            }
+        }
+        else if(parsed.type==='chunk'){
+            fullText+=parsed.text||'';
+            if(renderFrame===null)renderFrame=requestAnimationFrame(renderNow);
+        }
+    }
+    try{
+        const res=await fetch(`/chat/${convId}`,{
+            method:'POST',headers:getAuthHeaders(),body:JSON.stringify(payload)
+        }
+        );
+        if(!res.ok)throw Error('HTTP '+res.status);
+        const reader=res.body.getReader(),decoder=new TextDecoder('utf-8');
+        let buffer='';
+        function drain(){
+            let match;
+            while((match=/\r?\n\r?\n/.exec(buffer))){
+                processEvent(buffer.slice(0,match.index));
+                buffer=buffer.slice(match.index+match[0].length);
+            }
+        }
+        while(true){
+            const{
+                done,value
+            }
+            =await reader.read();
+            if(done)break;
+            buffer+=decoder.decode(value,{
+                stream:true
+            }
+            );
+            drain();
+        }
+        buffer+=decoder.decode();
+        drain();
+        if(buffer.trim())processEvent(buffer);
+        if(renderFrame!==null)cancelAnimationFrame(renderFrame);
+        renderNow();
+        reply.meta.innerHTML=renderMetadata(sources);
+        if(!doneReceived)throw Error('Incomplete stream');
+        if(fullText.includes('Bạn có muốn tải biểu mẫu'))addActions(reply.wrapper,key,'form');
+        else if(offered)addActions(reply.wrapper,key,'mcp');
+        await hydrateSavedReply(convId,view,reply,fullText);
+        loadSidebar();
+    }
+    catch(err){
+        if(renderFrame!==null)cancelAnimationFrame(renderFrame);
+        reply.content.classList.remove('loading-text');
+        if(fullText)reply.content.innerHTML=markdown(fullText);
+        else reply.content.textContent='';
+        const error=document.createElement('p');
+        error.className='error-text';
+        error.textContent='Kết nối bị gián đoạn. Vui lòng kiểm tra lịch sử trước khi gửi lại.';
+        reply.content.appendChild(error);
+        console.warn('Chat request failed',err);
+    }
+    finally{
+        setBusy(false);
+        if(viewVersion===view){
+            scrollChat();
+            $('prompt').focus();
+        }
+    }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+    const mic=$('mic-btn'),input=$('prompt'),SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SpeechRecognition){
+        mic.hidden=true;
+        return;
+    }
+    const recognition=new SpeechRecognition();
+    recognition.lang='vi-VN';
+    recognition.interimResults=false;
+    mic.onclick=()=>{
+        if(mic.classList.contains('listening')){
+            recognition.stop();
+            return;
+        }
+        try{
+            recognition.start();
+            mic.classList.add('listening');
+            input.placeholder='Đang nghe…';
+        }
+        catch(err){
+            input.placeholder='Không thể bật mic. Vui lòng nhập câu hỏi.';
+        }
+    }
+    ;
+    recognition.onresult=event=>{
+        input.value+=(input.value?' ':'')+event.results[0][0].transcript;
+    }
+    ;
+    recognition.onend=()=>{
+        mic.classList.remove('listening');
+        input.placeholder='Bạn muốn tìm hiểu điều gì?';
+    }
+    ;
+    recognition.onerror=()=>{
+        mic.classList.remove('listening');
+        input.placeholder='Lỗi mic, vui lòng nhập câu hỏi.';
+    }
+    ;
+}
+);
+</script>
 </body>
 </html>

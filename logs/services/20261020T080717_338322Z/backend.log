@@ -1,0 +1,122 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\eithe\\Documents\\GitHub\\Legal_LLM\\backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [15976] using StatReload
+INFO:     Started server process [19236]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:52882 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52891 - "GET /admin/failed-logs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52911 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52912 - "GET /domains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52913 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 336254e605fb4880]
+[activity] Retrieval finished (22.13 s) [request 336254e605fb4880]
+[activity] Retrieval finished (0.17 s) [request 336254e605fb4880]
+[activity] rag.directml.service_call: ERROR HTTPStatusError [request 336254e605fb4880]
+[activity] rag.merged_reranker_inference: ERROR Shared GPU inference unavailable. Check the LLM service and GPU setup logs; CPU fallback is disabled. [request 336254e605fb4880]
+[activity] rag.model_lock.held: ERROR RAGUnavailableError [request 336254e605fb4880]
+[activity] rag.retrieval_service.rerank_records: ERROR RAGUnavailableError [request 336254e605fb4880]
+[activity] rag.query_pipeline.build_evidence_bundle: ERROR RAGUnavailableError [request 336254e605fb4880]
+[activity] rag.request_queue.held: ERROR RAGUnavailableError [request 336254e605fb4880]
+RAG is unavailable
+Traceback (most recent call last):
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_client.py", line 23, in gpu_call
+    response.raise_for_status()
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '503 Service Unavailable' for url 'http://localhost:8001/v1/rag/rerank'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\backend\services\llm_service.py", line 117, in get_legal_response_stream
+    context, score, sources = await build_evidence_bundle(prompt, search_query, config=config,
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\timing.py", line 212, in wrapped
+    return await fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\query_pipeline.py", line 299, in build_evidence_bundle
+    matches = await asyncio.to_thread(rerank_records, search_query, matches, config=config, top_k=result_limit)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\AppData\Local\Programs\Python\Python312\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\timing.py", line 217, in wrapped
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\retrieval_service.py", line 225, in rerank_records
+    raw = _reranker().compute_score([[question,p] for p in passages[offset:offset+16]])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_runtime.py", line 187, in compute_score
+    result = gpu_call('/v1/rag/rerank', {'pairs': sentence_pairs})['logits']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_client.py", line 26, in gpu_call
+    raise RAGUnavailableError('Shared GPU inference unavailable. Check the LLM service and GPU setup logs; CPU fallback is disabled.') from exc
+rag.domain_config.RAGUnavailableError: Shared GPU inference unavailable. Check the LLM service and GPU setup logs; CPU fallback is disabled.
+[activity] backend.services.llm_service.get_legal_response_stream: ERROR HTTPException [request 336254e605fb4880]
+[activity] backend.services.chat_orchestrator.orchestrate_chat: ERROR HTTPException [request 336254e605fb4880]
+[activity] backend.routers.chat.handle_chat: ERROR HTTPException [request 336254e605fb4880]
+[activity] Chat: ERROR 503 [request 336254e605fb4880]
+INFO:     127.0.0.1:52914 - "POST /chat/483 HTTP/1.1" 503 Service Unavailable
+[activity] Chat: ERROR 503 [request 336254e605fb4880]
+INFO:     127.0.0.1:52924 - "POST /start-conversation HTTP/1.1" 200 OK
+[activity] Chat working... [request 6a1ba4efcf1f4bef]
+[activity] Retrieval finished (2.57 s) [request 6a1ba4efcf1f4bef]
+[activity] Retrieval finished (0.35 s) [request 6a1ba4efcf1f4bef]
+[activity] Retrieval finished (0.33 s) [request 6a1ba4efcf1f4bef]
+[activity] rag.directml.service_call: ERROR HTTPStatusError [request 6a1ba4efcf1f4bef]
+[activity] rag.merged_reranker_inference: ERROR Shared GPU inference unavailable. Check the LLM service and GPU setup logs; CPU fallback is disabled. [request 6a1ba4efcf1f4bef]
+[activity] rag.model_lock.held: ERROR RAGUnavailableError [request 6a1ba4efcf1f4bef]
+[activity] rag.retrieval_service.rerank_records: ERROR RAGUnavailableError [request 6a1ba4efcf1f4bef]
+[activity] rag.query_pipeline.build_evidence_bundle: ERROR RAGUnavailableError [request 6a1ba4efcf1f4bef]
+[activity] rag.request_queue.held: ERROR RAGUnavailableError [request 6a1ba4efcf1f4bef]
+RAG is unavailable
+Traceback (most recent call last):
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_client.py", line 23, in gpu_call
+    response.raise_for_status()
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\env\Lib\site-packages\httpx\_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '503 Service Unavailable' for url 'http://localhost:8001/v1/rag/rerank'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\backend\services\llm_service.py", line 117, in get_legal_response_stream
+    context, score, sources = await build_evidence_bundle(prompt, search_query, config=config,
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\timing.py", line 212, in wrapped
+    return await fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\query_pipeline.py", line 299, in build_evidence_bundle
+    matches = await asyncio.to_thread(rerank_records, search_query, matches, config=config, top_k=result_limit)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\AppData\Local\Programs\Python\Python312\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\timing.py", line 217, in wrapped
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\retrieval_service.py", line 225, in rerank_records
+    raw = _reranker().compute_score([[question,p] for p in passages[offset:offset+16]])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_runtime.py", line 187, in compute_score
+    result = gpu_call('/v1/rag/rerank', {'pairs': sentence_pairs})['logits']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\eithe\Documents\GitHub\Legal_LLM\rag\gpu_client.py", line 26, in gpu_call
+    raise RAGUnavailableError('Shared GPU inference unavailable. Check the LLM service and GPU setup logs; CPU fallback is disabled.') from exc
+rag.domain_config.RAGUnavailableError: Shared GPU inference unavailable. Check the LLM service and GPU setup logs; CPU fallback is disabled.
+[activity] backend.services.llm_service.get_legal_response_stream: ERROR HTTPException [request 6a1ba4efcf1f4bef]
+[activity] backend.services.chat_orchestrator.orchestrate_chat: ERROR HTTPException [request 6a1ba4efcf1f4bef]
+[activity] backend.routers.chat.handle_chat: ERROR HTTPException [request 6a1ba4efcf1f4bef]
+[activity] Chat: ERROR 503 [request 6a1ba4efcf1f4bef]
+INFO:     127.0.0.1:52925 - "POST /chat/484 HTTP/1.1" 503 Service Unavailable
+[activity] Chat: ERROR 503 [request 6a1ba4efcf1f4bef]
+INFO:     127.0.0.1:52933 - "POST /start-conversation HTTP/1.1" 200 OK

@@ -13,7 +13,10 @@ from services.llm_service import get_friendly_response_stream
 from rag.mcp_config import search_enabled, MCPConfigError
 from services.db_service import (get_conversation, add_message, get_conversation_history,
     update_conversation_title, update_conversation_state, update_domain_state, log_interaction)
-from services.domain_router import choose_domain, DomainClarification, property_followup, default_name
+from services.domain_router import choose_domain, DomainClarification, DomainNoMatch, DomainConversation, property_followup, default_name
+from rag.conversation_diagnostics import capture_turn
+from rag.turn_context import resolve_references
+from rag.domain_config import RAGUnavailableError
 
 from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
 
@@ -73,6 +76,8 @@ def active_procedures(messages, legacy_title="", domain=None):
         if message.role != "assistant":
             continue
         sources = parse_sources(message.sources)
+        if 'RAG_ROUTE:none' in sources:
+            return []
         source_domain = next((s[11:] for s in sources if isinstance(s, str) and s.startswith('RAG_DOMAIN:')), None)
         has_records = any(isinstance(s, str) and s.startswith('RAG_CONTENT:') for s in sources)
         if domain and (source_domain or (default_name() if has_records else domain)) != domain:
@@ -94,6 +99,8 @@ def domain_history(messages, domain):
         if message.role != 'assistant':
             continue
         sources = parse_sources(message.sources)
+        if 'RAG_ROUTE:none' in sources:
+            return messages[position + 1:]
         source_domain = next((s[11:] for s in sources if isinstance(s, str) and s.startswith('RAG_DOMAIN:')), None)
         if source_domain is None and any(isinstance(s, str) and s.startswith('RAG_CONTENT:') for s in sources):
             source_domain = default_name()
@@ -103,39 +110,24 @@ def domain_history(messages, domain):
 
 
 @timed('backend.services.chat_orchestrator.resolve_search_query')
-def resolve_search_query(prompt, active_titles, config=None):
-    """Only plain property follow-ups reuse all active records.
+def resolve_search_query(prompt, active_titles, config=None, *, followup=False):
+    """Reuse subject memory only for an identified continuation.
 
-    Explicit procedure/action questions retain the existing contextual search path;
-    query preparation gives a clearly named new topic priority.
+    A property-only continuation pins the previous records. Action continuations
+    may retrieve another record (e.g. borrowing -> renewal), so contextualize
+    those without pinning. Explicit new questions receive no old subjects.
     """
     from rag.domain_config import load_domain_config
-    from rag.query_pipeline import explicit_fields
     config = config or load_domain_config()
-    if config.primary_entity != 'procedure_name':
-        if property_followup(prompt, active_titles, config):
-            return '; '.join(active_titles) + '. ' + prompt.strip(), active_titles
-        # Query preparation can resolve references; explicit new topics keep priority.
-        return ('; '.join(active_titles) + '. ' if active_titles else '') + prompt.strip(), []
-    text = normalize_text(prompt.replace("đ", "d").replace("Đ", "D"))
-    names_new_topic = bool(re.search(
-        r"\b(dang ky|khai sinh|khai tu|ket hon|ho kinh doanh|cap lai|cap moi|"
-        r"xay dung|chung thuc|chuyen sang|thu tuc khac|hoi ve thu tuc)\b", text))
-    # Existing referential follow-ups may contain 'thủ tục này', but no named entity.
-    fields = explicit_fields(prompt, config)
-    followup_words = set("le phi chi tien mat bao nhieu nhieu o dau noi nop dia diem ho so giay to can chuan bi thoi gian lau may ngay lam viec giai quyet trong thi la het ton gom nhung gi nao vay the con cua thu tuc nay do tren vua roi va ca hai tung moi cho toi biet xin hoi muon duoc khong co phai them mot ban chinh sao".split())
-    # Do not treat an unrecognized entity name as a property-only follow-up.
-    property_only = set(text.split()).issubset(followup_words)
-    field_followup = bool(active_titles and fields and property_only and not names_new_topic)
-    if field_followup:
-        return "; ".join(active_titles) + ". " + prompt.strip(), active_titles
-    old_switch = bool(re.search(r"(muốn làm thủ tục khác|chuyển sang|hỏi về thủ tục|xin cấp mới|cấp lại)", prompt.lower()))
-    if not active_titles or old_switch:
-        return prompt.strip(), []
-    return "; ".join(active_titles) + ". " + prompt.strip(), []
+    if property_followup(prompt, active_titles, config):
+        return '; '.join(active_titles) + '. ' + prompt.strip(), active_titles
+    if followup and active_titles:
+        return '; '.join(active_titles) + '. ' + prompt.strip(), []
+    return prompt.strip(), []
 
 
 @timed('backend.services.chat_orchestrator.orchestrate_chat')
+@capture_turn
 async def orchestrate_chat(conversation_id, payload, db):
     if not payload.user_prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
@@ -190,10 +182,42 @@ async def orchestrate_chat(conversation_id, payload, db):
     try:
         config, state, switched = await choose_domain(payload.user_prompt, state, active_titles,
                                                       getattr(payload, 'domain', None))
+    except DomainConversation:
+        # Keep domain/subject memory for a later factual follow-up, but do not
+        # supply prior dataset facts to a greeting/thanks response.
+        @timed('backend.services.chat_orchestrator.conversation_stream')
+        async def conversation_stream():
+            parts = []
+            complete = False
+            async for frame in get_friendly_response_stream(payload.user_prompt.strip(), context_messages[-1:]):
+                if frame.strip() == 'data: [DONE]':
+                    complete = True
+                    continue
+                if frame.startswith('data:'):
+                    try:
+                        event = json.loads(frame[5:].strip())
+                        if event.get('type') == 'chunk':
+                            parts.append(event.get('text', ''))
+                    except (ValueError, AttributeError):
+                        pass
+                yield frame
+            answer = ''.join(parts)
+            await add_message(db, conversation_id, 'assistant', answer, ['RAG_ROUTE:conversation'])
+            await log_interaction(db, conversation_id, payload.user_prompt, answer, None, False, None,
+                                  'CONVERSATION' if complete else 'INCOMPLETE_STREAM')
+            yield 'data: [DONE]\n\n'
+        return StreamingResponse(conversation_stream(), media_type='text/event-stream')
     except DomainClarification as exc:
         text = str(exc)
-        await add_message(db, conversation_id, 'assistant', text, [])
-        await log_interaction(db, conversation_id, payload.user_prompt, text, None, False, None, 'DOMAIN_CLARIFICATION')
+        no_match = isinstance(exc, DomainNoMatch)
+        if no_match:
+            # A no-dataset result must not leave old evidence as the next turn's subject.
+            await update_domain_state(db, conversation_id,
+                {'selection': 'auto', 'locked': False,
+                 'allow_switching': state.get('allow_switching', False)}, clear_procedure=True)
+        await add_message(db, conversation_id, 'assistant', text, ['RAG_ROUTE:none'] if no_match else [])
+        await log_interaction(db, conversation_id, payload.user_prompt, text, None, False, None,
+                              'DOMAIN_NONE' if no_match else 'DOMAIN_CLARIFICATION')
         # Copy exception data before Python clears the except variable.
         choices = exc.domains
         @timed('backend.services.chat_orchestrator.clarification_stream')
@@ -211,7 +235,14 @@ async def orchestrate_chat(conversation_id, payload, db):
     mode = resolve_mode(getattr(payload, "mode", None), config)
     retrieve = mode == "strict" or await needs_retrieval(payload.user_prompt, active_titles, config)
     if retrieve:
+        # Routing chooses a dataset. Reference resolution separately decides
+        # whether a same-domain question still needs the previous subject.
         search_query, followup_titles = resolve_search_query(payload.user_prompt, active_titles, config)
+        if active_titles and not followup_titles:
+            try:
+                search_query = await resolve_references(payload.user_prompt, active_titles, config)
+            except RAGUnavailableError as exc:
+                raise HTTPException(503, 'Không thể xác định ngữ cảnh câu hỏi. Vui lòng thử lại hoặc nêu rõ đối tượng.') from exc
         stream_gen, max_score = await get_legal_response_stream(
             prompt=payload.user_prompt.strip(), search_query=search_query,
             active_procedures=followup_titles,
