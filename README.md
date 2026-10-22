@@ -149,7 +149,7 @@ For a bug report, include the question, selected domain, expected behavior and r
 
 ## Team
 
-**Team:** `[team name]`
+**Team:** `Team 10`
 
 | Member | GitHub | Responsibilities |
 |---|---|---|
