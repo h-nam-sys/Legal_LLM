@@ -6,7 +6,7 @@ Ask about administrative procedures, university services or other structured inf
 
 [Features](#features) · [Quick start](#quick-start) · [Models](#models-and-stack) · [Documentation](#documentation) · [Team](#team)
 
-![Chat interface and source records](docs/images/chat-sources.svg)
+![Chat interface and source records](docs/images/chat-sources.png)
 
 <!-- Replace with an actual screenshot of a completed answer and its expanded source record. -->
 
@@ -22,7 +22,7 @@ Ask about administrative procedures, university services or other structured inf
 - **Forms and external search.** Offer configured procedure forms and optionally use MCP search through the permission flow.
 - **Diagnostics.** Review service logs, request timings and exported test conversations when investigating a problem.
 
-![Dataset management dashboard](docs/images/admin-datasets.svg)
+![Dataset management dashboard](docs/images/admin-datasets.png)
 
 <!-- Replace with an actual screenshot of dataset configuration or ingestion progress. -->
 
