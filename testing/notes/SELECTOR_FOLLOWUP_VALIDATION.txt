@@ -1,0 +1,7 @@
+145 offline checks passed across routing, orchestration, evidence handling, field exclusion, structured output, cache isolation, checker equivalence and targeted comparison packaging.
+Final targeted recheck: test_selector_followup and test_generalization_regressions.
+Python compilation passed.
+Tests use temporary SQLite and mocked model/network I/O. No live model accuracy or Windows GPU latency improvement is claimed.
+The targeted driver was exercised with a fake export to verify archive packaging and paired analysis, not model quality.
+The original 64-turn, fresh 48-turn and 17-turn probe manifests and older baseline are byte-identical to the previous update.
+The historical export remains unchanged; CHECKER_REVIEW_20261022.json records the checker-only two-pass difference explicitly.

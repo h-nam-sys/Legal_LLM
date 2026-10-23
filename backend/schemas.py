@@ -7,6 +7,8 @@ class LoginRequest(BaseModel):
     username: str = Field(..., description="The user's username for deterministic ID generation")
 
 class ChatRequest(BaseModel):
+    answer_guidance: Optional[bool] = Field(default=None, description="Override optional answer guidance for controlled QA; omitted uses runtime setting")
+    bypass_answer_cache: bool = Field(default=False, description="Skip answer cache reads and writes for this request; used for cacheless QA")
     allow_switching: Optional[bool] = Field(default=None, description="Allow Auto to switch domains; omitted preserves conversation preference, default off")
     reset_domain: bool = Field(default=False, description='Clear domain and active-entity context before routing this turn')
     domain: Optional[str] = Field(default=None, description='Domain ID or auto; omitted preserves conversation selection', pattern=r'^[A-Za-z0-9_-]+$')

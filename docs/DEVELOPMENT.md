@@ -1,57 +1,42 @@
 # Development and evaluation
 
-## Background and progress
+The project combines Vietnamese administrative lookup with configurable retrieval over other structured datasets. Backend, local inference, ingestion and dataset administration are developed in the original repository; contribution evidence should link to actual commits and pull requests.
 
-The project started with Vietnamese administrative-procedure lookup and expanded into a configurable assistant for multiple structured datasets.
+## Selected source snapshot — 22 October 2026
 
-| Area | Current status | Evidence |
-|---|---|---|
-| Chat, history and sources | Implemented | `[Add relevant commit / PR]` |
-| Multiple datasets and routing controls | Implemented; routing robustness under refinement | `[Add relevant commit / PR]` |
-| Dataset administration and versioned ingestion | Implemented | `[Add commit / PR and admin capture]` |
-| Local Qwen and shared GPU retrieval models | Implemented | `[Add runtime/model configuration commit]` |
-| Comprehensive chat regression | 64-turn suite available | Recorded archive below |
-| Focused routing patch, 21 Oct | 123 offline checks passed; live validation pending | `[Add patch commit and subsequent live archive]` |
+This snapshot keeps full public-record context, clarification memory, bounded low-score recovery and answer guidance enabled by default. It restores `rag/query_pipeline.py` exactly from the build used in the verified 112-turn cacheless run. The subsequent selector experiment that included unwanted branches is not selected for this release. Corrected unit checks and diagnostic on/off tools remain available.
 
-Add contribution links beside each area so readers can follow the work in the original repository.
+The combined source snapshot has passed offline checks. It has not yet completed its own final live regression or whole-system acceptance pass. See [release checks](RELEASE_CHECKLIST.md).
 
-## Recorded evaluation
+## Recorded baseline
 
-The completed full-context run on **20 October 2026** recorded:
+Source: `cacheless_comparison_20261022T071428_097130Z.zip` and its nested original/fresh exports. Both runs completed without request or stream errors, with answer-cache bypass verified.
 
-| Metric | Result |
-|---|---:|
-| Turns / scenarios | 64 / 42 |
-| Automatic PASS / FAIL | 58 / 6 |
-| Mean complete-response time | 10.51 s |
-| Median complete-response time | 5.09 s |
+| Measurement | Original suite | Fresh suite |
+|---|---:|---:|
+| Turns | 64 | 48 |
+| Official automatic passes | 62 | 44 |
+| Same answers with equivalent-unit checker | 62 | 46 |
+| Mean response excluding first request | 13.35 s | 14.31 s |
+| Answer-cache hits | 0 | 0 |
 
-Source: `system_tests_20261020T081538_831156Z.zip`, `results.json`. `[Add a link to the retained summary/archive and the tested commit SHA.]`
+The two extra fresh passes come solely from accepting valid unit phrasing. They are not new generated answers or a model-quality improvement. Automatic counts are not a manual factual-accuracy grade. The admissions question has an ambiguous record expectation; some passing answers contain misleading caveats. Unaccented library routing and membership selection remain known limitations.
 
-Manual review graded 58 responses correct/acceptable, 4 partial and 2 incorrect. One automatic room-answer failure was a checker false positive. The suite includes greetings, refusals and repeated questions, so its pass rate is not factual accuracy over 64 independent questions. It does not measure concurrent-user capacity or validate every admin, form and external-search action.
+The later 65-turn paired experiment supported keeping answer guidance: paired averages were 13.18 s on and 13.09 s off, with cleaner answers in several cases. Both settings passed 28/32 automatic paired checks. That experiment also exposed extra-branch selector results, motivating restoration of the earlier selector. This is one run, not statistical proof or a new-dataset benchmark.
 
-![Recorded test summary](images/test-results.svg)
+## Test tools
 
-<!-- Replace with the actual dated run summary and identifier. -->
+- `testing\run_cacheless_tests.bat`: unchanged original 64 + fresh 48 questions, answer-cache reads and writes bypassed; saves both response logs and comparison metadata.
+- `testing\run_comprehensive_tests.bat`: retained original combined 64-turn launcher, including its read-only fixture preflight.
+- `testing\run_cacheless_tests.bat --suite probe`: 17 additional source-derived wording/state probes.
+- `testing\run_cacheless_tests.bat --suite targeted`: retained 65-turn guidance comparison for later diagnostics.
 
-## Remaining work
+Fixture files are test references, not runtime ingestion inputs. The runners do not ingest them. Historical `full_context_check.py` verifies an older isolated experiment's exact hashes; its optional `--verify-full-context` mode is not the release acceptance check.
 
-- Verify the renewal-follow-up and unaccented-routing patch with the live model.
-- Improve answers that omit a specific service desk or add unnecessary caveats.
-- Improve clarification/domain-lock explanations and refine the broad contradiction checker.
-- Evaluate concurrent users and complete acceptance coverage of admin actions, form downloads and optional search.
+Developer checks use temporary SQLite and mocked model/network I/O. They do not establish live model accuracy, concurrent-user capacity or Windows GPU latency. Production runtime dependencies and user model/index assets are needed for live acceptance.
 
-## Reproduce and trace a result
+## Research and contribution evidence
 
-Use the normal launcher, then run `testing\run_comprehensive_tests.bat`. Preserve its `qa_exports` ZIP with the corresponding commit SHA. The novel-dataset preflight reads existing ingestion state; it does not import data again.
+Engineering regression questions are separate from the paper's robustness evaluation. Preserve first-run results, question-set provenance and tested code hashes. Do not report a tuned regression set as an independent research benchmark.
 
-Developer routing checks:
-
-```bat
-python -m unittest discover -s tests -p test_llm_domain_routing.py
-python -m unittest discover -s tests -p test_routing_contract_integration.py
-```
-
-The offline checks use mocked model/external I/O. The 20 October live measurements predate the 21 October patch.
-
-Development history: [commits](https://github.com/h-nam-sys/Legal_LLM/commits), [branches](https://github.com/h-nam-sys/Legal_LLM/branches), [pull requests](https://github.com/h-nam-sys/Legal_LLM/pulls).
+Development evidence: [commits](https://github.com/h-nam-sys/Legal_LLM/commits), [branches](https://github.com/h-nam-sys/Legal_LLM/branches), [pull requests](https://github.com/h-nam-sys/Legal_LLM/pulls). Add actual contribution links to the team table rather than inferring individual work from this source archive. Keep the existing repository history when applying this snapshot.

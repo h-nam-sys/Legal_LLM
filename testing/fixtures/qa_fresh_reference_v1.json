@@ -1,0 +1,195 @@
+{
+  "source_archive": "system_tests_20261022T043158_944562Z.zip",
+  "note": "Recorded source snapshots, not independently verified current legal policy. Public fields only. Compare against the active data before changing expected facts.",
+  "records": {
+    "Cấp lại thẻ sinh viên": {
+      "Chủ đề": "Cấp lại thẻ sinh viên",
+      "Nội dung": "Nộp đơn cấp lại và ảnh chân dung. Đây là quy định giả lập để demo.",
+      "Thời gian xử lý": "3 ngày làm việc",
+      "Phí": "20000 đồng",
+      "Địa điểm": "Phòng dịch vụ sinh viên Demo"
+    },
+    "Gia hạn máy khoan — Trạm Mây": {
+      "Tên dịch vụ": "Gia hạn máy khoan — Trạm Mây",
+      "Trạm phục vụ": "Trạm Mây",
+      "Quy tắc và giới hạn": "Gia hạn tối đa 1 lần, thêm 3 ngày, nếu không có người đặt trước.",
+      "Thời gian xử lý yêu cầu": "10 phút",
+      "Giá dịch vụ": "Miễn phí",
+      "Quầy hỗ trợ": "Bàn thiết bị Trạm Mây",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Gia hạn máy khoan — Trạm Nắng": {
+      "Tên dịch vụ": "Gia hạn máy khoan — Trạm Nắng",
+      "Trạm phục vụ": "Trạm Nắng",
+      "Quy tắc và giới hạn": "Không cho gia hạn máy khoan. Phải trả đúng hạn ban đầu.",
+      "Thời gian xử lý yêu cầu": "Trong ngày",
+      "Giá dịch vụ": "Không áp dụng",
+      "Quầy hỗ trợ": "Bàn thiết bị Trạm Nắng",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Gia hạn sách thư viện": {
+      "Chủ đề": "Gia hạn sách thư viện",
+      "Nội dung": "Gia hạn 1 lần nếu không có người đặt trước.",
+      "Thời gian xử lý": "Trong ngày",
+      "Phí": "Miễn phí",
+      "Địa điểm": "Quầy thư viện cơ sở Demo"
+    },
+    "Làm thẻ thành viên — Trạm Mây": {
+      "Tên dịch vụ": "Làm thẻ thành viên — Trạm Mây",
+      "Trạm phục vụ": "Trạm Mây",
+      "Quy tắc và giới hạn": "Cần ảnh chân dung và giấy tờ có ảnh.",
+      "Thời gian xử lý yêu cầu": "2 ngày làm việc",
+      "Giá dịch vụ": "10000 đồng mỗi thẻ",
+      "Quầy hỗ trợ": "Quầy thành viên Trạm Mây",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Làm thẻ thành viên — Trạm Nắng": {
+      "Tên dịch vụ": "Làm thẻ thành viên — Trạm Nắng",
+      "Trạm phục vụ": "Trạm Nắng",
+      "Quy tắc và giới hạn": "Cần ảnh chân dung và giấy tờ có ảnh.",
+      "Thời gian xử lý yêu cầu": "3 ngày làm việc",
+      "Giá dịch vụ": "20000 đồng mỗi thẻ",
+      "Quầy hỗ trợ": "Quầy thành viên Trạm Nắng",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Mượn máy chiếu — Trạm Mây": {
+      "Tên dịch vụ": "Mượn máy chiếu — Trạm Mây",
+      "Trạm phục vụ": "Trạm Mây",
+      "Quy tắc và giới hạn": "Mỗi lượt tối đa 1 máy chiếu, được giữ trong 1 ngày.",
+      "Thời gian xử lý yêu cầu": "30 phút",
+      "Giá dịch vụ": "50000 đồng mỗi lượt",
+      "Quầy hỗ trợ": "Bàn thiết bị Trạm Mây",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Mượn máy chiếu — Trạm Nắng": {
+      "Tên dịch vụ": "Mượn máy chiếu — Trạm Nắng",
+      "Trạm phục vụ": "Trạm Nắng",
+      "Quy tắc và giới hạn": "Mỗi lượt tối đa 2 máy chiếu, được giữ trong 3 ngày.",
+      "Thời gian xử lý yêu cầu": "40 phút",
+      "Giá dịch vụ": "70000 đồng mỗi lượt",
+      "Quầy hỗ trợ": "Bàn thiết bị Trạm Nắng",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Mượn máy khoan — Trạm Nắng": {
+      "Tên dịch vụ": "Mượn máy khoan — Trạm Nắng",
+      "Trạm phục vụ": "Trạm Nắng",
+      "Quy tắc và giới hạn": "Mỗi lượt tối đa 1 máy khoan, được giữ trong 2 ngày. Chỉ dành cho thành viên.",
+      "Thời gian xử lý yêu cầu": "1 ngày làm việc",
+      "Giá dịch vụ": "30000 đồng mỗi lượt",
+      "Quầy hỗ trợ": "Bàn thiết bị Trạm Nắng",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Mượn sách thư viện": {
+      "Chủ đề": "Mượn sách thư viện",
+      "Nội dung": "Đem thẻ sinh viên. Mỗi lần mượn tối đa 3 cuốn trong 14 ngày.",
+      "Thời gian xử lý": "Trong ngày",
+      "Phí": "Miễn phí",
+      "Địa điểm": "Quầy thư viện cơ sở Demo"
+    },
+    "Sửa máy khoan — Trạm Mây": {
+      "Tên dịch vụ": "Sửa máy khoan — Trạm Mây",
+      "Trạm phục vụ": "Trạm Mây",
+      "Quy tắc và giới hạn": "Nhận sửa máy khoan của thành viên. Không bao gồm dịch vụ cho mượn.",
+      "Thời gian xử lý yêu cầu": "4 ngày làm việc",
+      "Giá dịch vụ": "80000 đồng mỗi máy",
+      "Quầy hỗ trợ": "Bàn thiết bị Trạm Mây",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Sửa máy khoan — Trạm Nắng": {
+      "Tên dịch vụ": "Sửa máy khoan — Trạm Nắng",
+      "Trạm phục vụ": "Trạm Nắng",
+      "Quy tắc và giới hạn": "Nhận sửa máy khoan của thành viên. Không bao gồm dịch vụ cho mượn.",
+      "Thời gian xử lý yêu cầu": "6 ngày làm việc",
+      "Giá dịch vụ": "110000 đồng mỗi máy",
+      "Quầy hỗ trợ": "Bàn thiết bị Trạm Nắng",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Thủ tục đăng ký khai sinh": {
+      "Tên thủ tục hành chính": "Thủ tục đăng ký khai sinh",
+      "Lĩnh vực": "Hộ tịch",
+      "Hình thức nộp": "Cả hai",
+      "Thành phần hồ sơ": "- Giấy chứng sinh (Bản chính)\n - Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu) của \n 2 vợ chồng (01 bản photo)\n - Giấy chứng nhận kết hôn (01 bản photo)\n (xuất trình bản chính để đối chiếu)",
+      "Thời gian giải quyết": "1 ngày",
+      "Lệ phí": "Bản chính: Không thu phí Bản sao: 8.000đ/bản",
+      "Địa điểm tiếp nhận hồ sơ trực tiếp (nếu có)": "Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú",
+      "Ghi chú": "",
+      "Trong trường hợp hồ sơ bao gồm các biểu mẫu vui lòng dính kèm file mẫu": "",
+      "trạng thái": "Xong",
+      "Căn cứ pháp lý": "Luật 60/2014/QH13 (Luật Hộ tịch); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP"
+    },
+    "Thủ tục đăng ký kết hôn": {
+      "Tên thủ tục hành chính": "Thủ tục đăng ký kết hôn",
+      "Lĩnh vực": "Hộ tịch",
+      "Hình thức nộp": "Cả hai",
+      "Thành phần hồ sơ": "Chứng minh nhân dân (hoặc căn cước công dân, hộ chiếu) của bên nam và bên nữ 01 bản photo (Xuất trình bản chính).\n Trường hợp bên nam hoặc bên nữ thường trú tại địa phương (nếu đã ly hôn thì kèm bản photo của quyết định ly hôn, nếu có chồng/vợ đã chết thì cung cấp đăng ký khai tử của chồng/vợ) không cần xác nhận tình trạng hôn nhân để đăng ký kết hôn.\n Giấy tờ chứng minh thông tin cư trú: thông báo đăng ký tạm trú (do công an phường cấp).",
+      "Thời gian giải quyết": "Trong ngày làm việc (nếu nhận hồ sơ sau 15 giờ thì trả kết quả vào ngày hôm sau).",
+      "Lệ phí": "Bản chính: Không thu phí Bản sao: 8.000đ/bản",
+      "Địa điểm tiếp nhận hồ sơ trực tiếp (nếu có)": "Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú",
+      "Ghi chú": "",
+      "Trong trường hợp hồ sơ bao gồm các biểu mẫu vui lòng dính kèm file mẫu": "",
+      "trạng thái": "Xong",
+      "Căn cứ pháp lý": "Luật 60/2014/QH13 (Luật Hộ tịch); Luật 52/2014/QH13 (Luật Hôn nhân và gia đình); Nghị quyết số 66.7/2025/NQ-CP; Nghị định số 123/2015/NĐ-CP; Nghị định số 87/2020/NĐ-CP; Nghị định số 104/2022/NĐ-CP; Nghị định số 07/2025/NĐ-CP; Nghị định số 120/2025/NĐ-CP; Nghị định số 18/2026/NĐ-CP; Thông tư số 85/2019/TT-BTC; Thông tư số 04/2020/TT-BTP; Thông tư số 106/2021/TT-BTC; Thông tư số 01/2022/TT-BTP; Thông tư số 03/2023/TT-BTP; Thông tư số 04/2024/TT-BTP; Thông tư số 08/2025/TT-BTP"
+    },
+    "Tuyển sinh phương thức 1a": {
+      "Chủ đề": "Tuyển sinh phương thức 1a",
+      "Nội dung": "Tuyển thẳng và ưu tiên theo quy định của Bộ GDĐT.",
+      "Hồ sơ": "",
+      "Thời gian": "",
+      "Phí hoặc học bổng": "",
+      "Kênh thực hiện": "",
+      "Năm áp dụng": "2026",
+      "Nguồn": "https://tuyensinh.hcmus.edu.vn/2026-thong-tin-tuyen-sinh/",
+      "Trường": "ĐH Khoa học tự nhiên, ĐHQG-HCM",
+      "Ngày kiểm tra nguồn": "2026-10-15"
+    },
+    "Tuyển sinh phương thức 1b": {
+      "Chủ đề": "Tuyển sinh phương thức 1b",
+      "Nội dung": "Dành cho người nước ngoài tốt nghiệp THPT nước ngoài; xét học tập THPT.",
+      "Hồ sơ": "",
+      "Thời gian": "",
+      "Phí hoặc học bổng": "",
+      "Kênh thực hiện": "",
+      "Năm áp dụng": "2026",
+      "Nguồn": "https://tuyensinh.hcmus.edu.vn/2026-thong-tin-tuyen-sinh/",
+      "Trường": "ĐH Khoa học tự nhiên, ĐHQG-HCM",
+      "Ngày kiểm tra nguồn": "2026-10-15"
+    },
+    "Tuyển sinh phương thức 2": {
+      "Chủ đề": "Tuyển sinh phương thức 2",
+      "Nội dung": "Kết hợp điểm thi THPT hoặc ĐGNL ĐHQG-HCM với học bạ lớp 10–12.",
+      "Hồ sơ": "",
+      "Thời gian": "",
+      "Phí hoặc học bổng": "",
+      "Kênh thực hiện": "",
+      "Năm áp dụng": "2026",
+      "Nguồn": "https://tuyensinh.hcmus.edu.vn/2026-thong-tin-tuyen-sinh/",
+      "Trường": "ĐH Khoa học tự nhiên, ĐHQG-HCM",
+      "Ngày kiểm tra nguồn": "2026-10-15"
+    },
+    "Xin bảng điểm": {
+      "Chủ đề": "Xin bảng điểm",
+      "Nội dung": "Nộp yêu cầu qua cổng sinh viên. Đây là dữ liệu giả lập.",
+      "Thời gian xử lý": "2 ngày làm việc",
+      "Phí": "10000 đồng mỗi bản",
+      "Địa điểm": "Phòng đào tạo Demo"
+    },
+    "Đặt phòng làm việc — Trạm Mây": {
+      "Tên dịch vụ": "Đặt phòng làm việc — Trạm Mây",
+      "Trạm phục vụ": "Trạm Mây",
+      "Quy tắc và giới hạn": "Phòng tối đa 6 người, mỗi lượt tối đa 3 giờ.",
+      "Thời gian xử lý yêu cầu": "15 phút",
+      "Giá dịch vụ": "60000 đồng mỗi giờ",
+      "Quầy hỗ trợ": "Quầy không gian Trạm Mây",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    },
+    "Đặt phòng làm việc — Trạm Nắng": {
+      "Tên dịch vụ": "Đặt phòng làm việc — Trạm Nắng",
+      "Trạm phục vụ": "Trạm Nắng",
+      "Quy tắc và giới hạn": "Phòng tối đa 8 người, mỗi lượt tối đa 2 giờ.",
+      "Thời gian xử lý yêu cầu": "25 phút",
+      "Giá dịch vụ": "45000 đồng mỗi giờ",
+      "Quầy hỗ trợ": "Quầy không gian Trạm Nắng",
+      "Kênh đăng ký": "Ứng dụng Xưởng Nhỏ"
+    }
+  }
+}

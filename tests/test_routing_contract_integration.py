@@ -212,6 +212,38 @@ class ContractIntegrationTests(unittest.IsolatedAsyncioTestCase):
         await self.run_turn()
         self.references.assert_not_awaited()
 
+    async def test_library_thanks_then_renewal_keeps_subject_without_pinning_borrowing_record(self):
+        self.conversation.checklist['_domain_state']={
+            'name':'university_test','selection':'auto','allow_switching':True,'locked':True}
+        self.conversation.current_procedure='Mượn sách thư viện'
+        self.messages[:]=[types.SimpleNamespace(role='assistant',content='3 cuốn, 14 ngày',
+            sources=['Mượn sách thư viện','RAG_CONTENT:{}','RAG_DOMAIN:university_test'])]
+        def friendly(*args,**kwargs):
+            async def stream():
+                yield 'data: {"type":"chunk","text":"Rất vui được hỗ trợ!"}\n\n'
+                yield 'data: [DONE]\n\n'
+            return stream()
+        self.module.get_friendly_response_stream=friendly
+        self.fixture.decision={'route':'conversation'}
+        self.payload.user_prompt='Cảm ơn bạn.'
+        await self.run_turn()
+        self.assertEqual(self.saved[-1].sources,['RAG_ROUTE:conversation'])
+        before=len(self.fixture.requests)
+        # Replay the previously wrong domain decision as a trap: it must not
+        # be requested for a recognized subjectless renewal continuation.
+        self.fixture.decision={'route':'administrative_procedures'}
+        self.payload.user_prompt='Có được gia hạn không và làm ở đâu?'
+        self.references.side_effect=None
+        self.references.return_value='CURRENT QUESTION: Có được gia hạn không và làm ở đâu?\nREFERENCED SUBJECTS: Mượn sách thư viện'
+        await self.run_turn()
+        self.assertEqual(len(self.fixture.requests),before)
+        self.references.assert_awaited_once_with(self.payload.user_prompt,['Mượn sách thư viện'],self.config)
+        kwargs=self.llm.get_legal_response_stream.call_args.kwargs
+        self.assertEqual(kwargs['domain'],'university_test')
+        self.assertIn('Mượn sách thư viện',kwargs['search_query'])
+        self.assertEqual(kwargs['active_procedures'],[])
+        self.assertFalse(self.dbmod.update_domain_state.call_args.kwargs['clear_procedure'])
+
     async def test_invalid_reference_resolution_does_not_guess_an_answer(self):
         self.fixture.decision = {'route':'administrative_procedures'}
         self.module.resolve_search_query=lambda question,titles,config:(question,[])

@@ -1,4 +1,4 @@
-"""Real chat API tests. No app-code changes, replay archive, or manual prompts."""
+"""Live chat API QA with frozen cases, preserved grading and cache diagnostics."""
 import argparse
 from collections import Counter
 from datetime import datetime, timezone
@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import re
 import sqlite3
+import statistics
 import sys
 import difflib
 import hashlib
@@ -24,6 +25,41 @@ def normalize(value):
     text = unicodedata.normalize('NFD', str(value).lower().replace('đ', 'd'))
     text = ''.join(c for c in text if not unicodedata.combining(c))
     return ' '.join(re.sub(r'[^\w\s.,]', ' ', text).split())
+
+
+# Language-level unit equivalence for QA only; never rewrites a production answer.
+_UNIT = r'(?:san pham|don vi|ban|the|may|gio|luot|nguoi|ngay|thang|nam|kg|lit|ve|phong)'
+
+
+def unit_equivalent_text(value):
+    """Recognize explicit distributive units without borrowing units from the question.
+
+    Keep the original matcher too. Reject implicit-rate inference across negation,
+    sentence boundaries or a conflicting explicit rate (e.g. per month).
+    """
+    raw = unicodedata.normalize('NFD', str(value).lower().replace('đ','d'))
+    raw = ''.join(c for c in raw if not unicodedata.combining(c))
+    raw = re.sub(r'(?<![a-z])(dong|vnd|d)\s*/\s*(' + _UNIT + r')\b', r'\1 moi \2', raw)
+    text = normalize(raw)
+    text = re.sub(r'\btung\s+(' + _UNIT + r')\b', r'moi \1', text)
+    hints = []
+    pattern = (r'\b(?:mot|1)\s+(?P<unit>' + _UNIT + r')\b'
+               r'(?P<tail>[^.!?\n]{0,80}?)'
+               r'(?P<amount>\d[\d., ]*\s*(?:dong|vnd|d)\b)')
+    bounded = normalize(raw.replace('\n', '.'))
+    bounded = re.sub(r'\btung\s+(' + _UNIT + r')\b', r'moi \1', bounded)
+    for match in re.finditer(pattern, bounded):
+        tail = match.group('tail')
+        if re.search(r'\b(?:khong|chua|mien|tru|giam)\b', tail):
+            continue
+        if tail.strip() and not re.search(r'\b(?:la|gia|phi|tinh|ton|het)\b',tail):
+            continue
+        following = bounded[match.end():match.end()+35]
+        rate = re.match(r'\s*(?:moi|tung)\s+(' + _UNIT + r')\b', following)
+        if rate and rate.group(1) != match.group('unit'):
+            continue
+        hints.append('moi ' + match.group('unit'))
+    return text + (' ' + ' '.join(hints) if hints else '')
 
 
 def parse_sse(lines):
@@ -121,7 +157,7 @@ def parse_sources(message):
     return values if isinstance(values, list) else []
 
 
-def check_turn(turn, events, source_audit=None):
+def check_turn(turn, events, source_audit=None, *, unit_equivalence=True):
     checks = []
     def check(name, valid, detail='', severity='FAIL'):
         checks.append({'name': name, 'status': 'PASS' if valid else severity, 'detail': detail})
@@ -129,6 +165,15 @@ def check_turn(turn, events, source_audit=None):
         return 'ERROR', [{'name':'request', 'status':'ERROR', 'detail':turn['error']}]
     expected, actual = turn['expected'], turn['actual']
     relevant = [e for e in events if e.get('request_id') == turn['request_id']]
+    cache_events = [e for e in relevant if e.get('task') == 'answer.cache']
+    if turn.get('payload', {}).get('bypass_answer_cache') and cache_events:
+        check('answer_cache_bypassed', all(e.get('cache_enabled') is False and not e.get('cache_hit') for e in cache_events),
+              'Cacheless QA requires backend acknowledgement and no cache hits.')
+    if type(turn.get('payload', {}).get('answer_guidance')) is bool and cache_events:
+        wanted_guidance = turn['payload']['answer_guidance']
+        check('answer_guidance_acknowledged', all(
+            e.get('runtime_options', {}).get('RAG_ANSWER_GUIDANCE') is wanted_guidance for e in cache_events),
+            'The answering backend must acknowledge the requested guidance setting.')
     decisions = [e['decision'] for e in relevant if e.get('task') == 'backend.services.domain_router.classifier' and e.get('event') == 'decision']
     decision = decisions[-1] if decisions else None
     turn['classifier_decision'] = decision
@@ -180,6 +225,7 @@ def check_turn(turn, events, source_audit=None):
     for field in expected.get('fields', []):
         check('field:' + field, field in fields, str(fields), severity='FAIL' if field_evidence_available else 'REVIEW')
     text = normalize(stream['answer'])
+    unit_text = unit_equivalent_text(stream['answer']) if unit_equivalence else text
     if expected.get('source_absence'):
         audit = (source_audit or {}).get('domains', {}).get(expected['source_absence'], {})
         check('source_absence_oracle', audit.get('status') == 'no_title_match'
@@ -187,7 +233,7 @@ def check_turn(turn, events, source_audit=None):
         check('no_substitute_records', not titles, str(titles))
         check('explicit_no_match', bool(re.search(r'(?:khong|chua).*(?:tim thay|thong tin|du lieu)', text)))
     for pattern in expected.get('answer_patterns', []):
-        check('answer_pattern:' + pattern, bool(re.search(pattern, text)), 'Required answer fact absent.' if expected.get('require_answer_patterns') else 'Wording-dependent check; inspect answer if absent.', severity='FAIL' if expected.get('require_answer_patterns') else 'REVIEW')
+        check('answer_pattern:' + pattern, bool(re.search(pattern, text) or re.search(pattern, unit_text)), 'Required answer fact absent.' if expected.get('require_answer_patterns') else 'Wording-dependent check; inspect answer if absent.', severity='FAIL' if expected.get('require_answer_patterns') else 'REVIEW')
     for pattern in expected.get('forbidden_patterns', []):
         check('no_injected_value:' + pattern, not re.search(pattern, text))
     for pattern in expected.get('contradiction_patterns', []):
@@ -195,13 +241,13 @@ def check_turn(turn, events, source_audit=None):
               'Answer contains a declared contradictory or unsupported caveat.')
     patterns = expected.get('answer_any_patterns', [])
     if patterns:
-        check('accepted_answer_form', any(re.search(pattern, text) for pattern in patterns),
+        check('accepted_answer_form', any(re.search(pattern, text) or re.search(pattern, unit_text) for pattern in patterns),
               'Answer did not match any declared response form.')
     if expected.get('any_of'):
         alternatives = []
         for option in expected['any_of']:
             branch = {**turn, 'expected':option}
-            alternatives.append(check_turn(branch, events, source_audit))
+            alternatives.append(check_turn(branch, events, source_audit, unit_equivalence=unit_equivalence))
         rank = {'PASS':0, 'REVIEW':1, 'FAIL':2, 'ERROR':3}
         best_status, best_checks = min(alternatives, key=lambda item:rank[item[0]])
         check('accepted_response_policy', best_status=='PASS',
@@ -214,7 +260,7 @@ def check_turn(turn, events, source_audit=None):
     return status, checks
 
 
-def execute_suite(client, scenarios, checkpoint, repeats=1):
+def execute_suite(client, scenarios, checkpoint, repeats=1, *, cacheless=False):
     results = []
     total = sum(len(c['turns']) for c in scenarios) * repeats
     for repeat in range(1, repeats + 1):
@@ -239,6 +285,8 @@ def execute_suite(client, scenarios, checkpoint, repeats=1):
                     try:
                         payload = {'user_prompt':step['prompt'], 'domain':scenario.get('domain','auto'), 'mode':scenario.get('mode','strict')}
                         payload.update(step.get('options', {}))
+                        if cacheless:
+                            payload['bypass_answer_cache'] = True
                         stream, trace, elapsed = client.request('/chat/' + str(cid), payload, stream=True)
                         result.update(request_id=trace, elapsed_ms=elapsed, payload=payload)
                         history, _, _ = client.request('/history/' + str(cid))
@@ -257,12 +305,51 @@ def execute_suite(client, scenarios, checkpoint, repeats=1):
     return results
 
 
+def performance_summary(results, events):
+    """Measured end-to-end latency; cold first turn is reported separately."""
+    cache = {}
+    for event in events:
+        if event.get('task') == 'answer.cache':
+            cache[event.get('request_id')] = event
+    timed = [r for r in results if isinstance(r.get('elapsed_ms'), (int, float))]
+    def stats(turns):
+        values = sorted(r['elapsed_ms'] / 1000 for r in turns)
+        if not values:
+            return {'count': 0, 'mean_seconds': None, 'median_seconds': None, 'p95_seconds': None}
+        # Linear interpolation; include the definition so reports are reproducible.
+        position = (len(values) - 1) * .95
+        low = int(position)
+        high = min(low + 1, len(values) - 1)
+        return {'count': len(values), 'mean_seconds': statistics.mean(values),
+                'median_seconds': statistics.median(values),
+                'p95_seconds': values[low] + (values[high] - values[low]) * (position - low)}
+    warm = timed[1:]
+    tasks = ('backend.services.domain_router.choose_domain',
+             'rag.query_preparation.prepare_search_queries', 'rag.retrieval_service.rerank_records',
+             'rag.query_pipeline.select_requested_records', 'backend.services.llm_service.stream_generator',
+             'llm.nonstream_inference')
+    stages = {task: stats([e for e in events if e.get('task') == task and e.get('event') == 'end'
+                          and isinstance(e.get('elapsed_ms'), (int, float))]) for task in tasks}
+    return {'stage_timings': stages, 'all': stats(timed), 'excluding_first_request': stats(warm),
+            'uncached_excluding_first_request': stats([r for r in warm
+                if not cache.get(r.get('request_id'), {}).get('cache_hit')]),
+            'first_request_seconds': timed[0]['elapsed_ms'] / 1000 if timed else None,
+            'cache_hits': sum(bool(cache.get(r.get('request_id'), {}).get('cache_hit')) for r in results),
+            'cache_bypass_acknowledged': sum(cache.get(r.get('request_id'), {}).get('cache_enabled') is False for r in results),
+            'answer_cache_events': sum(r.get('request_id') in cache for r in results),
+            'note': 'Uncached excludes recorded answer-cache hits, not model/index caches. P95 uses linear interpolation.'}
+
+
 def report(results):
     counts = Counter(r['status'] for r in results)
     lines = ['SYSTEM TEST RESULTS', json.dumps(dict(counts)),
              'PASS means the stated checks passed, not that every factual claim is verified.',
              'REVIEW includes wording-dependent checks or answers without factual ground truth.',
              'UI layout, feedback clicks, concurrency, and approved online actions are not tested.', '']
+    if any('previous_checker' in r for r in results):
+        strict_counts = Counter(r.get('previous_checker', {}).get('status', r['status']) for r in results)
+        lines.insert(2, 'Strict-unit wording counts on the same answers: ' + json.dumps(dict(strict_counts)))
+        lines.insert(3, 'Current counts accept equivalent explicit unit wording; recorded answers are unchanged.')
     for turn in results:
         lines.extend([f"[{turn['status']}] {turn['scenario']} / turn {turn['turn']} / repeat {turn['repeat']}",
                       'USER: ' + turn['prompt'],
@@ -333,6 +420,7 @@ def main():
     parser.add_argument('--repeats', type=int, choices=[1,2,3], default=1)
     parser.add_argument('--timeout', type=int, default=300)
     parser.add_argument('--require-all-domains', action='store_true')
+    parser.add_argument('--cacheless', action='store_true', help='Bypass generated-answer cache reads AND writes on every turn')
     args = parser.parse_args()
     manifest = json.loads(args.cases.read_text(encoding='utf-8'))
     review_cases = {'manual_domain_lock', 'auto_detect_once_lock', 'movie_topic',
@@ -365,21 +453,33 @@ def main():
     print('Separate test user: ' + client.user_id, flush=True)
     print('Uses the real backend/model. Keep services running; avoid other chats during the run.', flush=True)
     checkpoint = directory/'checkpoint.jsonl'
-    results = execute_suite(client, selected, checkpoint, args.repeats)
+    results = execute_suite(client, selected, checkpoint, args.repeats, cacheless=args.cacheless)
     # Responses are persisted before DONE; short flush allowance is for diagnostic files only.
     time.sleep(.25)
     events, files = collect_logs(ROOT, client.traces)
     for turn in results:
+        old_status, old_checks = check_turn(turn, events, source_audit, unit_equivalence=False)
+        turn['previous_checker'] = {'policy':'same checks with strict unit wording', 'status':old_status, 'checks':old_checks}
         turn['status'], turn['checks'] = check_turn(turn, events, source_audit)
     summary = report(results)
+    summary += '\nPERFORMANCE (seconds):\n' + json.dumps(performance_summary(results, events), indent=2)
     (directory/'summary.txt').write_text(summary, encoding='utf-8')
     (directory/'results.json').write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8')
     run = {'suite':args.suite, 'test_user_id':client.user_id, 'base_url':args.base_url,
            'repeats':args.repeats, 'turn_count':len(results), 'available_domains':sorted(names),
            'skipped_scenarios':skipped, 'counts':dict(Counter(r['status'] for r in results)),
            'diagnostic_events':len(events),
+           'answer_cache_bypassed':args.cacheless,
+           'checker_version':2,
+           'previous_checker_counts':dict(Counter(r['previous_checker']['status'] for r in results)),
+           'performance':performance_summary(results, events),
+           'runtime_options_observed':[json.loads(value) for value in sorted({
+               json.dumps(e['runtime_options'],sort_keys=True) for e in events
+               if e.get('task')=='answer.cache' and isinstance(e.get('runtime_options'),dict)})],
            'runtime_sha256':{str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
                             for folder in ('rag','backend/services') for path in sorted((ROOT/folder).glob('*.py'))},
+           'qa_harness_sha256':{name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()
+               for name in ('backend/schemas.py','qa_suite.py','testing/run_cacheless_tests.py','testing/targeted_analysis.py') if (ROOT/name).is_file()},
            'note':'Tests create isolated chat records; no existing chats are changed. Restart services before running so on-disk hashes describe the loaded code.'}
     (directory/'run.json').write_text(json.dumps(run, ensure_ascii=False, indent=2), encoding='utf-8')
     destination = directory.parent/('system_tests_' + stamp + '.zip')

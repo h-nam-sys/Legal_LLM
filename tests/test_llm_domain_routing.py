@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import sys
 import types
+import unicodedata
 import unittest
 from unittest.mock import patch
 
@@ -26,7 +27,10 @@ class RoutingTests(unittest.TestCase):
                 super().__init__(detail)
         fastapi.HTTPException = HTTPException
         qp = types.ModuleType('rag.query_pipeline')
-        qp._plain = lambda text: text.lower()
+        def plain(text):
+            text = unicodedata.normalize('NFD', text.casefold().replace('đ', 'd'))
+            return ' '.join(''.join(c for c in text if not unicodedata.combining(c)).split())
+        qp._plain = plain
         qp.explicit_fields = lambda *args: []
         with patch.dict(sys.modules, {'httpx': httpx, 'fastapi': fastapi, 'rag.query_pipeline': qp}):
             spec = importlib.util.spec_from_file_location('router_under_test', ROOT / 'backend/services/domain_router.py')
@@ -275,6 +279,66 @@ class RoutingTests(unittest.TestCase):
         for exc in (self.router.DomainConversation(), self.router.DomainNoMatch(), self.router.DomainClarification([])):
             self.assertEqual(exception_outcome(exc), ('control_flow', None))
         self.assertEqual(exception_outcome(ValueError('bad')), ('error', 'ValueError'))
+
+    def test_subjectless_renewal_keeps_current_domain_without_classifier(self):
+        for question in ('Có được gia hạn không và làm ở đâu?', 'co duoc gia han khong va lam o dau?',
+                         'Gia hạn được mấy lần, thêm bao nhiêu ngày?', 'Can I renew it and where?'):
+            with self.subTest(question=question):
+                config, state, switched = self.choose(question=question,
+                    state={'name':'university_admission','allow_switching':True}, titles=['Previous service'])
+                self.assertEqual(config.name,'university_admission')
+                self.assertEqual(state['route_action'],'followup')
+                self.assertFalse(switched)
+                self.assertFalse(self.requests)
+
+    def test_named_new_renewal_subject_still_uses_classifier(self):
+        for question in ('Gia hạn máy khoan ở Trạm Mây được không?', 'Can I renew my passport?',
+                         'Tôi không hỏi gia hạn, đăng ký khai sinh mất bao lâu?', 'Có gia hạn sách thư viện không?'):
+            with self.subTest(question=question):
+                before=len(self.requests)
+                config, _, switched=self.choose(question=question,
+                    state={'name':'university_admission','allow_switching':True},titles=['Old service'])
+                self.assertEqual(len(self.requests),before+1)
+                self.assertEqual(config.name,'administrative_procedures')
+                self.assertTrue(switched)
+
+    def test_subjectless_renewal_without_active_subject_is_not_guessed(self):
+        for state,titles in [({},[]),({'name':'university_admission','allow_switching':True},[])]:
+            before=len(self.requests)
+            self.choose(question='Có được gia hạn không và làm ở đâu?',state=state,titles=titles)
+            self.assertEqual(len(self.requests),before+1)
+
+    def test_ascii_question_gets_equivalent_normalized_coverage(self):
+        question='thu vien Demo moi lan muon may cuon sach va trong bao lau?'
+        self.configs[1].profile['description']='Mượn sách thư viện và dịch vụ sinh viên Demo.'
+        self.configs[1].profile['routing_examples']=['Mỗi lần mượn tối đa mấy cuốn sách?']
+        original=json.loads(json.dumps(self.configs[1].profile))
+        self.choose(question=question)
+        request=json.loads(self.requests[0]['messages'][1]['content'])
+        self.assertEqual(request['question'],question)
+        self.assertEqual(list(request)[-1],'question')
+        domain=request['domains'][1]
+        self.assertEqual(domain['normalized_description'],'muon sach thu vien va dich vu sinh vien demo.')
+        self.assertEqual(domain['normalized_examples'],['moi lan muon toi da may cuon sach?'])
+        self.assertEqual(self.configs[1].profile,original)
+        self.assertNotIn('current_domain',request)
+        self.assertEqual(len(self.requests),1)
+
+    def test_accented_classifier_input_keeps_previous_shape(self):
+        self.choose(question='Ở thư viện Demo, mỗi lần mượn mấy cuốn?')
+        request=json.loads(self.requests[0]['messages'][1]['content'])
+        self.assertEqual(set(request),{'domains','question'})
+        for domain in request['domains']:
+            self.assertEqual(set(domain),{'id','description','examples'})
+
+    def test_renewal_shortcut_does_not_override_manual_selection_or_detect_once_lock(self):
+        for state in ({'name':'university_admission','selection':'manual','allow_switching':True},
+                      {'name':'university_admission','locked':True,'allow_switching':False}):
+            config, next_state, changed=self.choose(question='Có được gia hạn không?',state=state,titles=['Old service'],requested=None)
+            self.assertEqual(config.name,'university_admission')
+            self.assertEqual(next_state['route_action'],'domain')
+            self.assertFalse(changed)
+            self.assertFalse(self.requests)
 
 
 if __name__ == '__main__':

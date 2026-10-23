@@ -90,3 +90,11 @@ External search additionally requires MCP configuration. Keep keys private and o
 Model weights are excluded from Git. Source exports may also omit databases, indexes and the test assets. Keep the actual test launcher and fixtures in the development repository, and document how permitted runtime data is obtained.
 
 The browser login is a demonstration identifier flow. It does not provide production authentication. Administrative/admissions answers reflect the loaded dataset; the application does not independently verify whether those policies are current.
+
+## Applying the complete source bundle
+
+Merge the source into the existing project. This bundle intentionally omits runtime assets and active dataset metadata: preserve `data/`, `models/`, `env/`, `.env`, `backend/.env`, the configured conversation database (default `legal_llm.db`), `backend/static/forms/`, raw source files and the existing Git repository. It does not contain a replacement for those files.
+
+For a fresh administrative-domain setup, `config_examples/administrative_domain_profile.json` contains the supplied schema mapping. It is an example, not an active generation or an ingested dataset. Review/use it during ingestion; do not overwrite an existing domain's configuration with it.
+
+Answer guidance and full context are enabled by default in the selected code. If a previous local ablation explicitly set `RAG_ANSWER_GUIDANCE=0`, remove that override or set it to `1` before the release run. Existing dataset profiles and environment overrides remain effective.

@@ -1,0 +1,459 @@
+{
+  "version": 1,
+  "suite_id": "generalization_probe_20261022_v1",
+  "purpose": "Additional source-derived wording and state probes after implementation; engineering only.",
+  "limits": "Known existing datasets and source facts. Not an independent blind benchmark, not a newly ingested dataset, and not research-paper evidence. Manual review of attribution, negation and caveats is required.",
+  "scenarios": [
+    {
+      "id": "probe_birth_documents",
+      "category": "combined_attributes",
+      "requires": [
+        "administrative_procedures"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Khi đi nộp trực tiếp hồ sơ khai sinh, tôi mang những giấy tờ nào và nộp tại đâu?",
+          "expected": {
+            "domain": "administrative_procedures",
+            "records": [
+              "Thủ tục đăng ký khai sinh"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "giay chung sinh",
+              "giay chung nhan ket hon",
+              "trung tam phuc vu hanh chinh cong"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "required_documents",
+              "reception_location"
+            ]
+          },
+          "manual_oracle": "Birth source: original birth notice; copies of both spouses' identification and marriage certificate, originals for comparison. Submit at Trung tâm Phục vụ hành chính công phường Tăng Nhơn Phú."
+        }
+      ]
+    },
+    {
+      "id": "probe_marriage_fee",
+      "category": "fee_units",
+      "requires": [
+        "administrative_procedures"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Làm đăng ký kết hôn lấy bản chính rồi xin thêm bản sao thì từng loại có lệ phí thế nào?",
+          "expected": {
+            "domain": "administrative_procedures",
+            "records": [
+              "Thủ tục đăng ký kết hôn"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "mien phi|khong thu phi|khong (?:mat|ton|thu) phi",
+              "(?<!\\d)8[., ]?000(?!\\d)",
+              "ban sao"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "fee"
+            ]
+          },
+          "manual_oracle": "Original is free; each copy costs 8,000 dong. Distinguish the two categories."
+        }
+      ]
+    },
+    {
+      "id": "probe_library_condition",
+      "category": "condition",
+      "requires": [
+        "university_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Ở thư viện Demo, có người đặt trước cuốn sách tôi đang giữ thì yêu cầu gia hạn của tôi có được chấp nhận không?",
+          "expected": {
+            "domain": "university_test",
+            "records": [
+              "Gia hạn sách thư viện"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "dat truoc|nguoi dat"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "description"
+            ]
+          },
+          "manual_oracle": "The recorded renewal condition is not met because another person has reserved the book. Explain that renewal is unavailable in this situation; merely quoting the rule needs manual completeness review."
+        }
+      ]
+    },
+    {
+      "id": "probe_student_documents",
+      "category": "combined_attributes",
+      "requires": [
+        "university_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Tôi bị mất thẻ sinh viên Demo. Xin làm lại thì cần hồ sơ gì và phòng nào nhận hồ sơ?",
+          "expected": {
+            "domain": "university_test",
+            "records": [
+              "Cấp lại thẻ sinh viên"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "don",
+              "anh chan dung",
+              "phong dich vu sinh vien"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "description",
+              "reception_location"
+            ]
+          },
+          "manual_oracle": "Application for replacement plus portrait photo; Phòng dịch vụ sinh viên Demo."
+        }
+      ]
+    },
+    {
+      "id": "probe_admissions_method",
+      "category": "combined_attributes",
+      "requires": [
+        "university_admission"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Với phương thức 2 tại HCMUS, trường xét kết quả học tập lớp mấy và kết hợp các kỳ thi nào?",
+          "expected": {
+            "domain": "university_admission",
+            "records": [
+              "Tuyển sinh phương thức 2"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "10",
+              "12",
+              "thpt",
+              "dgnl|danh gia nang luc"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "content"
+            ]
+          },
+          "manual_oracle": "Method 2 combines THPT exam OR ĐGNL ĐHQG-HCM with grades 10–12 records. Preserve OR between the exam alternatives."
+        }
+      ]
+    },
+    {
+      "id": "probe_projector_times",
+      "category": "processing_vs_usage",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Mượn máy chiếu ở Trạm Mây của Xưởng Nhỏ: bao lâu yêu cầu được duyệt, rồi tôi được giữ máy trong bao lâu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy chiếu — Trạm Mây"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "(?:30|ba muoi) phut",
+              "(?:1|mot) ngay"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "request_turnaround",
+              "policy_details"
+            ]
+          },
+          "manual_oracle": "Request processing 30 minutes; possession 1 day. Do not interchange."
+        }
+      ]
+    },
+    {
+      "id": "probe_repair_units",
+      "category": "units",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Sửa một máy khoan tại Xưởng Nhỏ Trạm Mây hết bao nhiêu? Mức đó tính cho từng máy hay mỗi giờ?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Sửa máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "(?<!\\d)80[., ]?000(?!\\d)",
+              "moi may|dong/may"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "service_charge"
+            ]
+          },
+          "manual_oracle": "80,000 dong per machine; not an hourly charge."
+        }
+      ]
+    },
+    {
+      "id": "probe_membership_ascii",
+      "category": "previously_untested_record",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "o xuong nho tram may, cap the thanh vien can ho so gi, xu ly may ngay va gia moi the the nao?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Làm thẻ thành viên — Trạm Mây"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "anh chan dung",
+              "giay to co anh",
+              "(?:2|hai) ngay lam viec",
+              "(?<!\\d)10[., ]?000(?!\\d)"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "policy_details",
+              "request_turnaround",
+              "service_charge"
+            ]
+          },
+          "manual_oracle": "Portrait photo and photo identification; 2 working days; 10,000 dong per card."
+        }
+      ]
+    },
+    {
+      "id": "probe_room_times",
+      "category": "processing_vs_usage",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Trạm Nắng của Xưởng Nhỏ xử lý đặt phòng làm việc bao lâu, và một lần được dùng phòng tối đa mấy giờ?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Đặt phòng làm việc — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "(?:25|hai muoi lam) phut",
+              "(?:2|hai) gio"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "request_turnaround",
+              "policy_details"
+            ]
+          },
+          "manual_oracle": "Request processing 25 minutes; booking maximum 2 hours."
+        }
+      ]
+    },
+    {
+      "id": "probe_clarify",
+      "category": "missing_subject",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Tôi cần chờ bao nhiêu ngày làm việc?",
+          "expected": {
+            "routes": [
+              "clarify"
+            ],
+            "no_retrieval": true
+          },
+          "manual_oracle": "No subject is supplied. Ask which procedure/service rather than guess a number or call the subject unsupported."
+        },
+        {
+          "prompt": "Tôi muốn hỏi dịch vụ làm thẻ thành viên ở Xưởng Nhỏ, Trạm Nắng.",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Làm thẻ thành viên — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "(?:3|ba) ngay lam viec"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "request_turnaround"
+            ]
+          },
+          "manual_oracle": "Use the previous time question after clarification: Nắng membership card takes 3 working days. An overview that omits the requested processing time is incomplete."
+        },
+        {
+          "prompt": "Chi phí cấp một thẻ như vậy là bao nhiêu?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Làm thẻ thành viên — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "(?<!\\d)20[., ]?000(?!\\d)",
+              "moi the|dong/the"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "service_charge"
+            ]
+          },
+          "manual_oracle": "20,000 dong per card, keeping Nắng membership subject."
+        }
+      ]
+    },
+    {
+      "id": "probe_pending_replaced",
+      "category": "missing_subject",
+      "requires": [
+        "maker_lab_test",
+        "administrative_procedures"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Mỗi lần phải thanh toán bao nhiêu tiền?",
+          "expected": {
+            "routes": [
+              "clarify"
+            ],
+            "no_retrieval": true
+          },
+          "manual_oracle": "No subject is supplied. Ask which procedure/service rather than guess a number or call the subject unsupported."
+        },
+        {
+          "prompt": "Thôi, tôi đổi câu hỏi: đăng ký kết hôn thì phí bản chính và bản sao là gì?",
+          "expected": {
+            "domain": "administrative_procedures",
+            "records": [
+              "Thủ tục đăng ký kết hôn"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "mien phi|khong thu phi|khong (?:mat|ton|thu) phi",
+              "(?<!\\d)8[., ]?000(?!\\d)",
+              "ban sao"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "fee"
+            ]
+          },
+          "manual_oracle": "Original is free; each copy costs 8,000 dong. Distinguish the two categories."
+        }
+      ]
+    },
+    {
+      "id": "probe_branch_change",
+      "category": "action_and_branch_changes",
+      "requires": [
+        "maker_lab_test"
+      ],
+      "mode": "strict",
+      "allow_switching": true,
+      "turns": [
+        {
+          "prompt": "Tại Xưởng Nhỏ Trạm Nắng, một lượt mượn máy chiếu được cấp nhiều nhất mấy chiếc?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Mượn máy chiếu — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "(?:2|hai) (?:may chieu|chiec)"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "policy_details"
+            ]
+          },
+          "manual_oracle": "Maximum 2 projectors."
+        },
+        {
+          "prompt": "Nếu muốn sửa máy khoan ở cùng trạm ấy thì chờ bao lâu và giá mỗi máy là gì?",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Sửa máy khoan — Trạm Nắng"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "(?<!\\d)110[., ]?000(?!\\d)",
+              "(?:6|sau) ngay lam viec"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "service_charge",
+              "request_turnaround"
+            ]
+          },
+          "manual_oracle": "Keep station Nắng but change action/item to drill repair: 110,000 dong/machine, 6 working days."
+        },
+        {
+          "prompt": "Tôi chuyển máy khoan sang sửa ở Trạm Mây của Xưởng Nhỏ. Cho tôi thời gian xử lý và phí của trạm mới.",
+          "expected": {
+            "domain": "maker_lab_test",
+            "records": [
+              "Sửa máy khoan — Trạm Mây"
+            ],
+            "exact_records": true,
+            "answer_patterns": [
+              "(?:4|bon) ngay lam viec",
+              "(?<!\\d)80[., ]?000(?!\\d)"
+            ],
+            "require_answer_patterns": true,
+            "fields": [
+              "request_turnaround",
+              "service_charge"
+            ]
+          },
+          "manual_oracle": "Change station to Mây: 4 working days, 80,000 dong/machine."
+        }
+      ]
+    }
+  ]
+}

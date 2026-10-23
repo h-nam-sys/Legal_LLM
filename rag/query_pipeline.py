@@ -8,6 +8,7 @@ import re
 import httpx
 
 from .domain_config import RAGUnavailableError, load_domain_config, llm_url
+from .runtime_options import enabled
 from .structured_output import parse_model_value
 from .record_context import fetch_public_rows, record_excerpt, field_samples
 from .retrieval_service import retrieve_and_rerank, rerank_records, _positive_integer
@@ -279,7 +280,10 @@ async def build_evidence_bundle(prompt, search_query, domain=None, *, config=Non
     # Sequential calls avoid concurrent model inference. Model/index caches are reused.
     # Preserve the complete question even when expansion drops or corrupts a
     # condition. Discovery is vector-only; all candidates share one final score.
-    discovery_queries = list(dict.fromkeys([search_query, *preparation.queries]))
+    # Preserve an unaccented original if reference resolution supplied another query.
+    # Property follow-ups keep their existing bounded title-discovery path.
+    original = [prompt] if enabled('RAG_ASCII_QUERY_GUARD') and prompt.isascii() and not active_procedures else []
+    discovery_queries = list(dict.fromkeys([search_query, *original, *preparation.queries]))
     emit(task, 'discovery_queries', domain=config.name, queries=discovery_queries)
     for phrase in discovery_queries:
         group = await asyncio.to_thread(retrieve_and_rerank, phrase, config=config, defer_rerank=True)
@@ -296,7 +300,8 @@ async def build_evidence_bundle(prompt, search_query, domain=None, *, config=Non
         emit(task, 'selection_path', domain=config.name, query=search_query,
              reason='active_subjects', retained_ids=[m[0] for m in matches])
     elif matches:
-        matches = await asyncio.to_thread(rerank_records, search_query, matches, config=config, top_k=result_limit)
+        matches = await asyncio.to_thread(rerank_records, search_query, matches, config=config,
+                                          top_k=result_limit, allow_low_score=enabled('RAG_LOW_SCORE_RECOVERY'))
         # Expanded phrases discover candidates; they never authorize a record.
         # One selection against the original/resolved question prevents an exact
         # title invented during preparation from bypassing intent validation.

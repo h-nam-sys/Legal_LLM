@@ -124,19 +124,17 @@ flowchart TD
 
 The backend selects a dataset, resolves conversational references and retrieves relevant records. The shared model service provides generation, embeddings and reranking. Responses and their sources are saved with the conversation.
 
-## Testing and project status
+## Testing
 
-With services running:
+With services running, run the complete cacheless chat regression:
 
 ```bat
-testing\run_comprehensive_tests.bat
+testing\run_cacheless_tests.bat
 ```
 
-The suite runs **64 turns** and saves prompts, responses and diagnostics under `qa_exports/`.
+This runs **112 turns** across the original and fresh question sets, saving prompts, responses, source records and timings under `qa_exports/`. The original 64-turn launcher remains available at `testing\run_comprehensive_tests.bat`.
 
-The last completed live run, on **20 October 2026**, passed **58/64 automatic checks**, with a mean complete-response time of **10.51 seconds**. Follow-up routing, unaccented questions and answer completeness remain areas of active development. The subsequent routing patch has passed offline checks and awaits live validation.
-
-See [development and evaluation notes](docs/DEVELOPMENT.md) for the background, recorded results and contribution evidence.
+Automatic checks cover declared expectations; inspect answers and sources when assessing factual quality. See [development and evaluation notes](docs/DEVELOPMENT.md) for recorded results and limitations, and the [release checklist](docs/RELEASE_CHECKLIST.md) for end-to-end feature checks.
 
 ## Documentation
 

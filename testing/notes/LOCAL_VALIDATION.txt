@@ -1,0 +1,14 @@
+LOCAL VALIDATION — 2026-10-22
+
+132 offline checks passed.
+Command (from project root):
+PYTHONPATH=tests python3 -m unittest test_llm_domain_routing test_routing_contract_integration test_pipeline_diagnostics test_turn_context test_record_context test_structured_output test_full_context_experiment test_conversation_diagnostics test_service_config test_generalization_regressions
+
+Python compileall passed for backend, rag, qa_suite.py and testing/run_cacheless_tests.py.
+The input project's 31 recorded rag/backend-service runtime hashes match the latest 48-turn export.
+The frozen original/fresh question manifests are byte-identical to their exported qa_cases.json files.
+No model, GPU, live index or running user backend was available here. No live score or speed improvement is claimed.
+Full dependency-heavy tests could not run: httpx, fastapi, pytest, sqlalchemy, aiosqlite, cachetools and dotenv are absent in this runtime.
+
+Additional behavior coverage: pending clarification/reset/new-question/social transitions, bounded low-score recovery and selector rejection, original ASCII query retention, cache read/write bypass, raw relevance preservation, cacheless acknowledgement and slowdown reporting.
+All source fields remain in the full-context generation path; excluded columns remain excluded.

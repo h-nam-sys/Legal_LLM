@@ -1,0 +1,48 @@
+{
+  "source_archive": "cacheless_comparison_20261022T071428_097130Z.zip",
+  "new_inference": false,
+  "note": "Checker-only re-evaluation of identical recorded answers. This is not a new live run or a manual factual accuracy score. Frozen archives are untouched. Passing answers with caveats still require manual review.",
+  "suites": [
+    {
+      "archive": "system_tests_20261022T064647_351905Z.zip",
+      "original_counts": {
+        "PASS": 62,
+        "FAIL": 2
+      },
+      "new_checker_counts": {
+        "PASS": 62,
+        "FAIL": 2
+      },
+      "changes": []
+    },
+    {
+      "archive": "system_tests_20261022T070244_225509Z.zip",
+      "original_counts": {
+        "PASS": 44,
+        "FAIL": 4
+      },
+      "new_checker_counts": {
+        "PASS": 46,
+        "FAIL": 2
+      },
+      "changes": [
+        {
+          "turn": 29,
+          "scenario": "fresh_student_chain",
+          "prompt": "Còn xin bảng điểm tại Demo, một bản tính bao nhiêu tiền?",
+          "answer": "Tại Demo, một bản xin bảng điểm là 10000 đồng.",
+          "original_status": "FAIL",
+          "new_checker_status": "PASS"
+        },
+        {
+          "turn": 42,
+          "scenario": "fresh_clarify_then_answer",
+          "prompt": "Vậy phí cho từng thẻ là bao nhiêu?",
+          "answer": "Phí cho từng thẻ là 20000 đồng.",
+          "original_status": "FAIL",
+          "new_checker_status": "PASS"
+        }
+      ]
+    }
+  ]
+}

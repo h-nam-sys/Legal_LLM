@@ -201,7 +201,7 @@ def retrieve_and_rerank(query, top_k=None, domain=None, *, config=None,
 
 
 @timed('rag.retrieval_service.rerank_records')
-def rerank_records(question, matches, *, config, top_k):
+def rerank_records(question, matches, *, config, top_k, allow_low_score=False):
     """One score scale for the merged pool; apply the result limit afterwards."""
     if not matches:
         return []
@@ -233,9 +233,14 @@ def rerank_records(question, matches, *, config, top_k):
             ranked = sorted([(m[0],score,m[2]) for m,score in zip(matches,scores)],
                             key=lambda m:m[1],reverse=True)
             kept = [m for m in ranked if m[1]>=config.minimum_score][:top_k]
+            # Recover only when the cutoff would discard the entire pool. The caller
+            # must perform semantic selection; ranking alone never authorizes evidence.
+            recovered = bool(not kept and allow_low_score)
+            if recovered:
+                kept = ranked[:min(top_k, 3)]
             emit(task,'complete',domain=config.name,
                  ranked=[{'id':m[0],'score':m[1]} for m in ranked],
-                 retained_ids=[m[0] for m in kept])
+                 retained_ids=[m[0] for m in kept], low_score_recovery=recovered)
             return kept
     except (RAGUnavailableError, ValueError):
         raise

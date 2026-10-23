@@ -15,6 +15,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 from rag.domain_config import load_domain_config, llm_url, RAGConfigurationError, RAGUnavailableError, config_for_mode, mode_settings
 from rag.query_pipeline import build_evidence_bundle, explicit_fields
+from rag.runtime_options import OPTIONS, enabled, signature
 import os
 
 logger = logging.getLogger(__name__)
@@ -88,7 +89,7 @@ def render_explicit_lookup(context, question, config):
 
 
 @timed('backend.services.llm_service.get_legal_response_stream')
-async def get_legal_response_stream(prompt, search_query, domain=None, *, active_procedures=None, mode='strict'):
+async def get_legal_response_stream(prompt, search_query, domain=None, *, active_procedures=None, mode='strict', use_cache=True, answer_guidance=None):
     from fastapi import HTTPException
     try:
         config = config_for_mode(load_domain_config(domain), mode)
@@ -100,19 +101,26 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
             from rag.domain_onboarding import GENERIC_EVIDENCE_PROMPT
             prompts = {'system_prompt': GENERIC_EVIDENCE_PROMPT}
         prompts = {**prompts, **mode_settings(config, mode)}
+        guidance = enabled('RAG_ANSWER_GUIDANCE') if answer_guidance is None else answer_guidance
+        if type(guidance) is not bool:
+            raise ValueError('answer_guidance must be a boolean or None')
+        options = dict(zip(OPTIONS, signature()))
+        options['RAG_ANSWER_GUIDANCE'] = guidance
         url = llm_url()
-        key = (config.name, config.revision, mode, context_mode, tuple(active_procedures or []), os.getenv("RAG_EXACT_FIELD_OUTPUT", "0"), prompt, search_query, url,
+        key = (config.name, config.revision, mode, context_mode, signature(), guidance, tuple(active_procedures or []), os.getenv("RAG_EXACT_FIELD_OUTPUT", "0"), prompt, search_query, url,
                json.dumps(prompts, sort_keys=True, ensure_ascii=False))
-        if key in qa_cache:
+        if use_cache and key in qa_cache:
             cached = qa_cache[key]
-            emit('answer.cache', cache_hit=True, context_mode=context_mode, evidence_fields=cached.get('evidence_fields'))
+            emit('answer.cache', cache_hit=True, cache_enabled=True, context_mode=context_mode,
+                 runtime_options=options, evidence_fields=cached.get('evidence_fields'))
             @timed('backend.services.llm_service.cached_stream')
             async def cached_stream():
                 yield event({"type": "metadata", "sources": cached["sources"]})
                 yield event({"type": "chunk", "text": cached["text"]})
                 yield "data: [DONE]\n\n"
             return cached_stream(), cached["score"]
-        emit('answer.cache', cache_hit=False, context_mode=context_mode)
+        emit('answer.cache', cache_hit=False, cache_enabled=bool(use_cache), context_mode=context_mode,
+             runtime_options=options)
         async with TimedLock(_rag_gate, 'rag.request_queue'):
             context, score, sources = await build_evidence_bundle(prompt, search_query, config=config,
                 active_procedures=active_procedures, context_mode=context_mode)
@@ -120,7 +128,9 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
         logger.exception("RAG is unavailable")
         raise HTTPException(status_code=503, detail="Kho dữ liệu tạm thời không khả dụng. Vui lòng thử lại sau.") from exc
 
-    if not context or score < config.minimum_score:
+    # The pipeline has already applied cutoff/pinning or semantic selection.
+    # Preserve the raw score for diagnostics; do not veto selector-approved evidence twice.
+    if not context:
         @timed('backend.services.llm_service.empty_stream')
         async def empty_stream():
             yield event({"type": "metadata", "sources": []})
@@ -152,8 +162,23 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
         'that the evidence actually lacks; do not add unrelated missing-field sections. '
         'Do not contradict a supported answer with a broad unsupported-information disclaimer. '
         'Preserve explicitly stated units without inventing uncertainty about those units. '
-        'Keep the answer concise and avoid duplicate sections.'
+        'Keep the answer concise and avoid duplicate sections. '
     )
+    if guidance:
+        system_prompt += (
+            'Before answering, silently map each requested fact to its record and source value. '
+            'Use facts embedded in descriptive fields, not just matching field labels. '
+            'Distinguish processing time, loan duration, renewal duration and reservation duration '
+            'by their meaning in the question and source. Do not treat equivalent wording as missing data. '
+            'A maximum per transaction answers a question about the permitted quantity per transaction; '
+            'do not append an unrelated per-person disclaimer. '
+            'A price with a stated unit is a supported price, not an unknown cost. '
+            'When multiple records are supplied, preserve the association of each value with its subject. '
+            'Do not claim a previously discussed branch lacks data: answer the currently requested branch only. '
+            'Negative headings such as not allowed must agree with the quoted rule; a conditional permission '
+            'must not be introduced by an unconditional refusal. '
+            'If a requested fact is truly absent, identify that exact fact; retain useful partial answers.'
+        )
     if config.primary_entity == 'procedure_name':
         system_prompt += "\n" + (
         "Chỉ dùng bằng chứng được cung cấp; không bổ sung kiến thức mô hình. "
@@ -168,8 +193,11 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
     template = prompts.get("user_template", "TÀI LIỆU:\n{context}\nCÂU HỎI:\n{query}")
     # format() performs a single substitution pass; user/source braces are not interpreted again.
     dataset_scope = {'dataset_id':config.name, 'description':config.profile.get('description','')[:800]}
+    requested_labels = [config.schema[key] for key in explicit_fields(prompt, config)] if guidance else []
     user_prompt = ('DATASET_SCOPE (provenance and coverage only):\n' +
                    json.dumps(dataset_scope,ensure_ascii=False) + '\n' +
+                   ('REQUESTED_FIELD_HINTS (non-exhaustive; values may also be in descriptive fields):\n' +
+                    json.dumps(requested_labels, ensure_ascii=False) + '\n' if requested_labels else '') +
                    template.format(context=context, query=prompt))
     payload = {"messages": [{"role": "system", "content": system_prompt},
                             {"role": "user", "content": user_prompt}],
@@ -216,7 +244,7 @@ async def get_legal_response_stream(prompt, search_query, domain=None, *, active
             emit('rag.answer.diagnostic', 'failure', domain=config.name, context_mode=context_mode,
                  error_type=type(exc).__name__, error=str(exc))
             yield event({"type": "chunk", "text": "\nLỗi hệ thống: phản hồi chưa hoàn tất. Vui lòng thử lại."})
-        if complete and chunks:
+        if use_cache and complete and chunks:
             qa_cache[key] = {"sources": sources, "text": "".join(chunks), "score": score,
                              "evidence_fields": evidence_fields}
         yield "data: [DONE]\n\n"

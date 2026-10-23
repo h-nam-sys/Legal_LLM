@@ -16,6 +16,7 @@ from services.db_service import (get_conversation, add_message, get_conversation
 from services.domain_router import choose_domain, DomainClarification, DomainNoMatch, DomainConversation, property_followup, default_name
 from rag.conversation_diagnostics import capture_turn
 from rag.turn_context import resolve_references
+from rag.runtime_options import enabled
 from rag.domain_config import RAGUnavailableError
 
 from rag.timing import timed, span, emit, TimedLock, trace_headers, TimingMiddleware, trace_id
@@ -139,6 +140,11 @@ async def orchestrate_chat(conversation_id, payload, db):
     # A new turn invalidates the old search offer, including old UI buttons.
     checklist = dict(conversation.checklist or {})
     checklist.pop('_mcp_pending', None)
+    pending_question = checklist.pop('_rag_pending_question', None)
+    if getattr(payload, 'reset_domain', False) or not enabled('RAG_RESUME_CLARIFICATION'):
+        pending_question = None
+    if not isinstance(pending_question, str) or len(pending_question) > 2000:
+        pending_question = None
     conversation.checklist = checklist
     conversation.needs_search_permission = False
     with span('db.commit'):
@@ -179,10 +185,19 @@ async def orchestrate_chat(conversation_id, payload, db):
     active_titles = active_procedures(context_messages, last_proc_title, prior_domain)
     if reset_domain:
         active_titles = []
+    question = payload.user_prompt.strip()
     try:
-        config, state, switched = await choose_domain(payload.user_prompt, state, active_titles,
-                                                      getattr(payload, 'domain', None))
+        pending_args = {'pending_question': pending_question} if pending_question else {}
+        config, state, switched = await choose_domain(question, state, active_titles,
+                                                      getattr(payload, 'domain', None), **pending_args)
     except DomainConversation:
+        # A social interlude does not consume an unanswered clarification.
+        if pending_question:
+            checklist = dict(conversation.checklist or {})
+            checklist['_rag_pending_question'] = pending_question
+            conversation.checklist = checklist
+            with span('db.commit'):
+                await db.commit()
         # Keep domain/subject memory for a later factual follow-up, but do not
         # supply prior dataset facts to a greeting/thanks response.
         @timed('backend.services.chat_orchestrator.conversation_stream')
@@ -215,6 +230,16 @@ async def orchestrate_chat(conversation_id, payload, db):
             await update_domain_state(db, conversation_id,
                 {'selection': 'auto', 'locked': False,
                  'allow_switching': state.get('allow_switching', False)}, clear_procedure=True)
+        if not no_match and enabled('RAG_RESUME_CLARIFICATION'):
+            checklist = dict(conversation.checklist or {})
+            # Replace rather than append: repeated clarification cannot grow context indefinitely.
+            unresolved = pending_question or question
+            # Never truncate away a late condition/negation and later answer a different question.
+            if len(unresolved) <= 2000:
+                checklist['_rag_pending_question'] = unresolved
+            conversation.checklist = checklist
+            with span('db.commit'):
+                await db.commit()
         await add_message(db, conversation_id, 'assistant', text, ['RAG_ROUTE:none'] if no_match else [])
         await log_interaction(db, conversation_id, payload.user_prompt, text, None, False, None,
                               'DOMAIN_NONE' if no_match else 'DOMAIN_CLARIFICATION')
@@ -226,27 +251,33 @@ async def orchestrate_chat(conversation_id, payload, db):
             yield f"data: {json.dumps({'type': 'chunk', 'text': text}, ensure_ascii=False)}\n\n"
             yield 'data: [DONE]\n\n'
         return StreamingResponse(clarification_stream(), media_type='text/event-stream')
+    resumed = bool(state.pop('resume_pending', False) and pending_question)
+    if resumed:
+        question = 'Câu hỏi cần trả lời: ' + pending_question + '\nĐối tượng được người dùng làm rõ: ' + question
+        active_titles = []
+        emit('rag.clarification', 'resumed', pending_question=pending_question, question=payload.user_prompt)
     switched = switched or reset_domain
     await update_domain_state(db, conversation_id, state, clear_procedure=switched)
     if switched:
         active_titles = []
-    else:
+    elif not resumed:
         active_titles = active_procedures(context_messages, last_proc_title, config.name)
     mode = resolve_mode(getattr(payload, "mode", None), config)
-    retrieve = mode == "strict" or await needs_retrieval(payload.user_prompt, active_titles, config)
+    retrieve = mode == "strict" or await needs_retrieval(question, active_titles, config)
     if retrieve:
         # Routing chooses a dataset. Reference resolution separately decides
         # whether a same-domain question still needs the previous subject.
-        search_query, followup_titles = resolve_search_query(payload.user_prompt, active_titles, config)
+        search_query, followup_titles = resolve_search_query(question, active_titles, config)
         if active_titles and not followup_titles:
             try:
-                search_query = await resolve_references(payload.user_prompt, active_titles, config)
+                search_query = await resolve_references(question, active_titles, config)
             except RAGUnavailableError as exc:
                 raise HTTPException(503, 'Không thể xác định ngữ cảnh câu hỏi. Vui lòng thử lại hoặc nêu rõ đối tượng.') from exc
         stream_gen, max_score = await get_legal_response_stream(
-            prompt=payload.user_prompt.strip(), search_query=search_query,
+            prompt=question, search_query=search_query,
             active_procedures=followup_titles,
-            domain=config.name, mode=mode,
+            domain=config.name, mode=mode, use_cache=not getattr(payload, 'bypass_answer_cache', False),
+            answer_guidance=getattr(payload, 'answer_guidance', None),
         )
     else:
         # A switched domain starts a fresh model context; previous dataset facts stay isolated.
@@ -327,7 +358,7 @@ async def orchestrate_chat(conversation_id, payload, db):
         if max_score is not None:
             db_sources.append(f"RAG_SCORE:{max_score}")
 
-        if extracted_procedure and stream_complete and config.profile.get('allow_forms', config.primary_entity == 'procedure_name') and is_form_trigger(payload.user_prompt):
+        if extracted_procedure and stream_complete and config.profile.get('allow_forms', config.primary_entity == 'procedure_name') and is_form_trigger(question):
             offer_text = "\n\n**Bạn có muốn tải biểu mẫu (file Word) cho thủ tục này không?**"
             full_ai_answer += offer_text
             yield f"data: {json.dumps({'type': 'chunk', 'text': offer_text})}\n\n"
