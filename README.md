@@ -147,12 +147,13 @@ For a bug report, include the question, selected domain, expected behavior and r
 
 ## Team
 
-**Team:** `[team name]`
+**Team:** `Team 10`
 
-| Member | GitHub | Main contribution |
+| Member | GitHub | Responsibilities |
 |---|---|---|
-| `[Full name]` | `@username` | `[Actual responsibility / contribution link]` |
-| `[Full name]` | `@username` | `[Actual responsibility / contribution link]` |
+| Nguyen Hai Nam | [@h-nam-sys](https://github.com/h-nam-sys) | System architecture, backend development, RAG integration and refinement, task coordination, experiment review and system debugging. |
+| Nguyen Minh Thinh | [@minhthinhn](https://github.com/minhthinhn) | Development of the initial working RAG module; ongoing research and paper development. |
+| Le Thien Khang | [@thienkhang1234](https://github.com/thienkhang1234) | Model selection, fine-tuning and quantization experiments, AI evaluation; ongoing research and paper development. |
 
 Contributions and development history are available in the [commit history](https://github.com/h-nam-sys/Legal_LLM/commits) and [pull requests](https://github.com/h-nam-sys/Legal_LLM/pulls).
 
