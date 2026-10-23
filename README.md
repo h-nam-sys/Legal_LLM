@@ -87,10 +87,10 @@ With the corresponding demo datasets loaded, try:
 
 Expand the source record beneath an answer to inspect its evidence. Use the admin dashboard to add your own data or adjust a dataset’s configuration.
 
-<details>
-<summary>Conversation across datasets</summary>
 
-![Automatic domain switching](docs/images/domain-switching.svg)
+Conversation across datasets (with automatic domain switching)
+
+![Automatic domain switching](docs/images/domain-switching.png)
 
 <!-- Replace with an actual conversation showing two datasets, with switching enabled. -->
 
