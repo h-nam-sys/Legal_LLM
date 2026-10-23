@@ -88,7 +88,7 @@ With the corresponding demo datasets loaded, try:
 Expand the source record beneath an answer to inspect its evidence. Use the admin dashboard to add your own data or adjust a dataset’s configuration.
 
 
-Conversation across datasets (with automatic domain switching)
+Conversation across datasets (with automatic domain switching):
 
 ![Automatic domain switching](docs/images/domain-switching.png)
 
